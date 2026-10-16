@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WhatElseSustainScenarioSchema",
+  "description": "Schema for scenarios in What Else Sustain game prototype",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "category",
+      "icon",
+      "targetAudience",
+      "difficulty",
+      "title",
+      "summary",
+      "choices"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]+$",
+        "description": "Unique identifier for the scenario"
+      },
+      "category": {
+        "type": "string",
+        "enum": ["daily_life", "farming", "school", "water", "energy", "waste"],
+        "description": "Broad category of the scenario"
+      },
+      "icon": {
+        "type": "string",
+        "description": "Primary emoji or icon symbol representing the scenario"
+      },
+      "targetAudience": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["students", "farmers", "rural_families", "everyone"]
+        },
+        "description": "Target demographics for the scenario"
+      },
+      "difficulty": {
+        "type": "string",
+        "enum": ["starter", "intermediate", "expert"]
+      },
+      "title": {
+        "type": "object",
+        "required": ["en", "te"],
+        "properties": {
+          "en": { "type": "string" },
+          "te": { "type": "string" }
+        }
+      },
+      "summary": {
+        "type": "object",
+        "required": ["en", "te"],
+        "properties": {
+          "en": { "type": "string" },
+          "te": { "type": "string" }
+        }
+      },
+      "contextPrompt": {
+        "type": "object",
+        "properties": {
+          "en": { "type": "string" },
+          "te": { "type": "string" }
+        }
+      },
+      "choices": {
+        "type": "array",
+        "minItems": 2,
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "icon",
+            "text",
+            "isMistake",
+            "natureHealthDelta",
+            "pointsDelta",
+            "impact"
+          ],
+          "properties": {
+            "id": { "type": "string" },
+            "icon": { "type": "string" },
+            "text": {
+              "type": "object",
+              "required": ["en", "te"],
+              "properties": {
+                "en": { "type": "string" },
+                "te": { "type": "string" }
+              }
+            },
+            "isMistake": {
+              "type": "boolean",
+              "description": "True if this option represents the common unsustainable choice/mistake"
+            },
+            "natureHealthDelta": {
+              "type": "integer",
+              "description": "Change in nature health (-100 to +100)"
+            },
+            "pointsDelta": {
+              "type": "integer",
+              "description": "Reward points earned or deducted"
+            },
+            "impact": {
+              "type": "object",
+              "required": ["headline", "description", "metrics"],
+              "properties": {
+                "headline": {
+                  "type": "object",
+                  "required": ["en", "te"],
+                  "properties": {
+                    "en": { "type": "string" },
+                    "te": { "type": "string" }
+                  }
+                },
+                "description": {
+                  "type": "object",
+                  "required": ["en", "te"],
+                  "properties": {
+                    "en": { "type": "string" },
+                    "te": { "type": "string" }
+                  }
+                },
+                "metrics": {
+                  "type": "array",
+                  "description": "List of factual or approximate metrics. Must specify source and verified status.",
+                  "items": {
+                    "type": "object",
+                    "required": ["label", "value", "source", "verified"],
+                    "properties": {
+                      "label": {
+                        "type": "object",
+                        "required": ["en", "te"],
+                        "properties": {
+                          "en": { "type": "string" },
+                          "te": { "type": "string" }
+                        }
+                      },
+                      "value": { "type": "string" },
+                      "source": {
+                        "type": "string",
+                        "description": "Reference source or agency documenting this figure"
+                      },
+                      "verified": {
+                        "type": "boolean",
+                        "description": "Set to false until confirmed by team"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "whatElse": {
+              "type": "array",
+              "description": "List of sustainable 'What Else' alternatives shown to guide better choices",
+              "items": {
+                "type": "object",
+                "required": ["id", "icon", "title", "description", "healthBenefit"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "icon": { "type": "string" },
+                  "title": {
+                    "type": "object",
+                    "required": ["en", "te"],
+                    "properties": {
+                      "en": { "type": "string" },
+                      "te": { "type": "string" }
+                    }
+                  },
+                  "description": {
+                    "type": "object",
+                    "required": ["en", "te"],
+                    "properties": {
+                      "en": { "type": "string" },
+                      "te": { "type": "string" }
+                    }
+                  },
+                  "healthBenefit": { "type": "integer" },
+                  "practicalTip": {
+                    "type": "object",
+                    "properties": {
+                      "en": { "type": "string" },
+                      "te": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

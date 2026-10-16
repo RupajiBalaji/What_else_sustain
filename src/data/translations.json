@@ -1,0 +1,341 @@
+{
+  "en": {
+    "app": {
+      "title": "What Else Sustain",
+      "tagline": "Make the mistake. Understand it. Choose what else.",
+      "shortName": "WES"
+    },
+    "header": {
+      "language": "Language",
+      "points": "Pts",
+      "badges": "Badges",
+      "level": "Rank",
+      "switchLang": "తెలుగు",
+      "advisorBtn": "Ask What Else 🤖",
+      "scorecardBtn": "Scorecard 📊"
+    },
+    "levels": {
+      "seedling": "Seedling 🌱",
+      "sapling": "Sapling 🌿",
+      "tree": "Tree 🌳",
+      "forest": "Forest 🌲"
+    },
+    "badges": {
+      "modalTitle": "Your Sustainability Badges",
+      "modalSubtitle": "Earn badges by testing choices and saving nature",
+      "close": "Close",
+      "locked": "Locked",
+      "unlocked": "Unlocked!",
+      "soilSaverTitle": "Soil Saver 🌾",
+      "soilSaverDesc": "Chose sustainable straw recycling over toxic stubble burning.",
+      "plasticBusterTitle": "Plastic Buster 🧴",
+      "plasticBusterDesc": "Kept plastic bottles out of landfills and fire by upcycling or recycling.",
+      "curiousMindTitle": "Curious Mind 🔍",
+      "curiousMindDesc": "Explored 'What Else?' alternatives to understand the full impact.",
+      "greenGuardianTitle": "Green Guardian 🌳",
+      "greenGuardianDesc": "Brought Nature Health balance to 80% or above."
+    },
+    "badgePage": {
+      "heading": "Badge Collection",
+      "subheading": "Every badge represents a real-world mistake averted and a sustainable habit unlocked.",
+      "back": "Back to Scenarios",
+      "viewScorecard": "View Scorecard",
+      "currentRank": "Current Level",
+      "unlocked": "Earned",
+      "howToEarn": "How to earn",
+      "soilSaverCriteria": "Choose mulching, composting, or biomass sale instead of burning field straw.",
+      "plasticBusterCriteria": "Choose DIY planter upcycling or scrap dealer recycling instead of dumping/burning plastic.",
+      "curiousMindCriteria": "Tap 'What Else?' on any scenario to explore eco-friendly alternatives.",
+      "greenGuardianCriteria": "Raise your live Nature Health bar above 80% with green choices."
+    },
+    "scoreScreen": {
+      "back": "Back",
+      "heroTitle": "Eco Champion Journey",
+      "heroSubtitle": "You tested the consequences, learned the facts, and chose better paths for mother Earth.",
+      "metricPoints": "Total Points",
+      "metricHealth": "Nature Health",
+      "metricBadges": "Badges Earned",
+      "metricScenarios": "Completed Scenarios",
+      "shareHeading": "Share Your Scorecard",
+      "copyBtn": "Copy Summary",
+      "copied": "Copied to Clipboard!",
+      "shareBtn": "Share",
+      "playMoreBtn": "Play More Scenarios"
+    },
+    "advisor": {
+      "title": "Ask What Else AI",
+      "subtitle": "Practical, low-cost sustainability guidance",
+      "close": "Close",
+      "thinking": "Thinking of practical solutions",
+      "inputPlaceholder": "Ask a question (e.g. how to reuse plastic bottles)...",
+      "send": "Send"
+    },
+    "healthBar": {
+      "title": "Nature Health",
+      "statusThriving": "Thriving Ecosystem 🌳",
+      "statusStable": "Stable Balance 🌿",
+      "statusStressed": "Under Pressure 🌾",
+      "statusCritical": "Ecosystem in Danger 🥀",
+      "instruction": "Your choices shape the health of nature around us"
+    },
+    "scenarioList": {
+      "heading": "Explore Scenarios",
+      "subheading": "Pick a real-world situation to begin learning",
+      "totalAvailable": "scenarios ready",
+      "categories": {
+        "all": "All",
+        "students": "Students",
+        "farming": "Farming",
+        "daily_life": "Daily Life",
+        "waste": "Waste & Reuse",
+        "energy": "Energy & Water"
+      },
+      "audiences": {
+        "students": "Students",
+        "farmers": "Farmers",
+        "rural_families": "Rural Families",
+        "everyone": "Everyone"
+      },
+      "difficulties": {
+        "starter": "Starter",
+        "intermediate": "Standard",
+        "expert": "Advanced"
+      },
+      "card": {
+        "startBtn": "Play Scenario",
+        "completed": "Completed ✓",
+        "new": "New",
+        "pointsReward": "pts reward"
+      },
+      "empty": {
+        "title": "No scenarios found in this category",
+        "description": "Switch category to view more real-life choices."
+      }
+    },
+    "scenarioFlow": {
+      "back": "Back",
+      "exit": "Exit",
+      "step": "Step",
+      "of": "of",
+      "introBadge": "Sustainability Choice",
+      "readyPrompt": "What will you do in this situation?",
+      "introHelper": "Make a decision and discover its true impact on our health and environment.",
+      "startChoiceBtn": "Make Your Decision",
+      "choicesHeading": "Choose your course of action:",
+      "quickEasyTag": "⚡ Quick & Easy",
+      "sustainableTag": "🌱 Nature Friendly",
+      "impactHeading": "Real-World Impact",
+      "impactSubheading": "Here is what happens behind the scenes to nature, health, and finances:",
+      "whatElseBtn": "What Else Could You Do? 💡",
+      "whatElseHeading": "What Else? Better Alternatives",
+      "whatElseSubheading": "Practical methods that save costs, protect health, and regenerate nature:",
+      "costLabel": "Cost:",
+      "effortLabel": "Effort:",
+      "financialLabel": "Financial Impact:",
+      "howToLabel": "How to do it:",
+      "effortLow": "Low",
+      "effortMedium": "Medium",
+      "effortHigh": "High",
+      "tryBetterChoiceBtn": "Replay With a Better Choice 🌱",
+      "replayHeading": "Try a Sustainable Choice",
+      "replaySubheading": "Select one of the alternatives to see the positive transformation:",
+      "comparisonHeading": "Before vs After Comparison",
+      "burnedStateLabel": "Mistake Choice ⚠️",
+      "sustainableStateLabel": "Your Sustainable Choice 🌱",
+      "fertilityLoss": "Negative environmental & hidden financial drain",
+      "netGain": "Positive ecological balance & net savings",
+      "healthDrop": "-25% Nature Health (Smog, plastic pollution & toxicity)",
+      "healthRise": "+25% Nature Health (Soil humus & clean recyclables)",
+      "claimRewardBtn": "Claim Rewards & Badges 🏆",
+      "rewardTitle": "Fantastic Learning! 🎉",
+      "rewardSubtitle": "You made the mistake, understood its true cost, and discovered a better way.",
+      "pointsEarned": "Points Earned",
+      "tryingBonus": "Learning from mistake",
+      "alternativeBonus": "Sustainable choice reward",
+      "explorerBonus": "Exploring all alternatives",
+      "badgeUnlocked": "Badge Unlocked!",
+      "playAgainBtn": "Replay Scenario 🔄",
+      "backToListBtn": "Explore More Scenarios 📋"
+    },
+    "dataNotice": {
+      "sourcePrefix": "Source:",
+      "unverifiedBadge": "Unverified (Approximate data for prototype)",
+      "verifiedBadge": "Verified Source"
+    },
+    "footer": {
+      "tagline": "Make the mistake. Understand it. Choose what else.",
+      "offlineNote": "Works offline & on low-bandwidth mobile networks.",
+      "resetProgress": "Reset Progress"
+    }
+  },
+  "te": {
+    "_reviewNotes": "Specific technical phrases marked with /* REVIEW_NEEDED */ for native speaker validation in TRANSLATION_REVIEW_NOTES.md",
+    "app": {
+      "title": "వాట్ ఎల్స్ సస్టైన్",
+      "tagline": "తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి.",
+      "shortName": "డబ్ల్యూఈఎస్"
+    },
+    "header": {
+      "language": "భాష",
+      "points": "పాయింట్లు",
+      "badges": "బ్యాడ్జీలు",
+      "level": "స్థాయి",
+      "switchLang": "English",
+      "advisorBtn": "సలహా అడగండి 🤖",
+      "scorecardBtn": "స్కోర్‌కార్డ్ 📊"
+    },
+    "levels": {
+      "seedling": "మొలక 🌱",
+      "sapling": "మొక్క 🌿",
+      "tree": "వృక్షం 🌳",
+      "forest": "మహారణ్యం 🌲"
+    },
+    "badges": {
+      "modalTitle": "మీ సుస్థిరత బ్యాడ్జీలు",
+      "modalSubtitle": "సరియైన ఎంపికలతో ప్రకృతిని కాపాడి బ్యాడ్జీలను గెలవండి",
+      "close": "మూసివేయి",
+      "locked": "లాక్ చేయబడింది",
+      "unlocked": "గెలుచుకున్నారు!",
+      "soilSaverTitle": "నేల సంరక్షకుడు 🌾",
+      "soilSaverDesc": "పొలంలో గడ్డిని కాల్చకుండా సుస్థిర పద్ధతిని ఎంచుకున్నారు.",
+      "plasticBusterTitle": "ప్లాస్టిక్ రక్షకుడు 🧴",
+      "plasticBusterDesc": "ప్లాస్టిక్ బాటిళ్లను కాల్చకుండా రీసైక్లింగ్ లేదా పునర్వినియోగం చేశారు.",
+      "curiousMindTitle": "ఆసక్తిగల అన్వేషకుడు 🔍",
+      "curiousMindDesc": "పూర్తి ప్రభావాన్ని అర్థం చేసుకోవడానికి 'మరి ఏంచేయాలి' ప్రత్యామ్నాయాలను పరిశీలించారు.",
+      "greenGuardianTitle": "హరిత సంరక్షకుడు 🌳",
+      "greenGuardianDesc": "ప్రకృతి ఆరోగ్యాన్ని 80% లేదా అంతకంటే ఎక్కువ పెంచారు."
+    },
+    "badgePage": {
+      "heading": "బ్యాడ్జీల సేకరణ",
+      "subheading": "ప్రతి బ్యాడ్జ్ ఒక నివారించబడిన తప్పుకు మరియు ఒక కొత్త సుస్థిర అలవాటుకు ప్రతీక.",
+      "back": "సన్నివేశాలకు వెళ్లండి",
+      "viewScorecard": "స్కోర్‌కార్డ్ చూడండి",
+      "currentRank": "ప్రస్తుత స్థాయి",
+      "unlocked": "సాధించినవి",
+      "howToEarn": "ఎలా సాధించాలి",
+      "soilSaverCriteria": "పొలంలో గడ్డిని కాల్చకుండా మల్చింగ్, కంపోస్టింగ్ లేదా బయోమాస్ అమ్మకం ఎంచుకోండి.",
+      "plasticBusterCriteria": "ప్లాస్టిక్‌ను పారవేయకుండా లేదా కాల్చకుండా కుండీగా మార్చడం లేదా స్క్రాప్ డీలర్‌కు అమ్మడం ఎంచుకోండి.",
+      "curiousMindCriteria": "ఏదైనా సన్నివేశంలో 'మరి ఏంచేయాలి' బటన్ నొక్కి ప్రత్యామ్నాయాలను చూడండి.",
+      "greenGuardianCriteria": "మంచి ఎంపికలతో ప్రకృతి ఆరోగ్యాన్ని 80% కంటే ఎక్కువగా ఉంచండి."
+    },
+    "scoreScreen": {
+      "back": "వెనుకకు",
+      "heroTitle": "పర్యావరణ విజేత ప్రయాణం",
+      "heroSubtitle": "మీరు తప్పుల పరిణామాలను పరిశీలించారు, వాస్తవాలను తెలుసుకున్నారు, భూమి కోసం మంచి మార్గాలను ఎంచుకున్నారు.",
+      "metricPoints": "మొత్తం పాయింట్లు",
+      "metricHealth": "ప్రకృతి ఆరోగ్యం",
+      "metricBadges": "సాధించిన బ్యాడ్జీలు",
+      "metricScenarios": "పూర్తయిన సవాళ్లు",
+      "shareHeading": "మీ స్కోర్‌కార్డ్‌ను పంచుకోండి",
+      "copyBtn": "సారాంశాన్ని కాపీ చేయండి",
+      "copied": "కాపీ అయింది!",
+      "shareBtn": "షేర్ చేయండి",
+      "playMoreBtn": "మరిన్ని సవాళ్లు ఆడండి"
+    },
+    "advisor": {
+      "title": "వాట్ ఎల్స్ AI సలహాదారు",
+      "subtitle": "ఆచరణాత్మక, తక్కువ ఖర్చు పర్యావరణ సూచనలు",
+      "close": "మూసివేయి",
+      "thinking": "ఆచరణాత్మక పరిష్కారాలను ఆలోచిస్తోంది",
+      "inputPlaceholder": "మీ ప్రశ్నను అడగండి (ఉదా: ప్లాస్టిక్ బాటిళ్లను ఎలా రీసైకిల్ చేయాలి)...",
+      "send": "పంపు"
+    },
+    "healthBar": {
+      "title": "ప్రకృతి ఆరోగ్యం",
+      "statusThriving": "సమృద్ధ పర్యావరణం 🌳",
+      "statusStable": "స్థిరమైన సమతుల్యత 🌿",
+      "statusStressed": "ఒత్తిడిలో ప్రకృతి 🌾",
+      "statusCritical": "ప్రమాదంలో పర్యావరణం 🥀",
+      "instruction": "మీరు చేసే ఎంపికలు మన చుట్టూ ఉన్న ప్రకృతిని ప్రభావితం చేస్తాయి"
+    },
+    "scenarioList": {
+      "heading": "సన్నివేశాలను ఎంచుకోండి",
+      "subheading": "నేర్చుకోవడం ప్రారంభించడానికి నిజ జీవిత సన్నివేశాన్ని ఎంచుకోండి",
+      "totalAvailable": "అందుబాటులో ఉన్నాయి",
+      "categories": {
+        "all": "అన్నీ",
+        "students": "విద్యార్థులు",
+        "farming": "వ్యవసాయం",
+        "daily_life": "దైనందిన జీవితం",
+        "waste": "వ్యర్థాలు & పునర్వినియోగం",
+        "energy": "విద్యుత్ & నీరు"
+      },
+      "audiences": {
+        "students": "విద్యార్థులు",
+        "farmers": "రైతులు",
+        "rural_families": "గ్రామీణ కుటుంబాలు",
+        "everyone": "అందరికీ"
+      },
+      "difficulties": {
+        "starter": "ప్రాథమిక",
+        "intermediate": "సాధారణ",
+        "expert": "ఉన్నత"
+      },
+      "card": {
+        "startBtn": "ఆడండి",
+        "completed": "పూర్తయింది ✓",
+        "new": "కొత్తది",
+        "pointsReward": "పాయింట్లు"
+      },
+      "empty": {
+        "title": "ఈ విభాగంలో సన్నివేశాలు లేవు",
+        "description": "మరిన్ని ఎంపికలను చూడటానికి విభాగాన్ని మార్చండి."
+      }
+    },
+    "scenarioFlow": {
+      "back": "వెనుకకు",
+      "exit": "ముగించు",
+      "step": "దశ",
+      "of": "/",
+      "introBadge": "సుస్థిర ఎంపిక",
+      "readyPrompt": "ఈ పరిస్థితిలో మీరు ఏం చేస్తారు?",
+      "introHelper": "నిర్ణయం తీసుకోండి మరియు మన ఆరోగ్యం, పర్యావరణంపై దాని నిజమైన ప్రభావాన్ని తెలుసుకోండి.",
+      "startChoiceBtn": "మీ నిర్ణయం తీసుకోండి",
+      "choicesHeading": "మీరు ఏం చేయాలో ఎంచుకోండి:",
+      "quickEasyTag": "⚡ వేగవంతం & సులభం",
+      "sustainableTag": "🌱 ప్రకృతి హితమైనది",
+      "impactHeading": "నిజ జీవితంలో కలిగే ప్రభావం",
+      "impactSubheading": "ప్రకృతి, ఆరోగ్యం మరియు ఆర్థిక స్థితిపై తెరవెనుక జరిగే నష్టం ఇది:",
+      "whatElseBtn": "మరి ఏంచేయాలి? ప్రత్యామ్నాయాలు 💡",
+      "whatElseHeading": "మరి ఏంచేయాలి? మెరుగైన మార్గాలు",
+      "whatElseSubheading": "ఖర్చులను తగ్గిస్తూ, ఆరోగ్యాన్ని కాపాడుతూ, ప్రకృతిని పునరుజ్జీవింపజేసే పద్ధతులు:",
+      "costLabel": "ఖర్చు:",
+      "effortLabel": "శ్రమ:",
+      "financialLabel": "ఆర్థిక ఫలితం:",
+      "howToLabel": "ఎలా చేయాలి:",
+      "effortLow": "తక్కువ",
+      "effortMedium": "మధ్యస్థం",
+      "effortHigh": "ఎక్కువ",
+      "tryBetterChoiceBtn": "మంచి ఎంపికతో మళ్లీ ఆడండి 🌱",
+      "replayHeading": "సుస్థిర ఎంపికను ప్రయత్నించండి",
+      "replaySubheading": "మంచి మార్పును చూడటానికి ఒక ప్రత్యామ్నాయాన్ని ఎంచుకోండి:",
+      "comparisonHeading": "ముందు vs తర్వాత పోలిక",
+      "burnedStateLabel": "తప్పు ఎంపిక ⚠️",
+      "sustainableStateLabel": "మీ సుస్థిర ఎంపిక 🌱",
+      "fertilityLoss": "పర్యావరణ నష్టం & కంటికి కనిపించని ఆర్థిక భారం",
+      "netGain": "సమతుల్య పర్యావరణం & నికర ఆర్థిక ఆదా",
+      "healthDrop": "-25% ప్రకృతి ఆరోగ్యం (కాలుష్యం & విషవాయువులు)",
+      "healthRise": "+25% ప్రకృతి ఆరోగ్యం (సారవంతమైన నేల & రీసైక్లింగ్)",
+      "claimRewardBtn": "బహుమతులు & బ్యాడ్జీలు పొందండి 🏆",
+      "rewardTitle": "అద్భుతమైన అవగాహన! 🎉",
+      "rewardSubtitle": "మీరు తప్పును పరిశీలించారు, దాని నిజమైన నష్టాన్ని గ్రహించారు, మెరుగైన మార్గాన్ని ఎంచుకున్నారు.",
+      "pointsEarned": "సాధించిన పాయింట్లు",
+      "tryingBonus": "తప్పు నుండి నేర్చుకున్నందుకు",
+      "alternativeBonus": "సుస్థిర ఎంపికకు బహుమతి",
+      "explorerBonus": "అన్ని మార్గాలను తెలుసుకున్నందుకు",
+      "badgeUnlocked": "బ్యాడ్జ్ లభించింది!",
+      "playAgainBtn": "మళ్లీ ఆడండి 🔄",
+      "backToListBtn": "మరిన్ని సన్నివేశాలు చూడండి 📋"
+    },
+    "dataNotice": {
+      "sourcePrefix": "ఆధారం:",
+      "unverifiedBadge": "ధృవీకరించబడలేదు (ప్రోటోటైప్ కోసం సుమారు లెక్క)",
+      "verifiedBadge": "ధృవీకరించిన ఆధారం"
+    },
+    "footer": {
+      "tagline": "తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి.",
+      "offlineNote": "తక్కువ ఇంటర్నెట్ మరియు సాధారణ మొబైల్ ఫోన్లలో కూడా పనిచేస్తుంది.",
+      "resetProgress": "మొదటి నుండి ప్రారంభించండి"
+    }
+  }
+}

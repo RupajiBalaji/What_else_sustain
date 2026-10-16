@@ -1,0 +1,586 @@
+[
+  {
+    "id": "farm_crop_residue",
+    "category": "farming",
+    "icon": "🌾",
+    "illustrationType": "farm",
+    "targetAudience": ["farmers", "rural_families", "everyone"],
+    "difficulty": "starter",
+    "title": {
+      "en": "The Farmer and the Leftover Straw",
+      "te": "రైతు మరియు మిగిలిన గడ్డి వ్యర్థాలు"
+    },
+    "summary": {
+      "en": "Harvest is done. Straw is left in your field. What will you do?",
+      "te": "పంట కోత పూర్తయింది. మీ పొలంలో గడ్డి మిగిలింది. మీరు ఏం చేస్తారు?"
+    },
+    "contextPrompt": {
+      "en": "You have 5 acres of harvested paddy field. The next sowing window opens in just 10 days. The thick straw stubble is blocking your plow. What is your choice?",
+      "te": "మీ 5 ఎకరాల పొలంలో వరి కోత పూర్తయి గడ్డి మిగిలింది. రాబోయే 10 రోజుల్లో తదుపరి పంట వేయాలి. పొలంలో మిగిలిన మొద్దులు నాగలికి అడ్డుపడుతున్నాయి. మీ నిర్ణయం ఏమిటి?"
+    },
+    "choices": [
+      {
+        "id": "choice_burn_stubble",
+        "icon": "🔥",
+        "badge": {
+          "en": "⚡ Quick & ₹0 Upfront",
+          "te": "⚡ వేగవంతం & ₹0 ఖర్చు"
+        },
+        "text": {
+          "en": "Burn it in the field (Quick, cleared in 1 hour)",
+          "te": "పొలంలోనే కాల్చివేయండి (వేగంగా 1 గంటలో శుభ్రం)"
+        },
+        "isMistake": true,
+        "natureHealthDelta": -25,
+        "pointsDelta": 10,
+        "impact": {
+          "headline": {
+            "en": "Immediate field clearance, but severe invisible damage to soil, air, and family income",
+            "te": "పొలం వెంటనే శుభ్రపడింది, కానీ నేల సారం, స్వచ్ఛమైన గాలి మరియు కుటుంబ ఆదాయం దెబ్బతిన్నాయి"
+          },
+          "description": {
+            "en": "Setting fire destroys topsoil organic carbon, releases thick toxic smoke, and forces you to buy expensive synthetic fertilizers next month.",
+            "te": "మంటలు పెట్టడం వల్ల నేలలోని సహజ పోషకాలు నాశనమై, విషపూరిత పొగ అలుముకుంటుంది. వచ్చే నెలలో ఖరీదైన రసాయన ఎరువులు కొనాల్సి వస్తుంది."
+          },
+          "threeCards": [
+            {
+              "id": "soil",
+              "icon": "🪱",
+              "title": {
+                "en": "Soil: Nutrient & Microbe Loss",
+                "te": "నేల: పోషకాలు & సూక్ష్మజీవుల నష్టం"
+              },
+              "detail": {
+                "en": "Heat up to 70°C kills earthworms, friendly fungi, and vaporizes organic nitrogen into thin air.",
+                "te": "70°C వరకు పెరిగే వేడి వానపాములు, మిత్ర సూక్ష్మజీవులను చంపేసి, నత్రజనిని ఆవిరి చేస్తుంది."
+              },
+              "stat": {
+                "label": {
+                  "en": "Estimated organic carbon loss per acre",
+                  "te": "ఎకరానికి కోల్పోయే సేంద్రీయ కర్బనం"
+                },
+                "value": "~100% Nitrogen & ~25-40% Organic Matter Lost",
+                "source": "ICAR-Indian Agricultural Research Institute observational estimates",
+                "verified": false
+              }
+            },
+            {
+              "id": "air",
+              "icon": "💨",
+              "title": {
+                "en": "Air & Health: Toxic Village Smog",
+                "te": "గాలి & ఆరోగ్యం: గ్రామాల్లో విషపూరిత పొగ"
+              },
+              "detail": {
+                "en": "Dense PM2.5 smoke triggers asthma attacks, coughing, and eye irritation for children and elders.",
+                "te": "దట్టమైన PM2.5 పొగ వల్ల గ్రామంలోని వృద్ధులు, పిల్లలలో శ్వాసకోశ సమస్యలు, దగ్గు పెరుగుతాయి."
+              },
+              "stat": {
+                "label": {
+                  "en": "Estimated PM2.5 emitted per acre burned",
+                  "te": "ఒక ఎకరం దహనంతో వెలువడే కాలుష్య కణాలు (PM2.5)"
+                },
+                "value": "~60 to 90 kg PM2.5 / acre",
+                "source": "Central Pollution Control Board (CPCB) field models",
+                "verified": false
+              }
+            },
+            {
+              "id": "money",
+              "icon": "💸",
+              "title": {
+                "en": "Money: Hidden Fertilizer Costs",
+                "te": "డబ్బు: ఎరువులు & వైద్య ఖర్చులు"
+              },
+              "detail": {
+                "en": "Burnt soil loses natural fertility, forcing ₹2,000+ extra spending on urea/DAP per acre, plus lost straw sales.",
+                "te": "సారం తగ్గిన నేల కోసం ఎకరానికి ₹2,000 అదనంగా ఎరువులు కొనాలి, అలాగే గడ్డి విక్రయం ద్వారా వచ్చే ఆదాయం కోల్పోతారు."
+              },
+              "stat": {
+                "label": {
+                  "en": "Approximate net financial loss per acre",
+                  "te": "ఎకరానికి సుమారు నికర ఆర్థిక నష్టం"
+                },
+                "value": "~₹3,000 to ₹4,500 / acre lost",
+                "source": "State Agricultural University Agronomy survey averages",
+                "verified": false
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice_mulch_soil",
+        "icon": "🚜",
+        "badge": {
+          "en": "🌱 Soil Enricher",
+          "te": "🌱 నేల సంరక్షక పద్ధతి"
+        },
+        "text": {
+          "en": "Mulch it into the soil (Straw chopper / Happy Seeder)",
+          "te": "మట్టిలోనే కలియదున్నండి (మల్చింగ్ / హ్యాపీ సీడర్)"
+        },
+        "isMistake": false,
+        "natureHealthDelta": 25,
+        "pointsDelta": 50,
+        "impact": {
+          "headline": {
+            "en": "Natural moisture shield created! Soil biological activity surges.",
+            "te": "నేలలో తేమ నిలిచింది! సూక్ష్మజీవుల సంఖ్య పెరిగి నేల సారం ఇనుమడించింది."
+          },
+          "description": {
+            "en": "Mulching straw retains ground moisture, suppresses weed growth, and gradually decomposes into dark rich humus.",
+            "te": "మల్చింగ్ వల్ల నేల తేమ ఆవిరి కాకుండా కాపాడుతుంది, కలుపు మొక్కలను అణచివేస్తుంది, సహజ ఎరువుగా మారుతుంది."
+          },
+          "metrics": [
+            {
+              "label": {
+                "en": "Irrigation water saved due to mulch cover",
+                "te": "మల్చింగ్ వల్ల ఆదా అయ్యే సాగునీరు"
+              },
+              "value": "~15% to 25% moisture retained",
+              "source": "FAO Conservation Agriculture guidelines",
+              "verified": false
+            }
+          ]
+        },
+        "alternativeDetails": {
+          "cost": {
+            "en": "~₹1,200 - ₹1,500 / acre (Tractor diesel or custom hiring)",
+            "te": "~₹1,200 - ₹1,500 / ఎకరానికి (ట్రాక్టర్ ఇంధనం లేదా అద్దె)"
+          },
+          "effort": {
+            "en": "Medium (Direct sowing with Happy Seeder machine)",
+            "te": "మధ్యస్థం (హ్యాపీ సీడర్ యంత్రంతో నేరుగా విత్తడం)"
+          },
+          "moneyImpact": {
+            "en": "Saves ~₹2,000/acre in urea & DAP fertilizers next season",
+            "te": "తర్వాతి పంటలో ఎరువుల ఖర్చుపై ~₹2,000 ఆదా అవుతుంది"
+          },
+          "howTo": {
+            "en": "Use a tractor-mounted straw chopper or Happy Seeder. It chops the straw and plants wheat/pulses directly into the mulched soil.",
+            "te": "ట్రాక్టర్ హ్యాపీ సీడర్ లేదా స్ట్రా ఛాపర్ ఉపయోగించి గడ్డిని ముక్కలుగా చేసి విత్తనాలను నేరుగా పొలంలో నాటవచ్చు."
+          }
+        }
+      },
+      {
+        "id": "choice_compost_decomposer",
+        "icon": "🪱",
+        "badge": {
+          "en": "🧪 Organic Gold",
+          "te": "🧪 సేంద్రీయ ఎరువు"
+        },
+        "text": {
+          "en": "Compost it with a bio-decomposer spray",
+          "te": "బయో-డీకంపోజర్ ద్రావణంతో కంపోస్ట్ చేయండి"
+        },
+        "isMistake": false,
+        "natureHealthDelta": 25,
+        "pointsDelta": 50,
+        "impact": {
+          "headline": {
+            "en": "Stubble transformed into black gold compost in 20-25 days!",
+            "te": "20-25 రోజుల్లో గడ్డి నల్లటి సహజ కంపోస్ట్‌గా రూపాంతరం చెందింది!"
+          },
+          "description": {
+            "en": "Microbial fungal enzymes break down tough cellulose and lignin rapidly without smoke or fires.",
+            "te": "సూక్ష్మజీవుల ఎంజైమ్‌లు మొండి గడ్డిని పొగ లేకుండా సహజ ఎరువుగా శీఘ్రంగా మారుస్తాయి."
+          },
+          "metrics": [
+            {
+              "label": {
+                "en": "Organic carbon returned to soil per hectare",
+                "te": "భూమికి చేరే సేంద్రీయ కర్బనం"
+              },
+              "value": "~3.5 tons organic matter / ha",
+              "source": "ICAR-IARI Pusa Decomposer field trials",
+              "verified": false
+            }
+          ]
+        },
+        "alternativeDetails": {
+          "cost": {
+            "en": "~₹300 - ₹500 / acre (Microbial spray solution + spray tank)",
+            "te": "~₹300 - ₹500 / ఎకరానికి (ద్రావణం & పిచికారీ ఖర్చు)"
+          },
+          "effort": {
+            "en": "Low to Medium (Dissolve solution, spray field, light water)",
+            "te": "తక్కువ నుండి మధ్యస్థం (ద్రావణాన్ని కలిపి పిచికారీ చేయడం)"
+          },
+          "moneyImpact": {
+            "en": "Produces rich farmyard compost valued at ₹3,000/acre",
+            "te": "ఎకరానికి ₹3,000 విలువైన మేలైన సేంద్రీయ ఎరువు తయారవుతుంది"
+          },
+          "howTo": {
+            "en": "Mix bio-decomposer liquid with jaggery and water. Spray evenly over chopped stubble and give a light irrigation. It rots into compost naturally.",
+            "te": "బెల్లం, నీటితో బయో-డీకంపోజర్ కలిపి పొలంలో పిచికారీ చేసి తేలికపాటి తడి అందించండి. 20-25 రోజుల్లో ఎరువుగా మారుతుంది."
+          }
+        }
+      },
+      {
+        "id": "choice_sell_biomass",
+        "icon": "💰",
+        "badge": {
+          "en": "💵 Cash Profit",
+          "te": "💵 నగదు ఆదాయం"
+        },
+        "text": {
+          "en": "Sell it to a biomass pellet or paper mill unit",
+          "te": "బయోమాస్ లేదా పేపర్ మిల్లుకు అమ్మండి"
+        },
+        "isMistake": false,
+        "natureHealthDelta": 20,
+        "pointsDelta": 50,
+        "impact": {
+          "headline": {
+            "en": "Waste converted to green energy and extra cash income!",
+            "te": "వ్యర్థం నుండి హరిత శక్తి మరియు రైతుకు అదనపు నగదు ఆదాయం!"
+          },
+          "description": {
+            "en": "Baled straw replaces coal in thermal plants and produces eco-friendly packaging paper boards.",
+            "te": "బేల్స్ చేసిన గడ్డి థర్మల్ పవర్ ప్లాంట్లలో బొగ్గుకు బదులుగా మరియు పర్యావరణ పేపర్ బోర్డుల తయారీకి ఉపయోగపడుతుంది."
+          },
+          "metrics": [
+            {
+              "label": {
+                "en": "Fossil fuel displaced by 1 ton biomass straw",
+                "te": "1 టన్ను గడ్డితో ఆదా అయ్యే శిలాజ ఇంధనం"
+              },
+              "value": "~0.5 tons coal displaced",
+              "source": "Ministry of New and Renewable Energy (MNRE) biomass benchmarks",
+              "verified": false
+            }
+          ]
+        },
+        "alternativeDetails": {
+          "cost": {
+            "en": "₹0 to ₹500 / acre (Aggregator often brings own baler)",
+            "te": "₹0 నుండి ₹500 / ఎకరానికి (కొనుగోలుదారులే యంత్రాలను తెస్తారు)"
+          },
+          "effort": {
+            "en": "Low (Balers collect and transport directly from field)",
+            "te": "తక్కువ (యంత్రాలు నేరుగా పొలం నుండి బేల్స్ చేసి తీసుకెళ్తాయి)"
+          },
+          "moneyImpact": {
+            "en": "Earn ₹1,500 to ₹2,500 / acre pure cash profit",
+            "te": "ఎకరానికి ₹1,500 నుండి ₹2,500 వరకు నికర నగదు లాభం"
+          },
+          "howTo": {
+            "en": "Contact your local Farmer Producer Organization (FPO) or straw aggregator. They bring a baler machine to bundle and haul the straw away.",
+            "te": "స్థానిక రైతు ఉత్పత్తిదారుల సంఘం (FPO) లేదా గడ్డి సేకరణ కేంద్రాలను సంప్రదించండి. వారు యంత్రంతో గడ్డిని బండిల్ చేసి కొనుగోలు చేస్తారు."
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "home_plastic_bottle",
+    "category": "daily_life",
+    "icon": "🧴",
+    "illustrationType": "home",
+    "targetAudience": ["students", "everyone", "rural_families"],
+    "difficulty": "starter",
+    "title": {
+      "en": "The Plastic Bottle at Home",
+      "te": "ఇంట్లో ఖాళీ ప్లాస్టిక్ బాటిల్"
+    },
+    "summary": {
+      "en": "You finished a cold drink. The empty plastic bottle is in your hand. What will you do?",
+      "te": "మీరు శీతల పానీయం తాగారు. ఖాళీ ప్లాస్టిక్ బాటిల్ మీ చేతిలో ఉంది. మీరు ఏం చేస్తారు?"
+    },
+    "contextPrompt": {
+      "en": "It is a standard 1-liter single-use PET bottle. The dustbin is right next to you, and an open corner in the yard is tempting to burn trash with dry leaves. What is your choice?",
+      "te": "ఇది 1 లీటరు సింగిల్-యూజ్ PET బాటిల్. చెత్తబుట్ట దగ్గరలోనే ఉంది, లేదా పెరట్లోని ఎండుటాకులతో కలిపి కాల్చేయడం సులభంగా అనిపిస్తుంది. మీ ఎంపిక ఏమిటి?"
+    },
+    "choices": [
+      {
+        "id": "choice_dustbin_mixed",
+        "icon": "🗑️",
+        "badge": {
+          "en": "⚡ Quick & Easy",
+          "te": "⚡ వేగవంతం & సులభం"
+        },
+        "text": {
+          "en": "Throw it in the mixed trash dustbin (Out of sight)",
+          "te": "మిశ్రమ చెత్తబుట్టలో పారవేయండి (కంటికి కనిపించకుండా)"
+        },
+        "isMistake": true,
+        "natureHealthDelta": -15,
+        "pointsDelta": 10,
+        "impact": {
+          "headline": {
+            "en": "Mixed plastic heads straight to open dumpsites and local water bodies",
+            "te": "మిశ్రమ చెత్తలో వేసిన ప్లాస్టిక్ నేరుగా డంపింగ్ యార్డులు మరియు కాలువల్లో చేరుతుంది"
+          },
+          "description": {
+            "en": "When plastic is thrown into wet mixed trash, ragpickers cannot safely extract it. It washes into city drains, chokes village canals, and breaks into microplastics that poison cattle and fish.",
+            "te": "తడి చెత్తతో కలిపి వేసిన ప్లాస్టిక్‌ను రీసైకిల్ చేయడం కష్టం. అది మురుగు కాలువలను అడ్డుకుంటుంది మరియు మైక్రోప్లాస్టిక్‌లుగా మారి మూగజీవాల కడుపులోకి చేరుతుంది."
+          },
+          "threeCards": [
+            {
+              "id": "land_water",
+              "icon": "🌊",
+              "title": {
+                "en": "Land & Water: 450+ Year Curse",
+                "te": "నేల & నీరు: 450+ ఏళ్ల కాలుష్యం"
+              },
+              "detail": {
+                "en": "PET plastics never biologically decompose. They fragment into tiny particles that contaminate tap water, river fish, and cattle feed.",
+                "te": "PET ప్లాస్టిక్ నేలలో సహజంగా కరిగిపోదు. ఇది సూక్ష్మ రేణువులుగా మారి తాగునీటిని, చేపలను, పశువుల మేతను కలుషితం చేస్తుంది."
+              },
+              "stat": {
+                "label": {
+                  "en": "Estimated natural decomposition lifespan",
+                  "te": "భూమిలో కరిగిపోవడానికి పట్టే సుమారు కాలం"
+                },
+                "value": "~450 to 1,000 years",
+                "source": "US EPA & National Oceanic and Atmospheric Administration (NOAA) approximate research",
+                "verified": false
+              }
+            },
+            {
+              "id": "air",
+              "icon": "💨",
+              "title": {
+                "en": "Air: Landfill Smolder & Toxins",
+                "te": "గాలి: డంపింగ్ యార్డ్ మంటలు & విషవాయువులు"
+              },
+              "detail": {
+                "en": "Dumpsite trash fires release dioxins, furans, and hydrochloric acid fumes that settle over surrounding neighborhoods.",
+                "te": "చెత్త కుప్పల్లో రగిలే మంటల వల్ల డయాక్సిన్లు, విషపూరిత వాయువులు పరిసర కాలనీల గాలిలోకి వ్యాపిస్తాయి."
+              },
+              "stat": {
+                "label": {
+                  "en": "Dumpsite fires linked to mixed plastic waste",
+                  "te": "ప్లాస్టిక్ వ్యర్థాల వల్ల సంభవించే డంపింగ్ యార్డ్ మంటలు"
+                },
+                "value": "~15% to 25% of city smog spikes",
+                "source": "Urban Waste Management & CPCB observational estimates",
+                "verified": false
+              }
+            },
+            {
+              "id": "money",
+              "icon": "💸",
+              "title": {
+                "en": "Money: Waste of Recyclable Raw Material",
+                "te": "డబ్బు: రీసైక్లింగ్ ఆదాయాన్ని కోల్పోవడం"
+              },
+              "detail": {
+                "en": "Clean discarded PET is worth ₹15-25/kg in the scrap market. Throwing it away discards circular wealth and burdens municipal tax budgets.",
+                "te": "శుభ్రమైన PET బాటిళ్లకు మార్కెట్లో కిలోకు ₹15-25 ధర లభిస్తుంది. దీన్ని పారవేయడం వల్ల సంపద వృధా అవుతుంది."
+              },
+              "stat": {
+                "label": {
+                  "en": "Approximate recyclable value lost per household",
+                  "te": "ఒక ఇంటి నుండి వృధా అయ్యే రీసైక్లింగ్ విలువ"
+                },
+                "value": "~₹600 to ₹1,200 / year in scrap value lost",
+                "source": "Informal Waste Sector Economy field benchmarks",
+                "verified": false
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice_burn_plastic",
+        "icon": "🔥",
+        "badge": {
+          "en": "⚡ Gone in 30 Seconds",
+          "te": "⚡ 30 సెకన్లలో మాయం"
+        },
+        "text": {
+          "en": "Burn it in the backyard with dry leaves",
+          "te": "పెరట్లో ఎండుటాకులతో కలిపి కాల్చేయండి"
+        },
+        "isMistake": true,
+        "natureHealthDelta": -30,
+        "pointsDelta": 10,
+        "impact": {
+          "headline": {
+            "en": "Burning plastic releases deadly carcinogenic dioxins right into your lungs",
+            "te": "ప్లాస్టిక్ కాల్చడం వల్ల నేరుగా మీ ఊపిరితిత్తుల్లోకి ప్రాణాంతక క్యాన్సర్ కారక వాయువులు చేరతాయి"
+          },
+          "description": {
+            "en": "Low-temperature open burning of plastics creates black soot, phthalates, and persistent organic pollutants that settle on home vegetable gardens and clothes.",
+            "te": "ఇళ్ల వద్ద ప్లాస్టిక్ కాల్చడం వల్ల నల్లటి మసి, రసాయనాలు ఇంట్లోని ఆహారం, బట్టలు మరియు గాలిపై పేరుకుపోతాయి."
+          },
+          "threeCards": [
+            {
+              "id": "air",
+              "icon": "💨",
+              "title": {
+                "en": "Air: Deadly Dioxins & Black Carbon",
+                "te": "గాలి: విషపూరిత డయాక్సిన్లు & నల్లటి మసి"
+              },
+              "detail": {
+                "en": "Inhaling burning plastic fumes triggers immediate asthma, throat constriction, and long-term hormonal disruption.",
+                "te": "ప్లాస్టిక్ పొగ పీల్చడం వల్ల వెంటనే ఆస్తమా, గొంతు మంట మరియు దీర్ఘకాలిక ఆరోగ్య సమస్యలు వస్తాయి."
+              },
+              "stat": {
+                "label": {
+                  "en": "Toxicity comparison to clean wood fire",
+                  "te": "కట్టెల పొగతో పోలిస్తే విషపూరిత తీవ్రత"
+                },
+                "value": "~100x to 500x more toxic volatile compounds",
+                "source": "WHO & Environmental Health observational benchmarks",
+                "verified": false
+              }
+            },
+            {
+              "id": "land_water",
+              "icon": "☠️",
+              "title": {
+                "en": "Land: Toxic Heavy Metal Ash",
+                "te": "నేల: విషపూరిత బూడిద అవశేషాలు"
+              },
+              "detail": {
+                "en": "The melted plastic residue leaves behind antimony and cadmium ash that leaches into backyard garden soil when it rains.",
+                "te": "కరిగిన ప్లాస్టిక్ బూడిద వర్షం పడినప్పుడు పెరట్లోని మట్టిలోకి చేరి కూరగాయల మొక్కలను విషతుల్యం చేస్తుంది."
+              },
+              "stat": {
+                "label": {
+                  "en": "Ash soil persistence duration",
+                  "te": "నేలలో బూడిద విష అవశేషాలు ఉండే కాలం"
+                },
+                "value": "~5 to 15 years in backyard topsoil",
+                "source": "Soil Contamination Research approximate models",
+                "verified": false
+              }
+            },
+            {
+              "id": "money",
+              "icon": "💸",
+              "title": {
+                "en": "Money: Respiratory Medicine Expenses",
+                "te": "డబ్బు: మందులు & ఆసుపత్రి ఖర్చులు"
+              },
+              "detail": {
+                "en": "Toxic smoke causes bronchitis and allergies in children, resulting in ₹1,000+ in clinic doctor visits and inhalers.",
+                "te": "విషపూరిత పొగ వల్ల పిల్లలకు దగ్గు, ఆస్తమా వచ్చి ₹1,000 పైగా వైద్య ఖర్చులు అవుతాయి."
+              },
+              "stat": {
+                "label": {
+                  "en": "Average clinic expense per burning episode",
+                  "te": "ఒక్కో అనారోగ్యానికి అయ్యే సగటు ఖర్చు"
+                },
+                "value": "~₹800 to ₹1,500 in medical bills",
+                "source": "Rural Clinic Health Cost survey approximations",
+                "verified": false
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "choice_reuse_home",
+        "icon": "🌱",
+        "badge": {
+          "en": "🎨 Creative Upcycle",
+          "te": "🎨 సృజనాత్మక పునర్వినియోగం"
+        },
+        "text": {
+          "en": "Upcycle it as a self-watering herb planter or kitchen storage",
+          "te": "మొక్కల కుండీగా లేదా వంటగది డబ్బాగా పునర్వినియోగించండి"
+        },
+        "isMistake": false,
+        "natureHealthDelta": 20,
+        "pointsDelta": 50,
+        "impact": {
+          "headline": {
+            "en": "A throwaway bottle transformed into a thriving green mint or chili plant!",
+            "te": "పారవేసే బాటిల్ పచ్చని పుదీనా లేదా మిర్చి మొక్కల కుండీగా మారింది!"
+          },
+          "description": {
+            "en": "Reusing bottles delays landfill waste by years, brings green oxygen to your balcony, and saves money on store-bought plastic pots.",
+            "te": "బాటిళ్లను తిరిగి వాడటం వల్ల ప్లాస్టిక్ వ్యర్థాలు ఆగుతాయి, ఇంటికి పచ్చదనం వస్తుంది, మరియు కుండీల ఖర్చు ఆదా అవుతుంది."
+          },
+          "metrics": [
+            {
+              "label": {
+                "en": "Plastic pots saved per 10 upcycled bottles",
+                "te": "ఆదా అయిన కొత్త ప్లాస్టిక్ కుండీల సంఖ్య"
+              },
+              "value": "10 pots saved (~₹300 - ₹500 saved)",
+              "source": "Urban Gardening & Circular Economy benchmarks",
+              "verified": false
+            }
+          ]
+        },
+        "alternativeDetails": {
+          "cost": {
+            "en": "₹0 (Use home scissors, water, and soil)",
+            "te": "₹0 (ఇంట్లోని కత్తెర, మట్టి, నీరు వాడండి)"
+          },
+          "effort": {
+            "en": "Low (Takes 5 minutes to cut and invert)",
+            "te": "తక్కువ (కట్ చేయడానికి 5 నిమిషాలు పడుతుంది)"
+          },
+          "moneyImpact": {
+            "en": "Saves ₹50 - ₹100 per flower pot + free home herbs",
+            "te": "ప్రతి కుండీపై ₹50 - ₹100 ఆదా + తాజా కూరగాయలు"
+          },
+          "howTo": {
+            "en": "Cut the bottle in half. Invert the top neck into the bottom base with a cotton wick cord. Fill top with soil and plant mint, coriander, or chili seeds. Self-waters for a week!",
+            "te": "బాటిల్‌ను సగానికి కట్ చేసి, పై భాగాన్ని తిరగేసి కింది భాగంలో ఉంచండి. కాటన్ దారంతో మట్టి వేసి విత్తనాలు నాటండి. వారం రోజుల పాటు తేమ నిలిచి ఉంటుంది!"
+          }
+        }
+      },
+      {
+        "id": "choice_sell_scrap",
+        "icon": "♻️",
+        "badge": {
+          "en": "💵 Scrap Cash",
+          "te": "💵 స్క్రాప్ నగదు"
+        },
+        "text": {
+          "en": "Crush, collect, and sell to a scrap dealer (Kabadiwala / dry waste center)",
+          "te": "నలిపి, సేకరించి స్క్రాప్ డీలర్‌కు అమ్మండి (కబాడీవాలా / డ్రై వేస్ట్ సెంటర్)"
+        },
+        "isMistake": false,
+        "natureHealthDelta": 25,
+        "pointsDelta": 50,
+        "impact": {
+          "headline": {
+            "en": "100% recycled back into polyester fiber, t-shirts, or new bottles!",
+            "te": "100% రీసైకిల్ అయి టీ-షర్టులు లేదా కొత్త బాటిళ్లుగా పునర్జన్మ పొందింది!"
+          },
+          "description": {
+            "en": "Sorted, crushed PET is shredded into clean plastic flakes, melted, and spun into durable synthetic yarn and eco-textiles.",
+            "te": "శుభ్రంగా వేరుచేసిన PET ప్లాస్టిక్ రీసైక్లింగ్ యూనిట్లకు వెళ్లి ఫైబర్ మరియు బట్టల తయారీకి ఉపయోగపడుతుంది."
+          },
+          "metrics": [
+            {
+              "label": {
+                "en": "Crude oil energy saved by recycling 1 ton PET",
+                "te": "1 టన్ను PET రీసైక్లింగ్‌తో ఆదా అయ్యే ముడి చమురు"
+              },
+              "value": "~3.8 barrels of petroleum saved",
+              "source": "Association of Plastic Recyclers (APR) energy metrics",
+              "verified": false
+            }
+          ]
+        },
+        "alternativeDetails": {
+          "cost": {
+            "en": "₹0 (Just a small bag or cardboard box in a corner)",
+            "te": "₹0 (ఒక చిన్న సంచి లేదా పెట్టెలో సేకరించండి)"
+          },
+          "effort": {
+            "en": "Low (Rinse, step to crush flat, drop in bag)",
+            "te": "తక్కువ (కడిగి, తొక్కి చదును చేసి సంచిలో వేయండి)"
+          },
+          "moneyImpact": {
+            "en": "Earn ₹15 to ₹25 per kg of clean crushed PET bottles",
+            "te": "కిలో శుభ్రమైన PET బాటిళ్లకు ₹15 నుండి ₹25 నగదు పొందండి"
+          },
+          "howTo": {
+            "en": "Rinse the bottle, remove cap, step on it to flatten (saves 80% space), and put it in a dry recycling bag. Once full, give it to the local scrap dealer or dry waste collector.",
+            "te": "బాటిల్‌ను కడిగి, మూత తీసి, తొక్కి చదును చేయండి. సంచి నిండిన తర్వాత స్థానిక స్క్రాప్ డీలర్ (కబాడీవాలా) కు విక్రయించండి."
+          }
+        }
+      }
+    ]
+  }
+]

@@ -33,7 +33,9 @@
       "curiousMindTitle": "Curious Mind 🔍",
       "curiousMindDesc": "Explored 'What Else?' alternatives to understand the full impact.",
       "greenGuardianTitle": "Green Guardian 🌳",
-      "greenGuardianDesc": "Brought Nature Health balance to 80% or above."
+      "greenGuardianDesc": "Brought Nature Health balance to 80% or above.",
+      "pledgeKeeperTitle": "Pledge Keeper 🤝",
+      "pledgeKeeperDesc": "Took a personal commitment pledge to protect nature in daily life."
     },
     "badgePage": {
       "heading": "Badge Collection",
@@ -46,7 +48,8 @@
       "soilSaverCriteria": "Choose mulching, composting, or biomass sale instead of burning field straw.",
       "plasticBusterCriteria": "Choose DIY planter upcycling or scrap dealer recycling instead of dumping/burning plastic.",
       "curiousMindCriteria": "Tap 'What Else?' on any scenario to explore eco-friendly alternatives.",
-      "greenGuardianCriteria": "Raise your live Nature Health bar above 80% with green choices."
+      "greenGuardianCriteria": "Raise your live Nature Health bar above 80% with green choices.",
+      "pledgeKeeperCriteria": "Take a sustainability pledge after finishing any scenario."
     },
     "scoreScreen": {
       "back": "Back",
@@ -60,7 +63,24 @@
       "copyBtn": "Copy Summary",
       "copied": "Copied to Clipboard!",
       "shareBtn": "Share",
+      "shareScoreBtn": "Share My Score 📲",
+      "shareScoreCopied": "Scorecard summary copied to clipboard! 📋",
       "playMoreBtn": "Play More Scenarios"
+    },
+    "pledge": {
+      "cardTitle": "Take the Pledge 🤝",
+      "cardSubtitle": "Turn learning into action with a personal commitment for our planet.",
+      "farmPledge": "I will not burn crop waste this season",
+      "plasticPledge": "I will reuse or sell my plastic bottles",
+      "defaultPledge": "I will choose sustainable alternatives to protect nature in daily life",
+      "pledgeBtn": "I Pledge ✋",
+      "pledgedBtn": "Pledge Active ✓",
+      "bonusNotice": "+25 Bonus Points & 'Pledge Keeper' Badge",
+      "successMessage": "Pledge taken! You earned +25 points and unlocked the Pledge Keeper badge! 🌟",
+      "alreadyPledgedMessage": "You have taken this pledge! Certified Pledge Keeper 🌟",
+      "viewScoreBtn": "View My Final Score 📊",
+      "skipBtn": "Skip to Scorecard →",
+      "backBtn": "Back to Scenarios"
     },
     "advisor": {
       "title": "Ask What Else AI",
@@ -165,6 +185,7 @@
     "footer": {
       "tagline": "Make the mistake. Understand it. Choose what else.",
       "offlineNote": "Works offline & on low-bandwidth mobile networks.",
+      "giveFeedback": "Give Feedback 💬",
       "resetProgress": "Reset Progress"
     }
   },
@@ -203,7 +224,9 @@
       "curiousMindTitle": "ఆసక్తిగల అన్వేషకుడు 🔍",
       "curiousMindDesc": "పూర్తి ప్రభావాన్ని అర్థం చేసుకోవడానికి 'మరి ఏంచేయాలి' ప్రత్యామ్నాయాలను పరిశీలించారు.",
       "greenGuardianTitle": "హరిత సంరక్షకుడు 🌳",
-      "greenGuardianDesc": "ప్రకృతి ఆరోగ్యాన్ని 80% లేదా అంతకంటే ఎక్కువ పెంచారు."
+      "greenGuardianDesc": "ప్రకృతి ఆరోగ్యాన్ని 80% లేదా అంతకంటే ఎక్కువ పెంచారు.",
+      "pledgeKeeperTitle": "ప్రతిజ్ఞా రక్షకుడు 🤝",
+      "pledgeKeeperDesc": "నిత్య జీవితంలో పర్యావరణాన్ని కాపాడేందుకు వ్యక్తిగత ప్రతిజ్ఞ చేశారు."
     },
     "badgePage": {
       "heading": "బ్యాడ్జీల సేకరణ",
@@ -216,7 +239,8 @@
       "soilSaverCriteria": "పొలంలో గడ్డిని కాల్చకుండా మల్చింగ్, కంపోస్టింగ్ లేదా బయోమాస్ అమ్మకం ఎంచుకోండి.",
       "plasticBusterCriteria": "ప్లాస్టిక్‌ను పారవేయకుండా లేదా కాల్చకుండా కుండీగా మార్చడం లేదా స్క్రాప్ డీలర్‌కు అమ్మడం ఎంచుకోండి.",
       "curiousMindCriteria": "ఏదైనా సన్నివేశంలో 'మరి ఏంచేయాలి' బటన్ నొక్కి ప్రత్యామ్నాయాలను చూడండి.",
-      "greenGuardianCriteria": "మంచి ఎంపికలతో ప్రకృతి ఆరోగ్యాన్ని 80% కంటే ఎక్కువగా ఉంచండి."
+      "greenGuardianCriteria": "మంచి ఎంపికలతో ప్రకృతి ఆరోగ్యాన్ని 80% కంటే ఎక్కువగా ఉంచండి.",
+      "pledgeKeeperCriteria": "ఏదైనా సవాలు పూర్తయిన తర్వాత పర్యావరణ ప్రతిజ్ఞను స్వీకరించండి."
     },
     "scoreScreen": {
       "back": "వెనుకకు",
@@ -230,7 +254,24 @@
       "copyBtn": "సారాంశాన్ని కాపీ చేయండి",
       "copied": "కాపీ అయింది!",
       "shareBtn": "షేర్ చేయండి",
+      "shareScoreBtn": "నా స్కోర్‌ను షేర్ చేయండి 📲",
+      "shareScoreCopied": "స్కోర్‌కార్డ్ సారాంశం క్లిప్‌బోర్డ్‌కి కాపీ చేయబడింది! 📋",
       "playMoreBtn": "మరిన్ని సవాళ్లు ఆడండి"
+    },
+    "pledge": {
+      "cardTitle": "ప్రతిజ్ఞ చేయండి 🤝",
+      "cardSubtitle": "మీ అభ్యాసాన్ని ప్రకృతి రక్షణ కోసం నిజ జీవిత వ్యక్తిగత నిబద్ధతగా మార్చుకోండి.",
+      "farmPledge": "ఈ సీజన్‌లో నేను పంట వ్యర్థాలను కాల్చను",
+      "plasticPledge": "నేను నా ప్లాస్టిక్ బాటిళ్లను తిరిగి ఉపయోగిస్తాను లేదా విక్రయిస్తాను",
+      "defaultPledge": "నా నిత్య జీవితంలో ప్రకృతిని కాపాడేందుకు స్థిరమైన ప్రత్యామ్నాయాలను ఎంచుకుంటాను",
+      "pledgeBtn": "నేను ప్రతిజ్ఞ చేస్తున్నాను ✋",
+      "pledgedBtn": "ప్రతిజ్ఞ క్రియాశీలంగా ఉంది ✓",
+      "bonusNotice": "+25 బోనస్ పాయింట్లు & 'ప్రతిజ్ఞా రక్షకుడు' బ్యాడ్జ్",
+      "successMessage": "ప్రతిజ్ఞ స్వీకరించబడింది! మీకు +25 పాయింట్లు మరియు ప్రతిజ్ఞా రక్షకుడు బ్యాడ్జ్ లభించాయి! 🌟",
+      "alreadyPledgedMessage": "మీరు ఈ ప్రతిజ్ఞ చేశారు! ధృవీకరించబడిన ప్రతిజ్ఞా రక్షకుడు 🌟",
+      "viewScoreBtn": "నా తుది స్కోర్‌కార్డ్ చూడండి 📊",
+      "skipBtn": "స్కోర్‌కార్డ్‌కు వెళ్లండి →",
+      "backBtn": "సవాళ్లకు తిరిగి వెళ్లండి"
     },
     "advisor": {
       "title": "వాట్ ఎల్స్ AI సలహాదారు",
@@ -335,6 +376,7 @@
     "footer": {
       "tagline": "తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి.",
       "offlineNote": "తక్కువ ఇంటర్నెట్ మరియు సాధారణ మొబైల్ ఫోన్లలో కూడా పనిచేస్తుంది.",
+      "giveFeedback": "అభిప్రాయాన్ని తెలియజేయండి 💬",
       "resetProgress": "మొదటి నుండి ప్రారంభించండి"
     }
   }

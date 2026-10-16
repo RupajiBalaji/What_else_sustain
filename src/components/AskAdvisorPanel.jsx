@@ -76,15 +76,16 @@ export default function AskAdvisorPanel({ onClose }) {
       } else {
         // Fallback triggered gracefully
         const offlineText = getOfflineAnswer(question, lang)
+        const noteText = data.message || (lang === 'te'
+          ? 'ఆఫ్‌లైన్ నాలెడ్జ్ బేస్ నుండి ధృవీకరించిన సమాధానం'
+          : 'Verified answer from Offline Knowledge Base')
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
             text: offlineText,
             source: 'offline',
-            note: lang === 'te'
-              ? '🛡️ ఆఫ్‌లైన్ నాలెడ్జ్ బేస్ నుండి ధృవీకరించిన సమాధానం'
-              : '🛡️ Verified answer from Offline Knowledge Base'
+            note: `🛡️ ${noteText}`
           }
         ])
       }
@@ -295,87 +296,106 @@ export default function AskAdvisorPanel({ onClose }) {
           ))}
         </div>
 
-        {/* Query Input Bar */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            handleAsk()
-          }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            paddingTop: '8px',
-            borderTop: '1px solid var(--color-border)'
-          }}
-        >
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('advisor.inputPlaceholder')}
-            style={{
-              flex: 1,
-              padding: '12px 14px',
-              borderRadius: 'var(--radius-full)',
-              border: '1.5px solid var(--color-border)',
-              background: 'var(--color-bg)',
-              fontSize: '0.88rem',
-              color: 'var(--color-text-main)',
-              outline: 'none'
+        {/* Query Input Bar with Character Counter */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '8px', borderTop: '1px solid var(--color-border)' }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleAsk()
             }}
-          />
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <input
+              type="text"
+              value={query}
+              maxLength={300}
+              onChange={(e) => setQuery(e.target.value.slice(0, 300))}
+              placeholder={t('advisor.inputPlaceholder')}
+              style={{
+                flex: 1,
+                padding: '12px 14px',
+                borderRadius: 'var(--radius-full)',
+                border: '1.5px solid var(--color-border)',
+                background: 'var(--color-bg)',
+                fontSize: '0.88rem',
+                color: 'var(--color-text-main)',
+                outline: 'none'
+              }}
+            />
 
-          {/* Voice Mic Button */}
-          {speechSupported && (
+            {/* Voice Mic Button */}
+            {speechSupported && (
+              <button
+                type="button"
+                onClick={handleToggleVoice}
+                aria-label={isListening ? 'Stop listening' : 'Start speaking'}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: isListening ? 'var(--color-harm-red)' : 'var(--color-surface-subtle)',
+                  color: isListening ? '#FFFFFF' : 'var(--color-deep-green)',
+                  fontSize: '1.2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  boxShadow: isListening ? '0 0 10px rgba(217, 83, 79, 0.6)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {isListening ? '🛑' : '🎙️'}
+              </button>
+            )}
+
+            {/* Submit Button */}
             <button
-              type="button"
-              onClick={handleToggleVoice}
-              aria-label={isListening ? 'Stop listening' : 'Start speaking'}
+              type="submit"
+              disabled={!query.trim() || query.trim().length > 300 || loading}
+              aria-label={t('advisor.send')}
               style={{
                 width: '44px',
                 height: '44px',
                 borderRadius: '50%',
                 border: 'none',
-                background: isListening ? 'var(--color-harm-red)' : 'var(--color-surface-subtle)',
-                color: isListening ? '#FFFFFF' : 'var(--color-deep-green)',
-                fontSize: '1.2rem',
+                background: query.trim() && query.trim().length <= 300 && !loading ? 'var(--color-leaf-green)' : '#C4BEB0',
+                color: '#FFFFFF',
+                fontSize: '1.1rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer',
-                flexShrink: 0,
-                boxShadow: isListening ? '0 0 10px rgba(217, 83, 79, 0.6)' : 'none',
-                transition: 'all 0.2s ease'
+                cursor: query.trim() && query.trim().length <= 300 && !loading ? 'pointer' : 'default',
+                flexShrink: 0
               }}
             >
-              {isListening ? '🛑' : '🎙️'}
+              ➤
             </button>
-          )}
+          </form>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={!query.trim() || loading}
-            aria-label={t('advisor.send')}
-            style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '50%',
-              border: 'none',
-              background: query.trim() && !loading ? 'var(--color-leaf-green)' : '#C4BEB0',
-              color: '#FFFFFF',
-              fontSize: '1.1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: query.trim() && !loading ? 'pointer' : 'default',
-              flexShrink: 0
-            }}
-          >
-            ➤
-          </button>
-        </form>
+          {/* Live Character Counter */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: '8px' }}>
+            <span
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color:
+                  query.length >= 280
+                    ? 'var(--color-harm-red)'
+                    : query.length >= 220
+                    ? 'var(--color-amber)'
+                    : 'var(--color-text-muted)'
+              }}
+            >
+              {query.length} / 300
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -41,6 +41,13 @@ export default function BadgeCollectionPage({ onBack, onOpenScorecard }) {
       title: t('badges.greenGuardianTitle'),
       desc: t('badges.greenGuardianDesc'),
       criteria: t('badgePage.greenGuardianCriteria')
+    },
+    {
+      id: 'pledge_keeper',
+      icon: '🤝',
+      title: t('badges.pledgeKeeperTitle'),
+      desc: t('badges.pledgeKeeperDesc'),
+      criteria: t('badgePage.pledgeKeeperCriteria')
     }
   ]
 

@@ -53,4 +53,52 @@ This document highlights technical agricultural, environmental, and informal col
 - **Offline Shield**: `"🛡️ ఆఫ్‌లైన్ నాలెడ్జ్ బేస్ నుండి ధృవీకరించిన సమాధానం"`
 
 ---
+
+### 6. Softened Qualitative Statements (గుణాత్మక ప్రకటనలు - ధృవీకరణ పెండింగ్‌లో ఉంది)
+1. **Paddy Stubble Burning Smoke**:
+   - Current: `"కొయ్యకాలు కాల్చడం వల్ల దట్టమైన PM2.5 పొగ మరియు ప్రమాదకర వాయు కాలుష్య కారకాలు వెలువడతాయి"`
+   - Review Note: Natural phrasing replacing the unverified "60 to 90 kg PM2.5 / acre" claim.
+2. **Dumpsite Smolder & City Smog**:
+   - Current: `"డంపింగ్ యార్డ్ మంటలు నగరాల్లో కాలుష్యం మరియు పొగమంచు తీవ్రతను నేరుగా పెంచుతాయి"`
+   - Review Note: Accurate and clear; replaces previous "15% to 25% of city smog spikes" figure.
+3. **Plastic Burning Toxicity**:
+   - Current: `"ప్లాస్టిక్ కాల్చడం వల్ల ఊపిరితిత్తులు మరియు ఆరోగ్యానికి హాని కలిగించే విషపూరిత వాయువులు వెలువడతాయి"`
+   - Review Note: Replaced "100x to 500x more toxic" claim with plain, truthful medical/respiratory warning.
+
+---
+
+### 7. Pledge Screen & "Pledge Keeper" Badge (ప్రతిజ్ఞ స్క్రీన్ & బ్యాడ్జ్)
+1. **Pledge Card Title & Subtitle**:
+   - Title: `"ప్రతిజ్ఞ చేయండి 🤝"`
+   - Subtitle: `"మీ అభ్యాసాన్ని ప్రకృతి రక్షణ కోసం నిజ జీవిత వ్యక్తిగత నిబద్ధతగా మార్చుకోండి."`
+   - Review Note: Formal yet engaging Telugu for school students and farmers alike.
+2. **Farm Residue Scenario Pledge**:
+   - Current: `"ఈ సీజన్‌లో నేను పంట వ్యర్థాలను కాల్చను"`
+   - Review Note: Direct translation of "I will not burn crop waste this season". Check if `"పంట వ్యర్థాలు"` or `"వరి గడ్డి / కొయ్యకాలు"` is preferred in coastal districts.
+3. **Plastic Bottle Scenario Pledge**:
+   - Current: `"నేను నా ప్లాస్టిక్ బాటిళ్లను తిరిగి ఉపయోగిస్తాను లేదా విక్రయిస్తాను"`
+   - Review Note: Simple, direct first-person resolution ("I will reuse or sell my plastic bottles").
+4. **Pledge Button**:
+   - Current: `"నేను ప్రతిజ్ఞ చేస్తున్నాను ✋"`
+   - Review Note: Standard formal declaration ("I pledge").
+5. **Pledge Keeper Badge**:
+   - Title: `"ప్రతిజ్ఞా రక్షకుడు 🤝"`
+   - Desc: `"నిత్య జీవితంలో పర్యావరణాన్ని కాపాడేందుకు వ్యక్తిగత ప్రతిజ్ఞ చేశారు."`
+   - Criteria: `"ఏదైనా సవాలు పూర్తయిన తర్వాత పర్యావరణ ప్రతిజ్ఞను స్వీకరించండి."`
+   - Review Note: Verify if `"ప్రతిజ్ఞా రక్షకుడు"` or `"నిబద్ధత కాపలాదారు"` sounds more natural to youth.
+
+---
+
+### 8. Playtest Feedback & Share Scorecard (ఫీడ్‌బ్యాక్ & స్కోర్‌కార్డ్ షేరింగ్)
+1. **Give Feedback**:
+   - Current: `"అభిప్రాయాన్ని తెలియజేయండి 💬"`
+   - Review Note: Respectful, clear standard Telugu in the footer.
+2. **Share My Score Button**:
+   - Current: `"నా స్కోర్‌ను షేర్ చేయండి 📲"`
+   - Copied Notice: `"స్కోర్‌కార్డ్ సారాంశం క్లిప్‌బోర్డ్‌కి కాపీ చేయబడింది! 📋"`
+3. **Social Share Text Format**:
+   - Current: `"నేను What Else Sustain లో {points} పాయింట్లు సాధించాను మరియు {badge} బ్యాడ్జ్ గెలుచుకున్నాను. "తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి." {siteUrl}"`
+   - Review Note: Conversational phrasing suitable for WhatsApp, Instagram, or Twitter sharing.
+
+---
 *All strings in [`src/data/translations.json`](file:///e:/What%20else%20sustain/src/data/translations.json) are active and editable directly.*

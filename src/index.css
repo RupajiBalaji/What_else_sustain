@@ -583,7 +583,7 @@ body.lang-te {
   .lang-toggle-btn {
     padding: 6px 10px;
     font-size: 0.78rem;
-    min-height: 42px;
+    min-height: 44px;
   }
 
   .header-stats-row {
@@ -618,4 +618,19 @@ body.lang-te {
   .what-else-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Pledge Card & Feedback Link Enhancements */
+.pledge-card {
+  animation: fadeIn 0.3s ease;
+}
+
+.footer-feedback-btn:hover {
+  background: var(--color-lime) !important;
+  color: var(--color-deep-green) !important;
+  border-color: var(--color-leaf-green) !important;
+}
+
+.footer-feedback-btn:active {
+  transform: scale(0.97);
 }

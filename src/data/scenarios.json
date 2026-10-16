@@ -77,10 +77,13 @@
               },
               "stat": {
                 "label": {
-                  "en": "Estimated PM2.5 emitted per acre burned",
-                  "te": "ఒక ఎకరం దహనంతో వెలువడే కాలుష్య కణాలు (PM2.5)"
+                  "en": "Particulate pollution from open burning",
+                  "te": "పొలంలో దహనం వల్ల వెలువడే కాలుష్యం"
                 },
-                "value": "~60 to 90 kg PM2.5 / acre",
+                "value": {
+                  "en": "Releases dense hazardous smoke that blankets nearby villages and harms respiratory health",
+                  "te": "గ్రామాలను కమ్మేసే దట్టమైన ప్రమాదకర పొగను వెలువరిస్తుంది, శ్వాసకోశ ఆరోగ్యానికి హానికరం"
+                },
                 "source": "Central Pollution Control Board (CPCB) field models",
                 "verified": false
               }
@@ -354,7 +357,10 @@
                   "en": "Dumpsite fires linked to mixed plastic waste",
                   "te": "ప్లాస్టిక్ వ్యర్థాల వల్ల సంభవించే డంపింగ్ యార్డ్ మంటలు"
                 },
-                "value": "~15% to 25% of city smog spikes",
+                "value": {
+                  "en": "Frequent contributor to hazardous dumpsite fires and toxic urban haze",
+                  "te": "డంపింగ్ యార్డుల్లో ప్రమాదకర మంటలు మరియు నగరంలో విష పొగ కమ్ముకోవడానికి ప్రధాన కారణం"
+                },
                 "source": "Urban Waste Management & CPCB observational estimates",
                 "verified": false
               }
@@ -423,7 +429,10 @@
                   "en": "Toxicity comparison to clean wood fire",
                   "te": "కట్టెల పొగతో పోలిస్తే విషపూరిత తీవ్రత"
                 },
-                "value": "~100x to 500x more toxic volatile compounds",
+                "value": {
+                  "en": "Burning plastic releases toxic fumes and carcinogenic soot that harm lungs",
+                  "te": "ప్లాస్టిక్ కాల్చడం వల్ల ఊపిరితిత్తులను దెబ్బతీసే క్యాన్సర్ కారక విష వాయువులు విడుదలవుతాయి"
+                },
                 "source": "WHO & Environmental Health observational benchmarks",
                 "verified": false
               }

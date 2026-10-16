@@ -19,7 +19,7 @@ Per project data rules:
 
 ### 2. Air & Health: Toxic Village Smog
 - **JSON Key Path**: `scenarios[0].choices[0].impact.threeCards[1].stat`
-- **Value**: `~60 to 90 kg PM2.5 / acre`
+- **Value**: `"Stubble burning generates dense PM2.5 smoke and hazardous air pollutants"` (*number removed pending verification*)
 - **Source**: `Central Pollution Control Board (CPCB) field models`
 - **Verified**: `false`
 - **Scientific Context**: Crop residue burning produces fine particulate matter ($\text{PM}_{2.5}$), carbon monoxide, polycyclic aromatic hydrocarbons, and volatile organic compounds that degrade air quality in surrounding rural and peri-urban settlements.
@@ -76,7 +76,7 @@ Per project data rules:
 
 ### 2. Air: Dumpsite Smolder & City Smog Spikes
 - **JSON Key Path**: `scenarios[1].choices[0].impact.threeCards[1].stat`
-- **Value**: `~15% to 25% of city smog spikes`
+- **Value**: `"Landfill and dumpsite fires contribute directly to seasonal city smog spikes"` (*number removed pending verification*)
 - **Source**: `Urban Waste Management & CPCB observational estimates`
 - **Verified**: `false`
 
@@ -88,7 +88,7 @@ Per project data rules:
 
 ### 4. Toxicity: Open Burning vs Clean Wood Fire
 - **JSON Key Path**: `scenarios[1].choices[1].impact.threeCards[0].stat`
-- **Value**: `~100x to 500x more toxic volatile compounds`
+- **Value**: `"Burning plastic releases toxic fumes that harm lungs and human health"` (*number removed pending verification*)
 - **Source**: `WHO & Environmental Health observational benchmarks`
 - **Verified**: `false`
 - **Health Context**: Incomplete combustion of plastics at low backyard temperatures releases chlorinated dioxins, furans, phthalate plasticizers, and carbon soot directly into human respiratory tracts.

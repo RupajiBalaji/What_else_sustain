@@ -15,48 +15,94 @@ export default function FinalScoreScreen({ onBackToScenarios, onOpenBadges }) {
   } = useGame()
 
   const [copied, setCopied] = useState(false)
+  const [shareFeedback, setShareFeedback] = useState('')
 
   // Level name in chosen language
   const levelTitle = t(`levels.${currentLevelKey}`)
 
-  // Generate shareable summary text
-  const shareText = lang === 'te'
-    ? `🌱 వాట్ ఎల్స్ సస్టైన్ (What Else Sustain) — నా పర్యావరణ స్కోర్‌కార్డ్!\n🎖️ నా స్థాయి: ${levelTitle}\n⭐ పాయింట్లు: ${points} Pts\n🌿 ప్రకృతి ఆరోగ్యం: ${natureHealth}%\n🏅 సాధించిన బ్యాడ్జీలు: ${badges.length}\n✅ పూర్తయిన సవాళ్లు: ${completedScenarios.length}\n\n"తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి."\n#WhatElseSustain #Sustainability #GoGreen`
-    : `🌱 What Else Sustain — My Eco Scorecard!\n🎖️ My Rank: ${levelTitle} (Level ${levelNumber})\n⭐ Points: ${points} Pts\n🌿 Nature Health: ${natureHealth}%\n🏅 Badges Earned: ${badges.length}\n✅ Scenarios Completed: ${completedScenarios.length}\n\n"Make the mistake. Understand it. Choose what else."\n#WhatElseSustain #Sustainability #EcoHero`
+  // Get primary badge name for sharing
+  const getBadgeNameForShare = () => {
+    if (!badges || badges.length === 0) {
+      return lang === 'te' ? 'పర్యావరణ రక్షకుడు' : 'Eco Hero'
+    }
+    const lastId = badges[badges.length - 1]
+    const badgeMap = {
+      pledge_keeper: { en: 'Pledge Keeper', te: 'ప్రతిజ్ఞా రక్షకుడు' },
+      soil_saver: { en: 'Soil Saver', te: 'నేల సంరక్షకుడు' },
+      plastic_buster: { en: 'Plastic Buster', te: 'ప్లాస్టిక్ రక్షకుడు' },
+      curious_mind: { en: 'Curious Mind', te: 'ఆసక్తిగల అన్వేషకుడు' },
+      green_guardian: { en: 'Green Guardian', te: 'హరిత సంరక్షకుడు' }
+    }
+    return badgeMap[lastId] ? badgeMap[lastId][lang] || badgeMap[lastId].en : (lang === 'te' ? 'పర్యావరణ రక్షకుడు' : 'Eco Hero')
+  }
 
-  const handleCopy = async () => {
+  const siteUrl = typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin
+    : 'https://what-else-sustain.vercel.app'
+
+  // Text format required by prompt:
+  // "I scored X points on What Else Sustain and earned the [badge] badge. Make the mistake. Understand it. Choose what else." plus the site URL.
+  const shareMyScoreText = lang === 'te'
+    ? `నేను What Else Sustain లో ${points} పాయింట్లు సాధించాను మరియు ${getBadgeNameForShare()} బ్యాడ్జ్ గెలుచుకున్నాను. "తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి." ${siteUrl}`
+    : `I scored ${points} points on What Else Sustain and earned the ${getBadgeNameForShare()} badge. Make the mistake. Understand it. Choose what else. ${siteUrl}`
+
+  // Detailed scorecard breakdown text
+  const shareText = lang === 'te'
+    ? `🌱 వాట్ ఎల్స్ సస్టైన్ (What Else Sustain) — నా పర్యావరణ స్కోర్‌కార్డ్!\n🎖️ నా స్థాయి: ${levelTitle}\n⭐ పాయింట్లు: ${points} Pts\n🌿 ప్రకృతి ఆరోగ్యం: ${natureHealth}%\n🏅 సాధించిన బ్యాడ్జీలు: ${badges.length}\n✅ పూర్తయిన సవాళ్లు: ${completedScenarios.length}\n\n"తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి."\n${siteUrl}\n#WhatElseSustain #Sustainability #GoGreen`
+    : `🌱 What Else Sustain — My Eco Scorecard!\n🎖️ My Rank: ${levelTitle} (Level ${levelNumber})\n⭐ Points: ${points} Pts\n🌿 Nature Health: ${natureHealth}%\n🏅 Badges Earned: ${badges.length}\n✅ Scenarios Completed: ${completedScenarios.length}\n\n"Make the mistake. Understand it. Choose what else."\n${siteUrl}\n#WhatElseSustain #Sustainability #EcoHero`
+
+  const copyToClipboard = async (text, isScorecard = false) => {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(shareText)
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text)
       } else {
         const textarea = document.createElement('textarea')
-        textarea.value = shareText
+        textarea.value = text
+        textarea.style.position = 'fixed'
+        textarea.style.opacity = '0'
         document.body.appendChild(textarea)
         textarea.select()
         document.execCommand('copy')
         document.body.removeChild(textarea)
       }
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2500)
+      if (isScorecard) {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2500)
+      } else {
+        setShareFeedback(t('scoreScreen.shareScoreCopied'))
+        setTimeout(() => setShareFeedback(''), 3000)
+      }
     } catch {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2500)
+      if (isScorecard) {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2500)
+      } else {
+        setShareFeedback(t('scoreScreen.shareScoreCopied'))
+        setTimeout(() => setShareFeedback(''), 3000)
+      }
     }
   }
 
-  const handleNativeShare = async () => {
-    if (navigator.share) {
+  const handleShareMyScore = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: t('app.title'),
-          text: shareText
+          text: shareMyScoreText,
+          url: siteUrl
         })
-      } catch {
-        // User cancelled or share failed
+        return
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          return // User cancelled share sheet
+        }
       }
-    } else {
-      handleCopy()
     }
+    await copyToClipboard(shareMyScoreText, false)
+  }
+
+  const handleCopySummary = async () => {
+    await copyToClipboard(shareText, true)
   }
 
   return (
@@ -236,34 +282,58 @@ export default function FinalScoreScreen({ onBackToScenarios, onOpenBadges }) {
           {shareText}
         </pre>
 
-        {/* Share buttons */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="filter-tab"
+        {/* Main "Share my score" action button with Web Share API and clipboard fallback */}
+        <button
+          type="button"
+          onClick={handleShareMyScore}
+          className="start-action-btn"
+          style={{
+            width: '100%',
+            justifyContent: 'center',
+            padding: '14px',
+            fontSize: '1rem',
+            minHeight: '48px',
+            boxShadow: 'var(--shadow-md)'
+          }}
+        >
+          <span>{t('scoreScreen.shareScoreBtn')}</span>
+        </button>
+
+        {/* Feedback alert banner when text is copied */}
+        {shareFeedback && (
+          <div
             style={{
-              flex: 1,
-              justifyContent: 'center',
-              background: copied ? 'var(--color-lime)' : 'var(--color-surface-subtle)',
-              color: copied ? 'var(--color-deep-green)' : 'var(--color-text-main)',
-              border: '1px solid var(--color-border)'
+              background: '#E8F5E9',
+              border: '1.5px solid var(--color-leaf-green)',
+              color: 'var(--color-deep-green)',
+              borderRadius: 'var(--radius-md)',
+              padding: '10px 14px',
+              fontSize: '0.84rem',
+              fontWeight: 800,
+              textAlign: 'center'
             }}
           >
-            <span>{copied ? '✓ ' + t('scoreScreen.copied') : '📋 ' + t('scoreScreen.copyBtn')}</span>
-          </button>
+            {shareFeedback}
+          </div>
+        )}
 
-          {typeof navigator !== 'undefined' && navigator.share && (
-            <button
-              type="button"
-              onClick={handleNativeShare}
-              className="start-action-btn"
-              style={{ flex: 1, justifyContent: 'center' }}
-            >
-              <span>📲 {t('scoreScreen.shareBtn')}</span>
-            </button>
-          )}
-        </div>
+        {/* Copy full detailed scorecard breakdown */}
+        <button
+          type="button"
+          onClick={handleCopySummary}
+          className="filter-tab"
+          style={{
+            width: '100%',
+            justifyContent: 'center',
+            background: copied ? 'var(--color-lime)' : 'var(--color-surface-subtle)',
+            color: copied ? 'var(--color-deep-green)' : 'var(--color-text-main)',
+            border: '1px solid var(--color-border)',
+            minHeight: '44px',
+            fontWeight: 700
+          }}
+        >
+          <span>{copied ? '✓ ' + t('scoreScreen.copied') : '📋 ' + t('scoreScreen.copyBtn')}</span>
+        </button>
       </div>
 
       {/* Action Buttons */}

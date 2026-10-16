@@ -137,7 +137,19 @@
                           "te": { "type": "string" }
                         }
                       },
-                      "value": { "type": "string" },
+                      "value": {
+                        "oneOf": [
+                          { "type": "string" },
+                          {
+                            "type": "object",
+                            "required": ["en", "te"],
+                            "properties": {
+                              "en": { "type": "string" },
+                              "te": { "type": "string" }
+                            }
+                          }
+                        ]
+                      },
                       "source": {
                         "type": "string",
                         "description": "Reference source or agency documenting this figure"

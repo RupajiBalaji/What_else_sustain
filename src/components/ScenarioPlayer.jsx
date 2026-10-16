@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { useGame } from '../context/GameContext'
+import { safeStorage } from '../utils/safeStorage'
 import FarmIllustration from './FarmIllustration'
 import HomeIllustration from './HomeIllustration'
+
+const PLEDGES_STORAGE_KEY = 'wes_pledges_v1'
 
 export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemoMode = false }) {
   const { getLocalized, t, lang } = useLanguage()
@@ -17,13 +20,27 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
     points
   } = useGame()
 
-  // Stages: 'intro' | 'choice' | 'impact_mistake' | 'what_else' | 'replay_choice' | 'comparison' | 'rewards'
+  // Stages: 'intro' | 'choice' | 'impact_mistake' | 'what_else' | 'replay_choice' | 'comparison' | 'rewards' | 'pledge'
   const [stage, setStage] = useState('intro')
   const [selectedMistake, setSelectedMistake] = useState(null)
   const [chosenAlternative, setChosenAlternative] = useState(null)
   const [hasExploredMistake, setHasExploredMistake] = useState(false)
   const [hasExploredWhatElse, setHasExploredWhatElse] = useState(false)
   const [earnedInThisRun, setEarnedInThisRun] = useState({ mistakePts: 0, altPts: 0, bonusPts: 0 })
+
+  // Check if pledge was previously recorded for this scenario
+  const [isPledged, setIsPledged] = useState(() => {
+    try {
+      const stored = safeStorage.getItem(PLEDGES_STORAGE_KEY)
+      if (stored) {
+        const list = JSON.parse(stored)
+        return Array.isArray(list) && list.some((item) => item.scenarioId === scenario.id)
+      }
+    } catch {
+      // safe fallback
+    }
+    return false
+  })
 
   // Demo Mode state
   const [demoSeconds, setDemoSeconds] = useState(0)
@@ -35,7 +52,7 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
   let illustrationState = 'normal'
   if (stage === 'impact_mistake') {
     illustrationState = 'burning'
-  } else if (stage === 'comparison' || stage === 'rewards' || (chosenAlternative && stage !== 'what_else')) {
+  } else if (stage === 'comparison' || stage === 'rewards' || stage === 'pledge' || (chosenAlternative && stage !== 'what_else')) {
     illustrationState = 'sustainable'
   }
 
@@ -44,6 +61,43 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
     if (scenario.id === 'farm_crop_residue') return 'soil_saver'
     if (scenario.id === 'home_plastic_bottle') return 'plastic_buster'
     return 'curious_mind'
+  }
+
+  // Get matched pledge text for the scenario
+  const getScenarioPledgeText = () => {
+    if (scenario.id === 'farm_crop_residue') {
+      return t('pledge.farmPledge')
+    }
+    if (scenario.id === 'home_plastic_bottle') {
+      return t('pledge.plasticPledge')
+    }
+    return t('pledge.defaultPledge')
+  }
+
+  // Handle player taking the pledge
+  const handleTakePledge = () => {
+    if (isPledged) return
+    setIsPledged(true)
+    addPoints(25)
+    unlockBadge('pledge_keeper')
+
+    // Persist pledge to safeStorage
+    try {
+      const stored = safeStorage.getItem(PLEDGES_STORAGE_KEY)
+      const list = stored ? JSON.parse(stored) : []
+      const pledgeText = getScenarioPledgeText()
+      const newEntry = {
+        scenarioId: scenario.id,
+        pledgeText,
+        date: new Date().toISOString()
+      }
+      if (!list.some((item) => item.scenarioId === scenario.id)) {
+        list.push(newEntry)
+      }
+      safeStorage.setItem(PLEDGES_STORAGE_KEY, JSON.stringify(list))
+    } catch (err) {
+      console.warn('[ScenarioPlayer] safeStorage write error:', err)
+    }
   }
 
   // Handle player's choice in step 2
@@ -107,8 +161,14 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
         } else if (next === 32) {
           const bestAlt = scenario.choices.find((c) => !c.isMistake)
           handleSelectAlternative(bestAlt)
-        } else if (next === 40) {
+        } else if (next === 38) {
           setStage('rewards')
+        } else if (next === 41) {
+          setStage('pledge')
+        } else if (next === 43) {
+          handleTakePledge()
+        } else if (next === 45) {
+          if (onCompleteAll) onCompleteAll()
         }
 
         return next <= 45 ? next : 45
@@ -140,14 +200,19 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
         ? 'దశ 4: మరి ఏంచేయాలి? — మల్చింగ్, కంపోస్ట్ & బయోమాస్ అమ్మకం ప్రత్యామ్నాయాలు.'
         : 'Step 4: What Else? — Practical alternatives (Mulch, Compost, Sell).'
     }
-    if (demoSeconds < 40) {
+    if (demoSeconds < 38) {
       return lang === 'te'
         ? 'దశ 5: మంచి మార్గం — హ్యాపీ సీడర్ మల్చింగ్‌తో పొలం పచ్చగా మారింది, ఆరోగ్యం పెరిగింది!'
         : 'Step 5: Better Choice — Happy Seeder mulch restores nature health and saves money!'
     }
+    if (demoSeconds < 43) {
+      return lang === 'te'
+        ? 'దశ 6: ప్రతిజ్ఞ — "ఈ సీజన్‌లో నేను పంట వ్యర్థాలను కాల్చను" అని ప్రతిజ్ఞ తీసుకుంటున్నారు.'
+        : 'Step 6: The Pledge — Taking the pledge: "I will not burn crop waste this season".'
+    }
     return lang === 'te'
-      ? 'దశ 6: విజయం! — పాయింట్లు లభించాయి, "నేల సంరక్షకుడు" బ్యాడ్జ్ అన్‌లాక్ అయింది.'
-      : 'Step 6: Victory! — Points earned, Soil Saver badge unlocked, rank promoted!'
+      ? 'ముగింపు: బోనస్ పాయింట్లు & "ప్రతిజ్ఞా రక్షకుడు" బ్యాడ్జ్ సాధించబడింది!'
+      : 'Finished: Bonus points & Pledge Keeper badge unlocked!'
   }
 
   return (
@@ -175,8 +240,8 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
               </strong>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.78rem', color: 'var(--color-cream)', fontWeight: 700 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--color-cream)', fontWeight: 700, marginRight: '4px' }}>
                 {demoSeconds}s / 45s
               </span>
               <button
@@ -184,16 +249,48 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
                 onClick={() => setIsDemoPaused(!isDemoPaused)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.2)',
-                  border: 'none',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
                   color: '#FFFFFF',
-                  padding: '4px 8px',
+                  padding: '6px 10px',
                   borderRadius: 'var(--radius-full)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.76rem',
                   fontWeight: 700,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '36px'
                 }}
               >
-                {isDemoPaused ? '▶️ Resume' : '⏸️ Pause'}
+                {isDemoPaused ? (lang === 'te' ? '▶️ కొనసాగించు' : '▶️ Resume') : (lang === 'te' ? '⏸️ నిలిపివేయి' : '⏸️ Pause')}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  // Skip demo directly to rewards / final scorecard
+                  const bestAlt = scenario.choices.find((c) => !c.isMistake)
+                  if (bestAlt) {
+                    handleSelectAlternative(bestAlt)
+                  }
+                  handleTakePledge()
+                  if (onCompleteAll) {
+                    onCompleteAll()
+                  }
+                }}
+                style={{
+                  background: 'var(--color-lime)',
+                  border: 'none',
+                  color: 'var(--color-deep-green)',
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '0.76rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  minHeight: '36px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <span>{lang === 'te' ? 'దాటవేయి ⏭️' : 'Skip demo ⏭️'}</span>
               </button>
 
               <button
@@ -203,14 +300,15 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
                   background: 'rgba(217, 83, 79, 0.85)',
                   border: 'none',
                   color: '#FFFFFF',
-                  padding: '4px 8px',
+                  padding: '6px 10px',
                   borderRadius: 'var(--radius-full)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.76rem',
                   fontWeight: 700,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '36px'
                 }}
               >
-                ✕ Exit
+                {lang === 'te' ? '✕ నిష్క్రమించు' : '✕ Exit'}
               </button>
             </div>
           </div>
@@ -440,18 +538,24 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
                       <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
                         {getLocalized(card.stat.label)}:
                       </span>
-                      <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--color-harm-red)' }}>
-                        {card.stat.value}
+                      <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--color-harm-red)', textAlign: 'right' }}>
+                        {getLocalized(card.stat.value)}
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', fontSize: '0.7rem', color: 'var(--color-text-muted)', paddingTop: '4px', borderTop: '1px dashed var(--color-border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', fontSize: '0.72rem', color: 'var(--color-text-muted)', paddingTop: '6px', borderTop: '1px dashed var(--color-border)', flexWrap: 'wrap' }}>
                       <span>
                         <strong>{t('dataNotice.sourcePrefix')}</strong> {card.stat.source}
                       </span>
-                      <span style={{ color: '#B25E00', fontWeight: 800 }}>
-                        ⚠️ {card.stat.verified ? t('dataNotice.verifiedBadge') : t('dataNotice.unverifiedBadge')}
-                      </span>
+                      {card.stat.verified ? (
+                        <span style={{ color: 'var(--color-leaf-green)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          ✓ {card.stat.source}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#B25E00', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          ⚠️ {t('dataNotice.unverifiedBadge')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -726,12 +830,23 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
             {t('header.level')} {levelNumber}: {t(`levels.${currentLevelKey}`)} ({points} {t('header.points')})
           </div>
 
+          {/* Proceed to Pledge Card before Final Score */}
+          <button
+            type="button"
+            className="start-action-btn"
+            style={{ width: '100%', justifyContent: 'center', minHeight: '48px', padding: '14px', fontSize: '1rem', marginTop: '4px', boxShadow: 'var(--shadow-md)' }}
+            onClick={() => setStage('pledge')}
+          >
+            <span>{t('pledge.cardTitle')}</span>
+            <span aria-hidden="true">→</span>
+          </button>
+
           {/* End Action Buttons */}
-          <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
             <button
               type="button"
               className="filter-tab"
-              style={{ flex: 1, justifyContent: 'center', background: 'var(--color-surface-subtle)', minHeight: '48px', fontWeight: 800 }}
+              style={{ flex: 1, justifyContent: 'center', background: 'var(--color-surface-subtle)', minHeight: '44px', fontWeight: 700 }}
               onClick={() => {
                 setStage('intro')
                 setSelectedMistake(null)
@@ -743,12 +858,177 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
 
             <button
               type="button"
-              className="start-action-btn"
-              style={{ flex: 1, justifyContent: 'center', minHeight: '48px' }}
+              className="filter-tab"
+              style={{ flex: 1, justifyContent: 'center', background: 'var(--color-surface-subtle)', minHeight: '44px', fontWeight: 700 }}
               onClick={onExit}
             >
               <span>{t('scenarioFlow.backToListBtn')}</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* STAGE 7: TAKE THE PLEDGE CARD (Before Final Score) */}
+      {stage === 'pledge' && (
+        <div className="player-stage-card pledge-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <span style={{ fontSize: '3.4rem', display: 'block', animation: 'bounce 1s infinite alternate' }}>
+              🤝
+            </span>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-deep-green)', marginTop: '8px' }}>
+              {t('pledge.cardTitle')}
+            </h3>
+            <p style={{ fontSize: '0.86rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+              {t('pledge.cardSubtitle')}
+            </p>
+          </div>
+
+          {/* Scenario-Matched Pledge Text Box */}
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgba(46, 158, 91, 0.12), rgba(183, 227, 106, 0.2))',
+              border: '2px solid var(--color-leaf-green)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '20px 16px',
+              textAlign: 'center',
+              boxShadow: 'var(--shadow-sm)'
+            }}
+          >
+            <span style={{ fontSize: '2rem', display: 'block', marginBottom: '8px' }}>
+              {scenario.icon}
+            </span>
+            <blockquote
+              style={{
+                fontSize: '1.15rem',
+                fontWeight: 800,
+                color: 'var(--color-deep-green)',
+                lineHeight: 1.45,
+                margin: 0
+              }}
+            >
+              "{getScenarioPledgeText()}"
+            </blockquote>
+          </div>
+
+          {/* Bonus Points Banner if Not Yet Pledged */}
+          {!isPledged && (
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: '0.84rem',
+                fontWeight: 800,
+                color: 'var(--color-amber)',
+                background: '#FFF8E1',
+                border: '1px solid #FFE082',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-full)'
+              }}
+            >
+              ⭐ {t('pledge.bonusNotice')}
+            </div>
+          )}
+
+          {/* Pledged Success Feedback Banner */}
+          {isPledged && (
+            <div
+              style={{
+                background: '#E8F5E9',
+                border: '1.5px solid var(--color-leaf-green)',
+                color: 'var(--color-deep-green)',
+                borderRadius: 'var(--radius-md)',
+                padding: '14px',
+                fontSize: '0.9rem',
+                fontWeight: 800,
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}
+            >
+              <span>✓ {t('pledge.successMessage')}</span>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+            {!isPledged ? (
+              <>
+                <button
+                  type="button"
+                  className="start-action-btn"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    minHeight: '48px',
+                    padding: '14px',
+                    fontSize: '1.05rem',
+                    boxShadow: 'var(--shadow-md)'
+                  }}
+                  onClick={handleTakePledge}
+                >
+                  <span>{t('pledge.pledgeBtn')}</span>
+                  <span aria-hidden="true">✋</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="filter-tab"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    minHeight: '44px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--color-text-muted)',
+                    fontSize: '0.84rem'
+                  }}
+                  onClick={() => {
+                    if (onCompleteAll) onCompleteAll()
+                    else onExit()
+                  }}
+                >
+                  <span>{t('pledge.skipBtn')}</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="start-action-btn"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    minHeight: '48px',
+                    padding: '14px',
+                    fontSize: '1rem',
+                    boxShadow: 'var(--shadow-md)'
+                  }}
+                  onClick={() => {
+                    if (onCompleteAll) onCompleteAll()
+                    else onExit()
+                  }}
+                >
+                  <span>{t('pledge.viewScoreBtn')}</span>
+                  <span aria-hidden="true">🏆</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="filter-tab"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    minHeight: '44px',
+                    background: 'var(--color-surface-subtle)',
+                    border: '1px solid var(--color-border)',
+                    fontSize: '0.84rem'
+                  }}
+                  onClick={onExit}
+                >
+                  <span>{t('pledge.backBtn')}</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

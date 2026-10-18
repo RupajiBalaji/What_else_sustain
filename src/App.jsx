@@ -8,8 +8,8 @@ import ScenarioList from './components/ScenarioList'
 import Footer from './components/Footer'
 import scenariosData from './data/scenarios.json'
 
-// 3D Game World Mode
-import FarmScene from './game3d/FarmScene'
+// 3D Game World Mode (Code-split for instant Lite mode loading)
+const FarmScene = lazy(() => import('./game3d/FarmScene'))
 
 // Lite Mode (2D Cartoon Map & Playable Scenarios)
 import VillageMapHome from './game/VillageMapHome'
@@ -134,10 +134,12 @@ function MainContent() {
   if (mode === '3d') {
     return (
       <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100dvh', overflow: 'hidden' }}>
-        <FarmScene
-          onSwitchToLite={handleSwitchToLite}
-          onFallbackToLite={handleFallbackToLite}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <FarmScene
+            onSwitchToLite={handleSwitchToLite}
+            onFallbackToLite={handleFallbackToLite}
+          />
+        </Suspense>
 
         {/* AI Advisor Modal Drawer */}
         <Suspense fallback={null}>

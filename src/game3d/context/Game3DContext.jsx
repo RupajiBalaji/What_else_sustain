@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { sound } from '../../game/soundManager'
+import { audioManager } from '../audio/AudioManager'
 import { useGame } from '../../context/GameContext'
 import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 
@@ -9,7 +10,7 @@ const Game3DContext = createContext(null)
 
 export function Game3DProvider({ children, onFallbackToLite }) {
   const game = useGame()
-  // Shared wind parameters (used for 3D visual flag/trees and backend smoke simulation)
+  // Shared wind parameters (used for 3D visual flag/trees, audio, and backend smoke simulation)
   const [windState, setWindState] = useState({
     directionDeg: 75, // 0 = North, 90 = East (drifts smoke towards village at Z=45, X=5)
     speedMs: 3.8,      // m/s
@@ -28,7 +29,82 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }
   })
 
+  const [isTierLocked, setIsTierLocked] = useState(() => {
+    try {
+      return localStorage.getItem('wes_tier_locked') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  // Dynamic Resolution Scale (1.0 = native, down to 0.72 under heavy load)
+  const [dprScale, setDprScale] = useState(1.0)
+
+  // Persist tier lock state
+  useEffect(() => {
+    try {
+      localStorage.setItem('wes_tier_locked', isTierLocked ? 'true' : 'false')
+      localStorage.setItem('wes_3d_quality', quality)
+    } catch {
+      // Safe fallback
+    }
+  }, [isTierLocked, quality])
+
   const qualityConfig = useMemo(() => getQualityConfig(quality), [quality])
+
+  // Toast Notification System ("Adjusted graphics for smooth play")
+  const [toastNotice, setToastNotice] = useState(null)
+  const toastTimeoutRef = useRef(null)
+  const triggerToast = useCallback((msg) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
+    setToastNotice(msg)
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastNotice(null)
+    }, 3200)
+  }, [])
+
+  // Settings Drawer & Diagnostics
+  const [showSettings, setShowSettings] = useState(false)
+  const [showDevStats, setShowDevStats] = useState(false)
+  const toggleDevStats = useCallback(() => {
+    setShowDevStats((p) => !p)
+  }, [])
+
+  // Audio Channels State
+  const [soundVolume, setSoundVolume] = useState(0.8)
+  const [musicVolume, setMusicVolume] = useState(0.6)
+  const [isMuted, setIsMuted] = useState(false)
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev
+      sound.setMuted(next)
+      audioManager.setMuted(next)
+      return next
+    })
+  }, [])
+
+  // Accessibility & Controls: Reduced Motion & Invert Look
+  const [reducedMotion, setReducedMotion] = useState(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    }
+    return false
+  })
+
+  const [invertLook, setInvertLook] = useState(false)
+
+  // Haptic feedback trigger (respects reducedMotion)
+  const triggerHaptic = useCallback((pattern) => {
+    if (reducedMotion) return
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern)
+      } catch {
+        // Safe fallback
+      }
+    }
+  }, [reducedMotion])
 
   // Day-night cycle state: golden-hour by default, can be paused/resumed
   const [isDayCyclePaused, setIsDayCyclePaused] = useState(false)
@@ -47,23 +123,36 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setCinematicMode('normal')
   }, [])
 
+  // Diagnostics & FPS Monitor
+  const [showFps, setShowFps] = useState(false)
+  const [fps, setFps] = useState(60)
+  const [frameTimeMs, setFrameTimeMs] = useState(16.6)
+  const lowFpsStartTimeRef = useRef(null)
+
   const toggleFps = useCallback(() => {
     sound.initAudio()
     sound.playTap()
     setShowFps((prev) => !prev)
   }, [])
 
-  // Keyboard shortcut: Press 'F' to toggle FPS
+  // Keyboard shortcuts: Press 'F' to toggle FPS, 'G' to toggle GPU stats overlay
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
       if (e.key === 'f' || e.key === 'F') {
         toggleFps()
+      } else if (e.key === 'g' || e.key === 'G') {
+        toggleDevStats()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [toggleFps])
+  }, [toggleFps, toggleDevStats])
+
+  // Update wind audio loop when wind speed changes
+  useEffect(() => {
+    audioManager.updateWind(windState.speedMs)
+  }, [windState.speedMs])
 
   const reportFps = useCallback((currentFps, frameTime) => {
     setFps(currentFps)
@@ -83,7 +172,6 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       lowFpsStartTimeRef.current = null
     }
   }, [onFallbackToLite])
-
 
   const toggleQuality = useCallback(() => {
     sound.initAudio()
@@ -109,9 +197,13 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setActivePile(targetPile)
     setBurnState('lighting')
     setCinematicMode('burn_focus')
-    setTimeScale(0.3) // 0.3x time slow-motion beat for 1.5s
+    if (!reducedMotion) {
+      setTimeScale(0.3) // 0.3x time slow-motion beat for 1.5s
+    }
     sound.initAudio()
     sound.playTap()
+    triggerHaptic([40, 30, 40])
+    audioManager.setMusicState('tense')
 
     // Slow-mo beat for 1.5s then return to regular timeScale and normal camera
     setTimeout(() => {
@@ -218,6 +310,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     sound.stopTractorEngine()
     sound.stopBalerSound()
     sound.playRewindWhoosh()
+    audioManager.setMusicState('calm')
     setIsRewinding(true)
 
     if (burnTimerRef.current) clearTimeout(burnTimerRef.current)
@@ -292,6 +385,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setHasMadeChoice(true)
     sound.initAudio()
     sound.playTap()
+    audioManager.setMusicState('hopeful')
     setActiveAlternative(altKey)
     setAlternativeProgress(0)
     setRupeeCount(0)
@@ -339,6 +433,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       sound.stopTractorEngine()
       sound.stopBalerSound()
       sound.playSuccessChime()
+      triggerHaptic(60)
       setAlternativeProgress(1.0)
       if (altKey === 'bale_sell') {
         setRupeeCount(15000)
@@ -379,7 +474,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       // Show the Before/After Comparison Split Slider!
       setShowComparison(true)
     }, durationMs)
-  }, [game])
+  }, [game, triggerHaptic])
 
   // Player interaction with a straw pile (handles both in-world choices and legacy wheel)
   const handleInteract = useCallback(() => {
@@ -391,10 +486,6 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       // Legacy wheel mode: open the radial choice wheel
       setShowChoiceWheel(true)
     }
-    // In in-world mode the InWorldChoicePanel is already visible whenever
-    // interactionTarget is set; pressing E / tapping the button just
-    // acknowledges the pile (pop sound + activePile set). The Confirm button
-    // inside InWorldChoicePanel calls startBurnSequence / startAlternative.
   }, [interactionTarget, useInWorldChoices])
 
   // Reset / Rewind the field back to healthy golden state
@@ -421,8 +512,31 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         windState,
         setWindState,
         quality,
+        setQuality,
         qualityConfig,
         toggleQuality,
+        isTierLocked,
+        setIsTierLocked,
+        dprScale,
+        setDprScale,
+        toastNotice,
+        triggerToast,
+        showSettings,
+        setShowSettings,
+        showDevStats,
+        setShowDevStats,
+        toggleDevStats,
+        soundVolume,
+        setSoundVolume,
+        musicVolume,
+        setMusicVolume,
+        isMuted,
+        toggleMute,
+        reducedMotion,
+        setReducedMotion,
+        invertLook,
+        setInvertLook,
+        triggerHaptic,
         isDayCyclePaused,
         toggleDayCycle,
         cinematicMode,

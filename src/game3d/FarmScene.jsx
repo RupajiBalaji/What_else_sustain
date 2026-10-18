@@ -30,12 +30,16 @@ import SoilCutawayCrossSection from './components/SoilCutawayCrossSection'
 import AirSensorPole from './components/AirSensorPole'
 import ConsequenceCallouts from './components/ConsequenceCallouts'
 import CinematicCamera from './components/CinematicCamera'
+import PerformanceGovernor from './perf/PerformanceGovernor'
+import MemoryStatsOverlay, { MemoryStatsSampler } from './perf/MemoryStatsOverlay'
 
 function SceneContent() {
   const { activeAlternative } = useGame3D()
 
   return (
     <>
+      <PerformanceGovernor />
+      <MemoryStatsSampler />
       <CinematicCamera />
       <WorldEnvironment />
       <BirdsFlying />
@@ -68,16 +72,16 @@ function SceneContent() {
 }
 
 function FarmSceneInner({ onSwitchToLite }) {
-  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover } = useGame3D()
+  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover, dprScale } = useGame3D()
   const [hasStarted, setHasStarted] = useState(false)
 
-  // Dynamic pixel ratio based on quality tier cap
+  // Dynamic pixel ratio based on quality tier cap * dynamic resolution scale
   const dpr = useMemo(() => {
     if (typeof window === 'undefined') return 1.0
     const nativeDpr = window.devicePixelRatio || 1
     const maxCap = qualityConfig.maxPixelRatio || 1.25
-    return Math.min(nativeDpr, maxCap)
-  }, [qualityConfig])
+    return Math.min(nativeDpr, maxCap) * (dprScale || 1.0)
+  }, [qualityConfig, dprScale])
 
   useEffect(() => {
     // Hide page scrollbars while in 3D world mode
@@ -186,6 +190,9 @@ function FarmSceneInner({ onSwitchToLite }) {
           }}
         />
       )}
+
+      {/* Memory & Render Stats Overlay (toggled with G) */}
+      <MemoryStatsOverlay />
 
       {/* 2D HUD UI Overlay */}
       {hasStarted && <HUDOverlay onSwitchToLite={onSwitchToLite} />}

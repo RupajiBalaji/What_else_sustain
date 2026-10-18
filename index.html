@@ -16,6 +16,10 @@
     <meta name="twitter:title" content="What Else Sustain" />
     <meta name="twitter:description" content="Make the mistake. Understand it. Choose what else. Learn practical sustainability choices." />
     
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+
     <title>What Else Sustain</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,5 +28,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.debug('[PWA] Service worker registration error:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

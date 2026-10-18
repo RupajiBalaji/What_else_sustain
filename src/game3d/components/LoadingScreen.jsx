@@ -1,34 +1,54 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useProgress } from '@react-three/drei'
 import { useLanguage } from '../../context/LanguageContext'
 import { sound } from '../../game/soundManager'
+import { audioManager } from '../audio/AudioManager'
 import SproutMascot from '../../game/SproutMascot'
+
+const SUSTAINABILITY_TIPS = [
+  '🌱 Mulching with paddy straw retains up to 40% more soil moisture and protects topsoil.',
+  '🌾 Happy Seeder sows wheat directly into standing stubble with zero burning.',
+  '🚜 Baling straw earns farmers up to ₹3,000/acre while supplying clean biomass fuel.',
+  '🧪 Bio-decomposer sprays convert stubble into rich organic compost in 20–25 days.',
+  '💨 Open burning destroys essential nitrogen, phosphorus, and friendly earthworms.'
+]
 
 export default function LoadingScreen({ onStart, onSwitchToLite }) {
   const { t } = useLanguage()
-  const [progress, setProgress] = useState(15)
-  const [isReady, setIsReady] = useState(false)
+  const { progress: dreiProgress, active } = useProgress()
+  const [tipIndex, setTipIndex] = useState(0)
   const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const [minProgress, setMinProgress] = useState(15)
 
+  // Smoothly increment a baseline floor so the bar looks lively while downloading
   useEffect(() => {
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
-    // Simulated progress bar loading assets
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setIsReady(true)
-          return 100
-        }
-        return prev + Math.floor(Math.random() * 25) + 15
-      })
+    const tipTimer = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % SUSTAINABILITY_TIPS.length)
+    }, 3800)
+
+    const progressTimer = setInterval(() => {
+      setMinProgress((p) => (p < 85 ? p + 8 : p))
     }, 200)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(tipTimer)
+      clearInterval(progressTimer)
+    }
   }, [])
 
-  const handleStart = () => {
+  // Calculate actual combined progress
+  const actualProgress = Math.max(minProgress, Math.round(dreiProgress || 0))
+  const isReady = actualProgress >= 100 || (!active && actualProgress >= 75)
+
+  const handleStart = async () => {
+    try {
+      await audioManager.unlock()
+    } catch {
+      // Safe fallback
+    }
     sound.initAudio()
     sound.playTap()
     onStart()
@@ -67,6 +87,27 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
           {t('game3d.loadingTitle')}
         </h2>
 
+        {/* Sustainability Tip Carousel */}
+        <div
+          style={{
+            backgroundColor: '#E8F5E9',
+            border: '1.5px solid #81C784',
+            borderRadius: '12px',
+            padding: '8px 12px',
+            margin: '6px 0 10px 0',
+            fontSize: '0.8rem',
+            color: '#1B5E20',
+            fontWeight: 700,
+            lineHeight: 1.4,
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          {SUSTAINABILITY_TIPS[tipIndex]}
+        </div>
+
         {/* One-time Controls Card */}
         <div
           style={{
@@ -74,7 +115,7 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
             border: '2px solid #8D6E63',
             borderRadius: '16px',
             padding: '10px 14px',
-            margin: '10px 0 14px 0',
+            margin: '6px 0 14px 0',
             textAlign: 'left',
             boxShadow: '0 4px 12px rgba(0,0,0,0.06)'
           }}
@@ -113,7 +154,7 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
                 <span style={{ color: '#0288D1' }}>🖱️ Look:</span> Drag the mouse to look around
               </div>
               <div>
-                <span style={{ color: '#2E7D32' }}>🔘 Action:</span> E to interact
+                <span style={{ color: '#2E7D32' }}>🔘 Action:</span> E or Click to interact
               </div>
             </div>
           ) : (
@@ -149,12 +190,12 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
             borderRadius: '9999px',
             overflow: 'hidden',
             border: '2px solid #8D6E63',
-            marginBottom: '20px'
+            marginBottom: '18px'
           }}
         >
           <div
             style={{
-              width: `${progress}%`,
+              width: `${actualProgress}%`,
               height: '100%',
               backgroundColor: '#4CAF50',
               borderRadius: '9999px',
@@ -166,14 +207,14 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
         {/* Start Button (Unlocks audio & begins game) */}
         {isReady ? (
           <motion.button
-            initial={{ scale: 0.9 }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ repeat: Infinity, duration: 1.2 }}
+            initial={{ scale: 0.95 }}
+            animate={{ scale: [1, 1.04, 1] }}
+            transition={{ repeat: Infinity, duration: 1.3 }}
             type="button"
             onClick={handleStart}
             style={{
               width: '100%',
-              minHeight: '60px',
+              minHeight: '58px',
               borderRadius: '9999px',
               backgroundColor: '#FFD54F',
               color: '#16382B',
@@ -188,15 +229,16 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
               gap: '8px'
             }}
           >
-            {t('game3d.startBtn')}
+            <span>🌾</span>
+            <span>{t('game3d.startBtn')}</span>
           </motion.button>
         ) : (
           <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#2E7D32' }}>
-            <span>🌱 {progress}%</span>
+            <span>🌱 Loading {actualProgress}%</span>
           </div>
         )}
 
-        {/* Option to switch straight to Lite mode if desired */}
+        {/* Option to switch straight to Lite mode */}
         <div style={{ marginTop: '16px' }}>
           <button
             type="button"

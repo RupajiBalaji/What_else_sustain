@@ -9,6 +9,7 @@ import RewindGlitchOverlay from './RewindGlitchOverlay'
 import RupeeCounterHUD from './RupeeCounterHUD'
 import ComparisonSliderModal from './ComparisonSliderModal'
 import KidPledgeScreen from '../../game/KidPledgeScreen'
+import SettingsDrawer from './SettingsDrawer'
 
 export default function HUDOverlay({ onSwitchToLite }) {
   const { t } = useLanguage()
@@ -32,7 +33,11 @@ export default function HUDOverlay({ onSwitchToLite }) {
     showFps,
     toggleFps,
     fps,
-    frameTimeMs
+    frameTimeMs,
+    showSettings,
+    setShowSettings,
+    toastNotice,
+    invertLook
   } = useGame3D()
 
   // Mobile virtual joystick state
@@ -116,6 +121,14 @@ export default function HUDOverlay({ onSwitchToLite }) {
     const dy = clientY - centerY
     const dist = Math.sqrt(dx * dx + dy * dy)
     const maxRadius = 45
+    const deadzone = 7 // 0.15 * 45px deadzone to eliminate touch drift
+
+    if (dist < deadzone) {
+      setKnobPos({ x: 0, y: 0 })
+      playerInput.joystickX = 0
+      playerInput.joystickY = 0
+      return
+    }
 
     const clampedDist = Math.min(dist, maxRadius)
     const angle = Math.atan2(dy, dx)
@@ -123,8 +136,10 @@ export default function HUDOverlay({ onSwitchToLite }) {
     const knobY = Math.sin(angle) * clampedDist
 
     setKnobPos({ x: knobX, y: knobY })
-    playerInput.joystickX = knobX / maxRadius
-    playerInput.joystickY = knobY / maxRadius
+    // Remap deadzone range smoothly to 0..1
+    const normalizedMag = (clampedDist - deadzone) / (maxRadius - deadzone)
+    playerInput.joystickX = Math.cos(angle) * normalizedMag
+    playerInput.joystickY = Math.sin(angle) * normalizedMag
   }
 
   // Touch handlers for Drag-to-Look area (right side)
@@ -140,7 +155,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
       if (touch.identifier === lookTouchIdRef.current) {
         const dx = touch.clientX - lastLookXRef.current
         lastLookXRef.current = touch.clientX
-        playerInput.lookDeltaX = dx
+        playerInput.lookDeltaX = invertLook ? -dx : dx
         break
       }
     }
@@ -409,6 +424,31 @@ export default function HUDOverlay({ onSwitchToLite }) {
           >
             {quality === 'high' ? '💎 High' : quality === 'medium' ? '⚖️ Med' : '⚡ Low'}
           </button>
+
+          {/* Settings Drawer Button */}
+          <button
+            type="button"
+            onClick={() => setShowSettings(true)}
+            style={{
+              minHeight: '44px',
+              padding: '6px 12px',
+              borderRadius: '9999px',
+              backgroundColor: '#FFFFFF',
+              border: '2px solid #2E7D32',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              color: '#16382B',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title="Open Graphics & Audio Settings"
+            aria-label="Open Game Settings"
+          >
+            <span>⚙️</span>
+            <span>Settings</span>
+          </button>
         </div>
       </div>
 
@@ -615,6 +655,41 @@ export default function HUDOverlay({ onSwitchToLite }) {
           </div>
         </div>
       )}
+
+      {/* Dynamic Performance & Tier Adjustment Toast Notice */}
+      {toastNotice && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'rgba(22, 56, 43, 0.94)',
+            color: '#FFFFFF',
+            border: '2px solid #81C784',
+            borderRadius: '9999px',
+            padding: '8px 20px',
+            fontSize: '0.86rem',
+            fontWeight: 800,
+            boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
+            zIndex: 110,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          <span>⚡</span>
+          <span>{toastNotice}</span>
+        </div>
+      )}
+
+      {/* Settings Drawer Slide-Over */}
+      <SettingsDrawer
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </div>
   )
 }

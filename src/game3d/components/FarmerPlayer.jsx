@@ -10,6 +10,12 @@ import { useModelAvailability } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
 import InWorldChoicePanel from './InWorldChoicePanel'
 import MoneyFloatingTag from './MoneyFloatingTag'
+import { audioManager } from '../audio/AudioManager'
+
+// Module-level scratch vectors to prevent GC allocations in useFrame
+const _scratchNextPos = new THREE.Vector3()
+const _scratchCamTarget = new THREE.Vector3()
+const _scratchPile = new THREE.Vector3()
 
 // Global input state for desktop & mobile
 export const playerInput = {
@@ -36,7 +42,8 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     activePile,
     playerResetTrigger,
     activeAlternative,
-    cinematicMode
+    cinematicMode,
+    reducedMotion
   } = useGame3D()
   const { camera } = useThree()
 
@@ -48,13 +55,16 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   const rightArmRef = useRef(null)
   const torsoRef = useRef(null)
 
-  // Player state
+  // Player state & smooth velocity lerp (acceleration / deceleration)
   const posRef = useRef(new THREE.Vector3(...initialPosition))
+  const currentVelRef = useRef(new THREE.Vector3(0, 0, 0))
+  const targetVelRef = useRef(new THREE.Vector3(0, 0, 0))
   const yawRef = useRef(0) // Player orientation angle
   const camYawRef = useRef(0.08) // Slight offset so camera frames straw piles, tractor, and village
   const isMovingRef = useRef(false)
   const walkTimeRef = useRef(0)
   const lastNavUpdateRef = useRef(0)
+  const lastTargetIdRef = useRef(null)
 
   const isHigh = quality === 'high'
   const hasFarmerModel = useModelAvailability('/models/farmer.glb')
@@ -228,50 +238,76 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     }
 
     const inputMag = Math.sqrt(moveX * moveX + moveZ * moveZ)
-    const isMoving = inputMag > 0.08
-    isMovingRef.current = isMoving
+    const hasInput = inputMag > 0.08
 
-    if (isMoving) {
-      // Normalize input vector
+    if (hasInput) {
       const normX = moveX / Math.max(inputMag, 1)
       const normZ = moveZ / Math.max(inputMag, 1)
-
-      // Calculate desired movement direction relative to camera yaw
       const moveAngle = Math.atan2(normX, normZ) + camYawRef.current
       yawRef.current = moveAngle
 
-      // Player speed: ~5.5 m/s
-      const speed = 5.5 * Math.min(inputMag, 1.0)
-      const dx = Math.sin(moveAngle) * speed * delta
-      const dz = Math.cos(moveAngle) * speed * delta
+      const targetSpeed = 5.5 * Math.min(inputMag, 1.0)
+      targetVelRef.current.set(
+        Math.sin(moveAngle) * targetSpeed,
+        0,
+        Math.cos(moveAngle) * targetSpeed
+      )
+      // Accelerate towards target velocity
+      currentVelRef.current.lerp(targetVelRef.current, Math.min(1.0, delta * 14.0))
+    } else {
+      targetVelRef.current.set(0, 0, 0)
+      // Decelerate smoothly to stop
+      currentVelRef.current.lerp(targetVelRef.current, Math.min(1.0, delta * 16.0))
+    }
 
-      // Attempt movement with separate X and Z collision handling (smooth sliding against walls)
+    const currentSpeed = currentVelRef.current.length()
+    const isMoving = currentSpeed > 0.15
+    isMovingRef.current = isMoving
+
+    if (isMoving) {
       const curPos = posRef.current
-      const nextPosX = new THREE.Vector3(curPos.x + dx, curPos.y, curPos.z)
-      if (!checkCollisions(nextPosX)) {
-        curPos.x += dx
+      const vx = currentVelRef.current.x * delta
+      const vz = currentVelRef.current.z * delta
+
+      // Separate X and Z sliding collisions using module scratch vector
+      _scratchNextPos.set(curPos.x + vx, curPos.y, curPos.z)
+      if (!checkCollisions(_scratchNextPos)) {
+        curPos.x += vx
+      }
+      _scratchNextPos.set(curPos.x, curPos.y, curPos.z + vz)
+      if (!checkCollisions(_scratchNextPos)) {
+        curPos.z += vz
       }
 
-      const nextPosZ = new THREE.Vector3(curPos.x, curPos.y, curPos.z + dz)
-      if (!checkCollisions(nextPosZ)) {
-        curPos.z += dz
-      }
+      walkTimeRef.current += delta * (currentSpeed * 1.65)
 
-      walkTimeRef.current += delta * 9.0
+      // Surface detection for footsteps: dirt (field), grass (border/canal), road (gravel/stone)
+      let surface = 'dirt'
+      if (curPos.x >= -2 && curPos.x <= 5 && curPos.z >= 0 && curPos.z <= 50) {
+        surface = 'road'
+      } else if (curPos.x <= -28 || curPos.z < -5 || curPos.z > 35) {
+        surface = 'grass'
+      }
+      const stepPhase = Math.sin(walkTimeRef.current)
+      if (Math.abs(stepPhase) < 0.18) {
+        audioManager.playFootstep(surface)
+      }
     }
 
     // Update player mesh position and rotation
     playerRef.current.position.copy(posRef.current)
     playerRef.current.rotation.y = yawRef.current
 
-    // 1. Proximity check against straw piles
+    // 1. Proximity check against straw piles (zero object allocations)
     let nearestPile = null
     let minDist = 5.0 // Increased interaction radius to 5.0m
     let absoluteClosest = null
     let absoluteMinDist = Infinity
 
-    for (const pile of STRAW_PILES_DATA) {
-      const dist = posRef.current.distanceTo(new THREE.Vector3(pile.x, 0, pile.z))
+    for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
+      const pile = STRAW_PILES_DATA[i]
+      _scratchPile.set(pile.x, 0, pile.z)
+      const dist = posRef.current.distanceTo(_scratchPile)
       if (dist < absoluteMinDist) {
         absoluteMinDist = dist
         absoluteClosest = pile
@@ -281,7 +317,12 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         nearestPile = pile
       }
     }
-    setInteractionTarget(nearestPile)
+
+    // Throttled target update: avoid re-rendering context consumers every frame
+    if (lastTargetIdRef.current !== (nearestPile ? nearestPile.id : null)) {
+      lastTargetIdRef.current = nearestPile ? nearestPile.id : null
+      setInteractionTarget(nearestPile)
+    }
 
     const isAtPile =
       Boolean(nearestPile) &&
@@ -297,7 +338,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       yawRef.current = THREE.MathUtils.lerp(yawRef.current, pileAngle, 0.08)
     }
 
-    // Report nearest pile navigation coordinates for HUD guidance arrow
+    // Report nearest pile navigation coordinates for HUD guidance arrow (throttled to ~12 Hz)
     if (_.clock.getElapsedTime() - lastNavUpdateRef.current > 0.08) {
       lastNavUpdateRef.current = _.clock.getElapsedTime()
       if (absoluteClosest) {
@@ -478,7 +519,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       if (torsoRef.current) torsoRef.current.position.y = 1.05 + breath
     }
 
-    // 3. 3rd Person Camera Smooth Follow (yields to CinematicCamera during flyover / special sequences)
+    // 3. 3rd Person Camera Smooth Follow with Bob & Collision Avoidance
     if (cinematicMode && cinematicMode !== 'normal') return
 
     const camDistance = isAtPile ? 3.4 : 5.8
@@ -490,15 +531,44 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     const sideX = Math.cos(camYawRef.current) * shoulderOffset
     const sideZ = -Math.sin(camYawRef.current) * shoulderOffset
 
-    const targetCamX = posRef.current.x + behindX + sideX
-    const targetCamY = posRef.current.y + camHeight
-    const targetCamZ = posRef.current.z + behindZ + sideZ
+    // Footstep camera bob (disabled under reduced motion)
+    const camBob = (!reducedMotion && isMoving)
+      ? Math.sin(walkTimeRef.current * 1.8) * 0.06 * (currentSpeed / 5.5)
+      : 0
+
+    let targetCamX = posRef.current.x + behindX + sideX
+    let targetCamY = posRef.current.y + camHeight + camBob
+    let targetCamZ = posRef.current.z + behindZ + sideZ
 
     const targetLookX = isAtPile ? posRef.current.x + sideX * 0.25 : posRef.current.x
-    const targetLookY = isAtPile ? posRef.current.y + 1.25 : posRef.current.y + 1.4
+    const targetLookY = isAtPile ? posRef.current.y + 1.25 + camBob : posRef.current.y + 1.4 + camBob
     const targetLookZ = isAtPile ? posRef.current.z + sideZ * 0.25 : posRef.current.z
 
-    camera.position.lerp(new THREE.Vector3(targetCamX, targetCamY, targetCamZ), isAtPile ? 0.08 : 0.12)
+    // Camera Collision Avoidance: prevent clipping inside Farmhouse, Tractor, or Village houses
+    const colliders = [
+      FARMHOUSE_COLLIDER,
+      TRACTOR_COLLIDER,
+      ...VILLAGE_COLLIDERS
+    ]
+    const camMargin = 0.85
+    for (let c = 0; c < colliders.length; c++) {
+      const col = colliders[c]
+      if (
+        targetCamX >= col.minX - camMargin &&
+        targetCamX <= col.maxX + camMargin &&
+        targetCamZ >= col.minZ - camMargin &&
+        targetCamZ <= col.maxZ + camMargin
+      ) {
+        // Pull camera 55% closer towards look target to clear exterior wall
+        targetCamX = THREE.MathUtils.lerp(targetLookX, targetCamX, 0.45)
+        targetCamZ = THREE.MathUtils.lerp(targetLookZ, targetCamZ, 0.45)
+        targetCamY = THREE.MathUtils.lerp(targetLookY + 0.6, targetCamY, 0.45)
+        break
+      }
+    }
+
+    _scratchCamTarget.set(targetCamX, targetCamY, targetCamZ)
+    camera.position.lerp(_scratchCamTarget, isAtPile ? 0.08 : 0.12)
     camera.lookAt(targetLookX, targetLookY, targetLookZ)
   })
 

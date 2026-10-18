@@ -4,6 +4,8 @@ import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 import { STRAW_PILES_DATA } from './StrawPiles'
 
+const _particleDummy = new THREE.Object3D()
+
 /**
  * Procedural Sprite Generators (Generated once on HTML5 canvas as CanvasTexture)
  */
@@ -235,15 +237,13 @@ export default function FireSmokeSystem() {
       }
     }
 
-    const dummy = new THREE.Object3D()
-
     // 2. Fire Particles (Core, Body, Tips)
     if (fireMeshRef.current) {
       if (!isBurning || !hasPiles) {
-        dummy.scale.set(0, 0, 0)
-        dummy.updateMatrix()
+        _particleDummy.scale.set(0, 0, 0)
+        _particleDummy.updateMatrix()
         for (let i = 0; i < maxFire; i++) {
-          fireMeshRef.current.setMatrixAt(i, dummy.matrix)
+          fireMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         }
         fireMeshRef.current.instanceMatrix.needsUpdate = true
       } else {
@@ -270,11 +270,11 @@ export default function FireSmokeSystem() {
           const progress = p.life / p.maxLife
           const size = Math.sin(progress * Math.PI) * 1.4 + 0.3
 
-          dummy.position.set(p.x, p.y, p.z)
-          dummy.scale.set(size, size, size)
-          dummy.rotation.set(0, 0, progress * Math.PI)
-          dummy.updateMatrix()
-          fireMeshRef.current.setMatrixAt(i, dummy.matrix)
+          _particleDummy.position.set(p.x, p.y, p.z)
+          _particleDummy.scale.set(size, size, size)
+          _particleDummy.rotation.set(0, 0, progress * Math.PI)
+          _particleDummy.updateMatrix()
+          fireMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         })
         fireMeshRef.current.instanceMatrix.needsUpdate = true
       }
@@ -283,10 +283,10 @@ export default function FireSmokeSystem() {
     // 3. Embers
     if (emberMeshRef.current) {
       if (!isBurning || !hasPiles) {
-        dummy.scale.set(0, 0, 0)
-        dummy.updateMatrix()
+        _particleDummy.scale.set(0, 0, 0)
+        _particleDummy.updateMatrix()
         for (let i = 0; i < maxEmbers; i++) {
-          emberMeshRef.current.setMatrixAt(i, dummy.matrix)
+          emberMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         }
         emberMeshRef.current.instanceMatrix.needsUpdate = true
       } else {
@@ -311,10 +311,10 @@ export default function FireSmokeSystem() {
           const progress = p.life / p.maxLife
           const size = (1.0 - progress) * 0.35 + 0.08
 
-          dummy.position.set(p.x, p.y, p.z)
-          dummy.scale.set(size, size, size)
-          dummy.updateMatrix()
-          emberMeshRef.current.setMatrixAt(i, dummy.matrix)
+          _particleDummy.position.set(p.x, p.y, p.z)
+          _particleDummy.scale.set(size, size, size)
+          _particleDummy.updateMatrix()
+          emberMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         })
         emberMeshRef.current.instanceMatrix.needsUpdate = true
       }
@@ -323,10 +323,10 @@ export default function FireSmokeSystem() {
     // 4. Smoke Plume Particles (expanding, fading, bending toward village)
     if (smokeMeshRef.current) {
       if (!isSmokeActive || !hasPiles) {
-        dummy.scale.set(0, 0, 0)
-        dummy.updateMatrix()
+        _particleDummy.scale.set(0, 0, 0)
+        _particleDummy.updateMatrix()
         for (let i = 0; i < maxSmoke; i++) {
-          smokeMeshRef.current.setMatrixAt(i, dummy.matrix)
+          smokeMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         }
         smokeMeshRef.current.instanceMatrix.needsUpdate = true
       } else {
@@ -352,16 +352,25 @@ export default function FireSmokeSystem() {
           // Expands as it rises
           const size = 0.8 + progress * 4.2
 
-          dummy.position.set(p.x, p.y, p.z)
-          dummy.scale.set(size, size, size)
-          dummy.rotation.set(0, 0, p.life * 0.4)
-          dummy.updateMatrix()
-          smokeMeshRef.current.setMatrixAt(i, dummy.matrix)
+          _particleDummy.position.set(p.x, p.y, p.z)
+          _particleDummy.scale.set(size, size, size)
+          _particleDummy.rotation.set(0, 0, p.life * 0.4)
+          _particleDummy.updateMatrix()
+          smokeMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         })
         smokeMeshRef.current.instanceMatrix.needsUpdate = true
       }
     }
   })
+
+  // Texture cleanup on unmount
+  useEffect(() => {
+    return () => {
+      fireTexture.dispose()
+      smokeTexture.dispose()
+      emberTexture.dispose()
+    }
+  }, [fireTexture, smokeTexture, emberTexture])
 
   const leadPile = STRAW_PILES_DATA.find((p) => ignitedPiles.includes(p.id)) || STRAW_PILES_DATA[0]
 

@@ -1,7 +1,9 @@
-import React, { useMemo, useLayoutEffect, useRef } from 'react'
+import React, { useMemo, useLayoutEffect, useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
+
+const _cropDummy = new THREE.Object3D()
 
 /**
  * Creates a slender paddy/wheat crop cluster with vertex color gradient
@@ -171,7 +173,6 @@ export default function StandingCropRows() {
 
     // Harvester cut progression
     if (harvestState === 'harvesting' && meshRef.current) {
-      const dummy = new THREE.Object3D()
       const prog = harvestProgress || 0
 
       cropData.forEach((item, i) => {
@@ -183,16 +184,24 @@ export default function StandingCropRows() {
           currentHeightScale = item.scale * (1.0 - localProg)
         }
 
-        dummy.position.set(item.x, 0, item.z)
-        dummy.rotation.set(0, item.rotY, 0)
-        dummy.scale.set(item.scale, currentHeightScale, item.scale)
-        dummy.updateMatrix()
-        meshRef.current.setMatrixAt(i, dummy.matrix)
+        _cropDummy.position.set(item.x, 0, item.z)
+        _cropDummy.rotation.set(0, item.rotY, 0)
+        _cropDummy.scale.set(item.scale, currentHeightScale, item.scale)
+        _cropDummy.updateMatrix()
+        meshRef.current.setMatrixAt(i, _cropDummy.matrix)
       })
 
       meshRef.current.instanceMatrix.needsUpdate = true
     }
   })
+
+  // Dispose buffer geometry and material when harvesting finishes or scene resets
+  useEffect(() => {
+    return () => {
+      geometry.dispose()
+      material.dispose()
+    }
+  }, [geometry, material])
 
   // Completely unmount once harvest is finalized to save 100% GPU
   if (harvestState === 'harvested') {

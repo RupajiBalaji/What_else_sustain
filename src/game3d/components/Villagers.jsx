@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
 import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
 import ModelWithFallback from '../assets/ModelLoader'
@@ -15,12 +15,23 @@ const VILLAGERS_DATA = [
 ]
 
 function ProceduralVillager({ data, isCoughing, isWaving, isHigh }) {
+  const { camera } = useThree()
   const torsoRef = useRef(null)
   const leftArmRef = useRef(null)
   const rightArmRef = useRef(null)
   const headRef = useRef(null)
+  const frameTickRef = useRef(0)
 
   useFrame(({ clock }) => {
+    // Distance LOD: throttle animation ticks if camera is far (> 28m)
+    const dx = camera.position.x - data.x
+    const dz = camera.position.z - data.z
+    const distSq = dx * dx + dz * dz
+    if (distSq > 784) { // > 28m away
+      frameTickRef.current++
+      if (frameTickRef.current % 3 !== 0) return
+    }
+
     const t = clock.getElapsedTime() + data.x
     if (isCoughing) {
       const coughShake = Math.sin(t * 11) * 0.18 + 0.38

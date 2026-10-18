@@ -21,22 +21,18 @@ The 3D game engine supports optional external `.glb` models. When available, the
 
 ## 2. Sound & Audio Effects
 
-- **Web Audio Procedural Sound Engine** (`src/game/soundManager.js`)
-  - **Type**: Real-time synthesized procedural audio via Web Audio API oscillators and Howler.js.
-  - **License**: Creative Commons Zero (CC0 1.0) / Public Domain.
-  - **Sounds Synthesized**:
-    - `playTap()`: Sine wave transient button click (600 Hz &rarr; 300 Hz).
-    - `playPop()`: High-to-low bubble pop chirp (900 Hz &rarr; 350 Hz) for item sorting.
-    - `playCoin()`: Dual-harmonic bell chime (B5 987.77 Hz & E6 1318.51 Hz).
-    - `playSuccessChime()`: Pentatonic crystalline arpeggio (C5, E5, G5, C6).
-    - `playWin()`: Four-tone brassy victory fanfare (C5, E5, G5, C6 triangle harmonics).
-    - `playError()`: Low sawtooth warning bonk (160 Hz &rarr; 110 Hz).
-    - `startFireCrackle()`: Stochastic white noise bandpass bursts (800–2000 Hz).
-    - `playRewindWhoosh()`: Reverse sawtooth sweep with dynamic lowpass resonant filter sweep.
-    - `playAmbient()`: Warm sub-harmonic rural village drone (146.83 Hz D3 triangle tone).
-    - `startTractorEngine()`: Low diesel engine fundamental (54 Hz) with LFO rhythmic chug modulation.
-    - `startBalerSound()`: Periodic mechanical compression and baling whoosh (180 Hz &rarr; 60 Hz).
-  - **Zero External MP3s**: Audio requires no network downloads, avoids 404 broken link risks, and adheres to strict browser user-gesture policies (no autoplay without user interaction).
+- **Web Audio & Howler Advanced Audio Engine** (`src/game3d/audio/AudioManager.js`, `src/game/soundManager.js`)
+  - **Type**: Real-time synthesized procedural Web Audio API nodes with stereo panning and dynamic filters.
+  - **License**: Creative Commons Zero (CC0 1.0 Universal) / Public Domain.
+  - **Dynamic Audio Systems**:
+    - **Dynamic Wind Ambience**: Real-time pink noise generator with resonant bandpass filter modulated by live wind speed (`windState.speedMs`).
+    - **Procedural Birdsong**: Pentatonic high-frequency sinusoidal chirps that attenuate and silence when smoke rises.
+    - **Surface-Dependent Footsteps**: Differentiated acoustic transients for dirt (fields), grass (margins & canal), and road (gravel/stone).
+    - **Spatial Audio Positioning**: Real-time Euclidean distance attenuation ($1 / (1 + 0.08d)$) and stereo panning for tractors, harvesters, balers, and fire.
+    - **Layered Adaptive Music**: Continuous generative harmonic chords crossfading smoothly between **Calm** (C maj 9 pastoral), **Tense** (D min / F dim low pulsing tension during fire), and **Hopeful** (G maj / C maj crystalline resolution during sustainable alternatives).
+    - **Sound FX**: Tap, pop, coin chime, crystalline success arpeggios, fire crackle, and rewind whooshes.
+  - **Clean User-Gesture Unlock**: Audio context resumes exclusively on user interaction ("Tap to Start"), respecting mobile and modern browser autoplay policies. Master, SFX, and Music volume channels with global mute.
+  - **Zero External MP3s**: Eliminates broken link risks, reduces initial network payload to 0 kB of audio files, and works completely offline.
 
 ---
 

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="40" fill="#0B3D2E"/>
+  <!-- Golden paddy circle badge -->
+  <circle cx="96" cy="96" r="68" fill="#F6E2B3" stroke="#FFD54F" stroke-width="4"/>
+  <!-- Friendly Sprout Mascot -->
+  <path d="M96 130 C96 110, 85 92, 70 85 C88 88, 94 102, 96 130 Z" fill="#2E7D32"/>
+  <path d="M96 130 C96 108, 110 88, 126 82 C110 88, 100 102, 96 130 Z" fill="#43A047"/>
+  <circle cx="85" cy="74" r="8" fill="#2E7D32"/>
+  <circle cx="107" cy="74" r="8" fill="#43A047"/>
+  <!-- Soil base -->
+  <path d="M68 134 Q96 142 124 134 Q96 146 68 134 Z" fill="#795548"/>
+</svg>

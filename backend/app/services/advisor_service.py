@@ -225,7 +225,7 @@ async def ask_advisor(prompt: Optional[str], lang: str = "en", client_ip: str = 
             fallbackNeeded=True,
             source="offline",
             message="GEMINI_API_KEY is not configured in environment.",
-            answer=get_offline_fallback_answer(clean_prompt, "en"),
+            answer=get_offline_fallback_answer(clean_prompt, lang),
         )
 
     # 4. English-only system prompt with rigorous practical sustainability guidance

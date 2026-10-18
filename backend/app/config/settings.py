@@ -1,22 +1,15 @@
 import json
 from typing import List, Union
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     # Supports single key or comma-separated list of keys for rotational load-balancing
-    # e.g. GEMINI_API_KEY="key1,key2,key3" or GEMINI_API_KEYS="key1,key2"
     GEMINI_API_KEY: str = ""
     GEMINI_API_KEYS: str = ""
 
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "*"
-    ]
+    # Stored as str to allow any env format (e.g. "*", '["*"]', or comma-separated domains)
+    ALLOWED_ORIGINS: Union[str, List[str]] = "*"
     PORT: int = 8000
     DATABASE_URL: str = "sqlite:///./local.db"
 
@@ -26,18 +19,24 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_allowed_origins(cls, value: Union[str, List[str]]) -> List[str]:
-        if isinstance(value, str):
-            value = value.strip()
-            if value.startswith("[") and value.endswith("]"):
+    def get_allowed_origins(self) -> List[str]:
+        """Safely parses ALLOWED_ORIGINS whether passed as '*', JSON list, or comma-separated."""
+        val = self.ALLOWED_ORIGINS
+        if isinstance(val, list):
+            return val
+        if isinstance(val, str):
+            val = val.strip()
+            if not val or val == "*":
+                return ["*"]
+            if val.startswith("[") and val.endswith("]"):
                 try:
-                    return json.loads(value)
+                    parsed = json.loads(val)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
                 except Exception:
                     pass
-            return [item.strip() for item in value.split(",") if item.strip()]
-        return value
+            return [item.strip() for item in val.split(",") if item.strip()]
+        return ["*"]
 
     def get_gemini_keys(self) -> List[str]:
         """Collects all configured Gemini API keys into a sanitized list."""

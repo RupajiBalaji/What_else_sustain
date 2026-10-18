@@ -45,7 +45,7 @@ function createCropGeometry() {
   const finalColor = new THREE.Color()
 
   for (let i = 0; i < vertexCount; i++) {
-    const y = positions[i * 3 + 1] // Height 0 to 1.15
+    const y = positions[i * 3 + 1]
     const t = Math.max(0, Math.min(1, y / 1.15))
 
     if (t < 0.5) {
@@ -67,13 +67,14 @@ function createCropGeometry() {
 }
 
 export default function StandingCropRows() {
-  const { quality, windState, harvestState, harvestProgress } = useGame3D()
-  const isHigh = quality === 'high'
+  const { qualityConfig, windState, harvestState, harvestProgress } = useGame3D()
+  const isShadows = qualityConfig.shadows
   const meshRef = useRef(null)
+  const shaderRef = useRef(null)
 
-  // Rows and cols covering the main field
-  const rows = isHigh ? 18 : 12
-  const cols = isHigh ? 18 : 12
+  // Rows and cols covering the main field based on quality tier
+  const rows = qualityConfig.cropRows || 14
+  const cols = qualityConfig.cropCols || 14
   const count = rows * cols
 
   const geometry = useMemo(() => createCropGeometry(), [])
@@ -92,8 +93,6 @@ export default function StandingCropRows() {
         const z = zStart + c * zStep + (Math.cos(r * 2 + c) * 0.18)
         const scale = 0.9 + (Math.sin(r * 3 + c) * 0.15)
         const rotY = (r * 0.4 + c * 0.7)
-
-        // Cut threshold based on sweep along X and Z
         const cutOrder = (r / rows) * 0.6 + (c / cols) * 0.4
 
         items.push({ x, z, scale, rotY, cutOrder })
@@ -102,62 +101,97 @@ export default function StandingCropRows() {
     return items
   }, [rows, cols])
 
-  // Initial matrix setup
+  // Initial layout for instanced mesh
   useLayoutEffect(() => {
     if (!meshRef.current) return
     const dummy = new THREE.Object3D()
 
     cropData.forEach((item, i) => {
       dummy.position.set(item.x, 0, item.z)
-      dummy.scale.set(item.scale, item.scale, item.scale)
       dummy.rotation.set(0, item.rotY, 0)
+      dummy.scale.set(item.scale, item.scale, item.scale)
       dummy.updateMatrix()
       meshRef.current.setMatrixAt(i, dummy.matrix)
     })
 
     meshRef.current.instanceMatrix.needsUpdate = true
-  }, [cropData])
+  }, [cropData, count])
 
-  // Wind sway & dynamic harvesting cut shrinkage
+  // Custom Wind-Driven Vertex Shader with real wind speed/direction
+  const material = useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.82,
+      metalness: 0.05,
+      side: THREE.DoubleSide
+    })
+
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uWindTime = { value: 0 }
+      shader.uniforms.uWindDir = { value: new THREE.Vector2(0.5, 0.8) }
+      shader.uniforms.uWindSpeed = { value: 3.8 }
+
+      shader.vertexShader = `
+        uniform float uWindTime;
+        uniform vec2 uWindDir;
+        uniform float uWindSpeed;
+      ` + shader.vertexShader
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        `
+        #include <begin_vertex>
+        // GPU vertex wave driven by real wind direction & speed
+        vec4 wPos = modelMatrix * instanceMatrix * vec4(position, 1.0);
+        float wavePhase = (wPos.x * uWindDir.x + wPos.z * uWindDir.y) * 0.45;
+        float wave = sin(wavePhase - uWindTime * (uWindSpeed * 0.8 + 1.2));
+        float hFactor = max(0.0, position.y);
+        transformed.x += uWindDir.x * wave * hFactor * 0.22;
+        transformed.z += uWindDir.y * wave * hFactor * 0.22;
+        `
+      )
+      shaderRef.current = shader
+    }
+
+    return mat
+  }, [])
+
+  // Animate wind shader uniforms and handle dynamic harvesting cut
   useFrame(({ clock }) => {
-    if (!meshRef.current || harvestState === 'harvested') return
-    const t = clock.getElapsedTime()
-    const windSpeed = windState?.speedMs || 3.8
-    const swayFactor = 0.06 * (windSpeed / 3.0)
+    if (harvestState === 'harvested') return
 
-    const dummy = new THREE.Object3D()
-    const matrix = new THREE.Matrix4()
-    const pos = new THREE.Vector3()
-    const quat = new THREE.Quaternion()
-    const scale = new THREE.Vector3()
+    // Update GPU wind shader uniforms
+    if (shaderRef.current) {
+      const t = clock.getElapsedTime()
+      shaderRef.current.uniforms.uWindTime.value = t
+      const windRad = ((windState?.directionDeg ?? 75) * Math.PI) / 180
+      shaderRef.current.uniforms.uWindDir.value.set(Math.sin(windRad), Math.cos(windRad))
+      shaderRef.current.uniforms.uWindSpeed.value = windState?.speedMs ?? 3.8
+    }
 
-    const isHarvesting = harvestState === 'harvesting'
-    const prog = harvestProgress || 0
+    // Harvester cut progression
+    if (harvestState === 'harvesting' && meshRef.current) {
+      const dummy = new THREE.Object3D()
+      const prog = harvestProgress || 0
 
-    cropData.forEach((item, i) => {
-      // Determine if this stalk has been cut by the harvester
-      let currentHeightScale = item.scale
-      if (isHarvesting) {
+      cropData.forEach((item, i) => {
+        let currentHeightScale = item.scale
         if (prog >= item.cutOrder + 0.12) {
-          // Completely cut down
           currentHeightScale = 0.001
         } else if (prog >= item.cutOrder) {
-          // Shrinking / falling
           const localProg = (prog - item.cutOrder) / 0.12
           currentHeightScale = item.scale * (1.0 - localProg)
         }
-      }
 
-      const sway = Math.sin(t * 2.8 + item.x * 0.3 + item.z * 0.3) * swayFactor
-      dummy.position.set(item.x, 0, item.z)
-      dummy.rotation.set(sway * 0.7, item.rotY, sway)
-      dummy.scale.set(item.scale, currentHeightScale, item.scale)
-      dummy.updateMatrix()
+        dummy.position.set(item.x, 0, item.z)
+        dummy.rotation.set(0, item.rotY, 0)
+        dummy.scale.set(item.scale, currentHeightScale, item.scale)
+        dummy.updateMatrix()
+        meshRef.current.setMatrixAt(i, dummy.matrix)
+      })
 
-      meshRef.current.setMatrixAt(i, dummy.matrix)
-    })
-
-    meshRef.current.instanceMatrix.needsUpdate = true
+      meshRef.current.instanceMatrix.needsUpdate = true
+    }
   })
 
   // Completely unmount once harvest is finalized to save 100% GPU
@@ -168,17 +202,10 @@ export default function StandingCropRows() {
   return (
     <instancedMesh
       ref={meshRef}
-      args={[geometry, undefined, count]}
-      castShadow={isHigh}
-      receiveShadow={isHigh}
+      args={[geometry, material, count]}
+      castShadow={isShadows}
+      receiveShadow={isShadows}
       name="StandingCropRowsInstanced"
-    >
-      <meshStandardMaterial
-        vertexColors
-        roughness={0.82}
-        metalness={0.05}
-        side={THREE.DoubleSide}
-      />
-    </instancedMesh>
+    />
   )
 }

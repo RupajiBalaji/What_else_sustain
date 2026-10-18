@@ -184,6 +184,7 @@ RULES:
 
 // https://vite.dev/config/
 export default defineConfig({
+  assetsInclude: ['**/*.glb'],
   plugins: [react(), geminiAdvisorPlugin()],
   server: {
     port: 5173,

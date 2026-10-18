@@ -35,7 +35,8 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     burnState,
     activePile,
     playerResetTrigger,
-    activeAlternative
+    activeAlternative,
+    cinematicMode
   } = useGame3D()
   const { camera } = useThree()
 
@@ -477,7 +478,9 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       if (torsoRef.current) torsoRef.current.position.y = 1.05 + breath
     }
 
-    // 3. 3rd Person Camera Smooth Follow with Over-The-Shoulder Glide when at pile
+    // 3. 3rd Person Camera Smooth Follow (yields to CinematicCamera during flyover / special sequences)
+    if (cinematicMode && cinematicMode !== 'normal') return
+
     const camDistance = isAtPile ? 3.4 : 5.8
     const camHeight = isAtPile ? 2.15 : 3.2
     const shoulderOffset = isAtPile ? 0.72 : 0

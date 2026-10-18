@@ -399,7 +399,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
               minHeight: '44px',
               padding: '6px 12px',
               borderRadius: '9999px',
-              backgroundColor: quality === 'high' ? '#FFF9C4' : '#ECEFF1',
+              backgroundColor: quality === 'high' ? '#FFF9C4' : quality === 'medium' ? '#E1F5FE' : '#ECEFF1',
               border: '2px solid #E65100',
               fontWeight: 800,
               fontSize: '0.82rem',
@@ -407,7 +407,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
               cursor: 'pointer'
             }}
           >
-            {quality === 'high' ? `💎 ${t('game3d.qualityHigh')}` : `⚡ ${t('game3d.qualityLow')}`}
+            {quality === 'high' ? '💎 High' : quality === 'medium' ? '⚖️ Med' : '⚡ Low'}
           </button>
         </div>
       </div>

@@ -82,7 +82,8 @@ export function ProceduralFarmhouse({ position = [18, 0, -12], ...props }) {
 export default function Farmhouse(props) {
   return (
     <ModelWithFallback
-      modelUrl="/models/house.glb"
+      assetId="barn"
+      modelUrl="/models/barn.glb"
       fallback={ProceduralFarmhouse}
       position={[18, 0, -12]}
       {...props}

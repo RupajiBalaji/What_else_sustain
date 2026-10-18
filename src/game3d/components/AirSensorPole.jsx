@@ -11,7 +11,7 @@ import { useGame3D } from '../context/Game3DContext'
  */
 export default function AirSensorPole({ position = [-2.5, 0, 40.5] }) {
   const { quality, burnState, burnProgress, smokeData, activeAlternative } = useGame3D()
-  const isHigh = quality === 'high'
+  const isHigh = quality !== 'low'
 
   const anemometerRef = useRef(null)
   const beaconLightRef = useRef(null)

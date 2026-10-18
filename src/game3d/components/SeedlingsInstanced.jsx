@@ -6,7 +6,7 @@ import { useGame3D } from '../context/Game3DContext'
 export default function SeedlingsInstanced() {
   const { activeAlternative, alternativeProgress, isFieldBurnt, quality, showComparison } = useGame3D()
   const meshRef = useRef(null)
-  const isHigh = quality === 'high'
+  const isHigh = quality !== 'low'
   const count = isHigh ? 160 : 90
 
   // Visible after ANY sustainable alternative or during before/after comparison

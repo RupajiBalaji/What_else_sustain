@@ -4,14 +4,122 @@ import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 import { STRAW_PILES_DATA } from './StrawPiles'
 
-const MAX_FIRE_PARTICLES = 240
-const MAX_SMOKE_PARTICLES = 300 // Total 540 particles <= 600 limit
+/**
+ * Procedural Sprite Generators (Generated once on HTML5 canvas as CanvasTexture)
+ */
+function createParticleTexture(type) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 128
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, 128, 128)
+
+  if (type === 'fire') {
+    // Soft glowing radial flame puff
+    const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 60)
+    grad.addColorStop(0, 'rgba(255, 255, 240, 1.0)') // White-hot core
+    grad.addColorStop(0.25, 'rgba(255, 183, 77, 0.85)') // Bright golden flame
+    grad.addColorStop(0.6, 'rgba(230, 81, 0, 0.55)') // Deep orange
+    grad.addColorStop(0.85, 'rgba(191, 54, 12, 0.25)') // Dark crimson tip
+    grad.addColorStop(1.0, 'rgba(191, 54, 12, 0.0)')
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.arc(64, 64, 60, 0, Math.PI * 2)
+    ctx.fill()
+  } else if (type === 'ember') {
+    // Sharp glowing spark
+    const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 48)
+    grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)')
+    grad.addColorStop(0.35, 'rgba(255, 213, 79, 0.9)')
+    grad.addColorStop(0.7, 'rgba(255, 112, 67, 0.4)')
+    grad.addColorStop(1.0, 'rgba(255, 87, 34, 0.0)')
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.arc(64, 64, 48, 0, Math.PI * 2)
+    ctx.fill()
+  } else {
+    // Soft turbulent smoke puff
+    const grad = ctx.createRadialGradient(64, 64, 4, 64, 64, 60)
+    grad.addColorStop(0, 'rgba(80, 70, 65, 0.75)')
+    grad.addColorStop(0.4, 'rgba(60, 52, 48, 0.5)')
+    grad.addColorStop(0.75, 'rgba(45, 40, 38, 0.2)')
+    grad.addColorStop(1.0, 'rgba(40, 36, 35, 0.0)')
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.arc(64, 64, 60, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.generateMipmaps = true
+  return tex
+}
+
+/**
+ * Heat Distortion Shimmer Plane directly above active fire
+ * Cheap animated wave refraction plane (High tier only).
+ */
+function HeatShimmer({ visible = true, position = [0, 2.5, 0] }) {
+  const meshRef = useRef(null)
+
+  const shimmerMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 }
+      },
+      vertexShader: `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec3 pos = position;
+          pos.x += sin(pos.y * 5.0 + uTime * 12.0) * 0.06;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          float wave = sin(vUv.y * 18.0 - uTime * 10.0) * 0.5 + 0.5;
+          float mask = smoothstep(0.0, 0.4, vUv.y) * smoothstep(1.0, 0.6, vUv.y);
+          mask *= smoothstep(0.0, 0.2, vUv.x) * smoothstep(1.0, 0.8, vUv.x);
+          gl_FragColor = vec4(1.0, 0.85, 0.6, mask * wave * 0.12);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide
+    })
+  }, [])
+
+  useFrame(({ clock }) => {
+    if (shimmerMaterial.uniforms) {
+      shimmerMaterial.uniforms.uTime.value = clock.getElapsedTime()
+    }
+  })
+
+  if (!visible) return null
+
+  return (
+    <mesh ref={meshRef} position={position} material={shimmerMaterial}>
+      <planeGeometry args={[4.5, 3.5, 12, 12]} />
+    </mesh>
+  )
+}
 
 export default function FireSmokeSystem() {
-  const { burnState, burnProgress, windState, ignitedPiles, setIgnitedPiles, quality } = useGame3D()
-  const isHigh = quality === 'high'
+  const {
+    burnState,
+    windState,
+    ignitedPiles,
+    setIgnitedPiles,
+    qualityConfig
+  } = useGame3D()
 
   const fireMeshRef = useRef(null)
+  const emberMeshRef = useRef(null)
   const smokeMeshRef = useRef(null)
   const lightRef = useRef(null)
 
@@ -19,24 +127,48 @@ export default function FireSmokeSystem() {
   const isConsequence = burnState === 'consequence'
   const isSmokeActive = isBurning || isConsequence
 
+  // Particle caps from qualityConfig
+  const maxFire = qualityConfig.fireParticles || 180
+  const maxSmoke = qualityConfig.smokeParticles || 140
+  const maxEmbers = qualityConfig.emberParticles || 50
+
+  const fireTexture = useMemo(() => createParticleTexture('fire'), [])
+  const smokeTexture = useMemo(() => createParticleTexture('smoke'), [])
+  const emberTexture = useMemo(() => createParticleTexture('ember'), [])
+
   // Initialize particle states
   const fireParticles = useMemo(() => {
-    return Array.from({ length: MAX_FIRE_PARTICLES }, () => ({
+    return Array.from({ length: 320 }, () => ({
       pileIndex: 0,
       x: 0,
       y: 0,
       z: 0,
       vx: 0,
-      vy: 1.5,
+      vy: 1.8,
       vz: 0,
       scale: 1,
       life: Math.random(),
-      maxLife: 0.8 + Math.random() * 0.6
+      maxLife: 0.7 + Math.random() * 0.5
+    }))
+  }, [])
+
+  const emberParticles = useMemo(() => {
+    return Array.from({ length: 100 }, () => ({
+      pileIndex: 0,
+      x: 0,
+      y: 0,
+      z: 0,
+      vx: 0,
+      vy: 2.8,
+      vz: 0,
+      scale: 0.4,
+      life: Math.random(),
+      maxLife: 1.4 + Math.random() * 0.9
     }))
   }, [])
 
   const smokeParticles = useMemo(() => {
-    return Array.from({ length: MAX_SMOKE_PARTICLES }, () => ({
+    return Array.from({ length: 260 }, () => ({
       pileIndex: 0,
       x: 0,
       y: 0,
@@ -59,7 +191,6 @@ export default function FireSmokeSystem() {
     const windVec = new THREE.Vector2(Math.sin(windRad), Math.cos(windRad)).normalize()
     const windSpeed = windState?.speedMs ?? 3.8
 
-    // Calculate ignition delay for each straw pile based on downwind distance
     const timeouts = STRAW_PILES_DATA.map((pile) => {
       if (pile.id === initialPile.id) return null
 
@@ -68,7 +199,6 @@ export default function FireSmokeSystem() {
       const dist = Math.sqrt(dx * dx + dz * dz)
       const dot = (dx * windVec.x + dz * windVec.y) / (dist || 1)
 
-      // Spreads faster downwind (dot > 0)
       const speedFactor = Math.max(0.35, 1.0 + dot * 0.65 * (windSpeed / 3.0))
       const delayMs = Math.min(13000, 1500 + (dist / (speedFactor * 3.2)) * 1000)
 
@@ -82,160 +212,225 @@ export default function FireSmokeSystem() {
     }
   }, [isBurning, windState, setIgnitedPiles])
 
-  // Get positions of currently ignited piles
-  const activePilePositions = useMemo(() => {
-    if (!ignitedPiles || ignitedPiles.length === 0) {
-      return [new THREE.Vector3(STRAW_PILES_DATA[0].x, 0.4, STRAW_PILES_DATA[0].z)]
-    }
-    return STRAW_PILES_DATA.filter((p) => ignitedPiles.includes(p.id)).map(
-      (p) => new THREE.Vector3(p.x, 0.4, p.z)
-    )
-  }, [ignitedPiles])
-
-  // Frame update for particle physics
+  // Frame update: animate fire, embers, smoke, and flickering point light
   useFrame(({ clock }, delta) => {
-    if (!isSmokeActive) return
-    const time = clock.getElapsedTime()
+    const elapsed = clock.getElapsedTime()
+    const windRad = ((windState?.directionDeg ?? 75) * Math.PI) / 180
+    const windSpeed = windState?.speedMs ?? 3.8
+    const windX = Math.sin(windRad) * windSpeed * 0.35
+    const windZ = Math.cos(windRad) * windSpeed * 0.35
 
-    // 1. Point Light Flicker (dims down to smolder during consequence)
-    if (lightRef.current && activePilePositions.length > 0) {
-      const center = activePilePositions[0]
-      lightRef.current.position.set(center.x, 2.2, center.z)
+    const activePilesList = STRAW_PILES_DATA.filter((p) => ignitedPiles.includes(p.id))
+    const hasPiles = activePilesList.length > 0
+
+    // 1. Point Light Flicker
+    if (lightRef.current && hasPiles) {
       if (isBurning) {
-        const flicker = 1.9 + Math.sin(time * 18) * 0.6 + Math.cos(time * 28) * 0.35
-        lightRef.current.intensity = Math.max(0.6, flicker)
+        const flicker = Math.sin(elapsed * 22) * 0.3 + Math.cos(elapsed * 37) * 0.2 + 1.2
+        lightRef.current.intensity = flicker * (activePilesList.length * 1.5)
+        const lead = activePilesList[0]
+        lightRef.current.position.set(lead.x, 1.8, lead.z)
       } else {
-        lightRef.current.intensity = 0.35 + Math.sin(time * 4) * 0.15
+        lightRef.current.intensity = 0
       }
     }
 
     const dummy = new THREE.Object3D()
-    const windRad = ((windState?.directionDeg ?? 75) * Math.PI) / 180
-    const windDirX = Math.sin(windRad)
-    const windDirZ = Math.cos(windRad)
-    const windSpeed = windState?.speedMs ?? 3.8
 
-    // 2. Fire Particles Update (only active while burning)
+    // 2. Fire Particles (Core, Body, Tips)
     if (fireMeshRef.current) {
-      for (let i = 0; i < MAX_FIRE_PARTICLES; i++) {
-        const p = fireParticles[i]
-        if (!isBurning) {
-          dummy.position.set(0, -10, 0)
-          dummy.scale.set(0, 0, 0)
-          dummy.updateMatrix()
+      if (!isBurning || !hasPiles) {
+        dummy.scale.set(0, 0, 0)
+        dummy.updateMatrix()
+        for (let i = 0; i < maxFire; i++) {
           fireMeshRef.current.setMatrixAt(i, dummy.matrix)
-          continue
         }
+        fireMeshRef.current.instanceMatrix.needsUpdate = true
+      } else {
+        fireParticles.slice(0, maxFire).forEach((p, i) => {
+          p.life += delta
+          if (p.life >= p.maxLife) {
+            p.life = 0
+            p.pileIndex = i % activePilesList.length
+            const pile = activePilesList[p.pileIndex]
+            const angle = Math.random() * Math.PI * 2
+            const rad = Math.random() * 0.8
+            p.x = pile.x + Math.cos(angle) * rad
+            p.y = 0.2 + Math.random() * 0.3
+            p.z = pile.z + Math.sin(angle) * rad
+            p.vx = (Math.random() - 0.5) * 0.4 + windX * 0.2
+            p.vy = 2.0 + Math.random() * 1.8
+            p.vz = (Math.random() - 0.5) * 0.4 + windZ * 0.2
+          }
 
-        p.life += delta
-
-        if (p.life >= p.maxLife) {
-          // Respawn at a random active pile
-          const pile = activePilePositions[i % activePilePositions.length]
-          p.x = pile.x + (Math.random() - 0.5) * 1.8
-          p.y = 0.5 + Math.random() * 0.4
-          p.z = pile.z + (Math.random() - 0.5) * 1.8
-          p.vx = (Math.random() - 0.5) * 0.8 + windDirX * 0.4
-          p.vy = 2.2 + Math.random() * 2.0
-          p.vz = (Math.random() - 0.5) * 0.8 + windDirZ * 0.4
-          p.life = 0
-          p.scale = 0.5 + Math.random() * 0.5
-        } else {
           p.x += p.vx * delta
           p.y += p.vy * delta
           p.z += p.vz * delta
-          // Fire shrinks as it ascends
+
           const progress = p.life / p.maxLife
-          const currentScale = Math.max(0.01, p.scale * (1.0 - progress))
+          const size = Math.sin(progress * Math.PI) * 1.4 + 0.3
+
           dummy.position.set(p.x, p.y, p.z)
-          dummy.scale.set(currentScale, currentScale * 1.4, currentScale)
+          dummy.scale.set(size, size, size)
+          dummy.rotation.set(0, 0, progress * Math.PI)
           dummy.updateMatrix()
           fireMeshRef.current.setMatrixAt(i, dummy.matrix)
-        }
+        })
+        fireMeshRef.current.instanceMatrix.needsUpdate = true
       }
-      fireMeshRef.current.instanceMatrix.needsUpdate = true
     }
 
-    // 3. Smoke Particles Update
-    if (smokeMeshRef.current) {
-      for (let i = 0; i < MAX_SMOKE_PARTICLES; i++) {
-        const p = smokeParticles[i]
-        p.life += delta
+    // 3. Embers
+    if (emberMeshRef.current) {
+      if (!isBurning || !hasPiles) {
+        dummy.scale.set(0, 0, 0)
+        dummy.updateMatrix()
+        for (let i = 0; i < maxEmbers; i++) {
+          emberMeshRef.current.setMatrixAt(i, dummy.matrix)
+        }
+        emberMeshRef.current.instanceMatrix.needsUpdate = true
+      } else {
+        emberParticles.slice(0, maxEmbers).forEach((p, i) => {
+          p.life += delta
+          if (p.life >= p.maxLife) {
+            p.life = 0
+            p.pileIndex = i % activePilesList.length
+            const pile = activePilesList[p.pileIndex]
+            p.x = pile.x + (Math.random() - 0.5) * 1.2
+            p.y = 0.5 + Math.random() * 0.5
+            p.z = pile.z + (Math.random() - 0.5) * 1.2
+            p.vx = (Math.random() - 0.5) * 0.8 + windX * 0.8
+            p.vy = 2.5 + Math.random() * 2.2
+            p.vz = (Math.random() - 0.5) * 0.8 + windZ * 0.8
+          }
 
-        if (p.life >= p.maxLife) {
-          // Respawn at active pile base
-          const pile = activePilePositions[i % activePilePositions.length]
-          p.x = pile.x + (Math.random() - 0.5) * 2.2
-          p.y = 1.0 + Math.random() * 0.8
-          p.z = pile.z + (Math.random() - 0.5) * 2.2
-          p.vx = windDirX * windSpeed * (0.6 + Math.random() * 0.5)
-          p.vy = 1.4 + Math.random() * 1.2
-          p.vz = windDirZ * windSpeed * (0.6 + Math.random() * 0.5)
-          p.life = 0
-          p.scale = 0.8 + Math.random() * 0.6
-        } else {
-          p.x += p.vx * delta
+          p.x += p.vx * delta + Math.sin(elapsed * 8 + i) * 0.02
           p.y += p.vy * delta
-          p.z += p.vz * delta
+          p.z += p.vz * delta + Math.cos(elapsed * 8 + i) * 0.02
 
-          // Smoke expands and rises as it blows towards village
           const progress = p.life / p.maxLife
-          const currentScale = p.scale + progress * 3.2
+          const size = (1.0 - progress) * 0.35 + 0.08
+
           dummy.position.set(p.x, p.y, p.z)
-          dummy.scale.set(currentScale, currentScale, currentScale)
-          dummy.rotation.set(0, time * 0.5 + i, 0)
+          dummy.scale.set(size, size, size)
           dummy.updateMatrix()
+          emberMeshRef.current.setMatrixAt(i, dummy.matrix)
+        })
+        emberMeshRef.current.instanceMatrix.needsUpdate = true
+      }
+    }
+
+    // 4. Smoke Plume Particles (expanding, fading, bending toward village)
+    if (smokeMeshRef.current) {
+      if (!isSmokeActive || !hasPiles) {
+        dummy.scale.set(0, 0, 0)
+        dummy.updateMatrix()
+        for (let i = 0; i < maxSmoke; i++) {
           smokeMeshRef.current.setMatrixAt(i, dummy.matrix)
         }
+        smokeMeshRef.current.instanceMatrix.needsUpdate = true
+      } else {
+        smokeParticles.slice(0, maxSmoke).forEach((p, i) => {
+          p.life += delta
+          if (p.life >= p.maxLife) {
+            p.life = 0
+            p.pileIndex = i % activePilesList.length
+            const pile = activePilesList[p.pileIndex]
+            p.x = pile.x + (Math.random() - 0.5) * 1.4
+            p.y = 1.0 + Math.random() * 0.6
+            p.z = pile.z + (Math.random() - 0.5) * 1.4
+            p.vx = windX * 0.5 + (Math.random() - 0.5) * 0.3
+            p.vy = 1.2 + Math.random() * 1.0
+            p.vz = windZ * 0.5 + (Math.random() - 0.5) * 0.3
+          }
+
+          const progress = p.life / p.maxLife
+          p.x += (p.vx + windX * progress * 1.5) * delta
+          p.y += p.vy * delta
+          p.z += (p.vz + windZ * progress * 1.5) * delta
+
+          // Expands as it rises
+          const size = 0.8 + progress * 4.2
+
+          dummy.position.set(p.x, p.y, p.z)
+          dummy.scale.set(size, size, size)
+          dummy.rotation.set(0, 0, p.life * 0.4)
+          dummy.updateMatrix()
+          smokeMeshRef.current.setMatrixAt(i, dummy.matrix)
+        })
+        smokeMeshRef.current.instanceMatrix.needsUpdate = true
       }
-      smokeMeshRef.current.instanceMatrix.needsUpdate = true
     }
   })
 
-  if (!isSmokeActive) return null
+  const leadPile = STRAW_PILES_DATA.find((p) => ignitedPiles.includes(p.id)) || STRAW_PILES_DATA[0]
 
   return (
-    <group name="FireSmokeSystem">
-      {/* Flickering orange fire point light */}
+    <group name="FireSmokeSystemGroup">
+      {/* 1. Flickering Point Light (rich orange flame illuminating surroundings) */}
       <pointLight
         ref={lightRef}
         color="#FF6D00"
-        intensity={2.2}
-        distance={isHigh ? 38 : 24}
+        intensity={0}
+        distance={24}
         decay={2}
       />
 
-      {/* GPU-Friendly Instanced Fire Particles */}
+      {/* 2. Layered Fire Particles with Additive Blending */}
       <instancedMesh
         ref={fireMeshRef}
-        args={[undefined, undefined, MAX_FIRE_PARTICLES]}
-        frustumCulled={false}
+        args={[undefined, undefined, maxFire]}
+        depthWrite={false}
       >
-        <coneGeometry args={[0.3, 0.6, 5]} />
+        <planeGeometry args={[1.2, 1.2]} />
         <meshBasicMaterial
-          color="#FF5722"
+          map={fireTexture}
           transparent
-          opacity={0.88}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
+          side={THREE.DoubleSide}
         />
       </instancedMesh>
 
-      {/* GPU-Friendly Instanced Dark Smoke Particles */}
+      {/* 3. High Embers */}
       <instancedMesh
-        ref={smokeMeshRef}
-        args={[undefined, undefined, MAX_SMOKE_PARTICLES]}
-        frustumCulled={false}
+        ref={emberMeshRef}
+        args={[undefined, undefined, maxEmbers]}
+        depthWrite={false}
       >
-        <sphereGeometry args={[0.6, 6, 6]} />
-        <meshStandardMaterial
-          color="#3E2723"
-          roughness={0.95}
+        <planeGeometry args={[0.5, 0.5]} />
+        <meshBasicMaterial
+          map={emberTexture}
           transparent
-          opacity={0.62}
+          blending={THREE.AdditiveBlending}
           depthWrite={false}
+          side={THREE.DoubleSide}
         />
       </instancedMesh>
+
+      {/* 4. Dense Smoky Plume */}
+      <instancedMesh
+        ref={smokeMeshRef}
+        args={[undefined, undefined, maxSmoke]}
+        depthWrite={false}
+      >
+        <planeGeometry args={[2.0, 2.0]} />
+        <meshBasicMaterial
+          map={smokeTexture}
+          transparent
+          opacity={0.42}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </instancedMesh>
+
+      {/* 5. Heat Distortion Shimmer (High Tier Only) */}
+      {isBurning && qualityConfig.heatShimmer && (
+        <HeatShimmer
+          position={[leadPile.x, 2.8, leadPile.z]}
+          visible={Boolean(qualityConfig.heatShimmer)}
+        />
+      )}
     </group>
   )
 }

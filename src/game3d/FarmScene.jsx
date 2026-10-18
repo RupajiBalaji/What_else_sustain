@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
+import * as THREE from 'three'
 import { Canvas } from '@react-three/fiber'
 import { Game3DProvider, useGame3D } from './context/Game3DContext'
 import WorldEnvironment from './components/WorldEnvironment'
@@ -28,12 +29,14 @@ import CombineHarvester from './components/CombineHarvester'
 import SoilCutawayCrossSection from './components/SoilCutawayCrossSection'
 import AirSensorPole from './components/AirSensorPole'
 import ConsequenceCallouts from './components/ConsequenceCallouts'
+import CinematicCamera from './components/CinematicCamera'
 
 function SceneContent() {
   const { activeAlternative } = useGame3D()
 
   return (
     <>
+      <CinematicCamera />
       <WorldEnvironment />
       <BirdsFlying />
       <FarmField />
@@ -65,15 +68,18 @@ function SceneContent() {
 }
 
 function FarmSceneInner({ onSwitchToLite }) {
-  const { quality, startHarvestSequence } = useGame3D()
+  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover } = useGame3D()
   const [hasStarted, setHasStarted] = useState(false)
-  const [dpr, setDpr] = useState(1.0)
+
+  // Dynamic pixel ratio based on quality tier cap
+  const dpr = useMemo(() => {
+    if (typeof window === 'undefined') return 1.0
+    const nativeDpr = window.devicePixelRatio || 1
+    const maxCap = qualityConfig.maxPixelRatio || 1.25
+    return Math.min(nativeDpr, maxCap)
+  }, [qualityConfig])
 
   useEffect(() => {
-    // Cap devicePixelRatio at 1.5 for mid-range phone performance
-    const pixelRatio = window.devicePixelRatio || 1
-    setDpr(Math.min(pixelRatio, 1.5))
-
     // Hide page scrollbars while in 3D world mode
     const origBodyOverflow = document.body.style.overflow
     const origHtmlOverflow = document.documentElement.style.overflow
@@ -97,28 +103,59 @@ function FarmSceneInner({ onSwitchToLite }) {
         zIndex: 5
       }}
     >
-      {/* 3D Canvas */}
+      {/* 3D Canvas with ACES Filmic Tone Mapping and Tuned Exposure */}
       <Canvas
-        shadows={quality === 'high'}
+        shadows={qualityConfig.shadows}
         dpr={dpr}
-        camera={{ position: [-1.78, 3.2, 4.23], fov: 50, near: 0.1, far: 200 }}
+        camera={{ position: [5.0, 24.0, 58.0], fov: 50, near: 0.1, far: 220 }}
         gl={{
-          antialias: quality === 'high',
-          powerPreference: 'high-performance'
+          antialias: qualityConfig.tier !== 'low',
+          powerPreference: 'high-performance',
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.08
         }}
         style={{ width: '100%', height: '100%', display: 'block' }}
       >
         <SceneContent />
       </Canvas>
 
-      {/* Subtle Mobile-Friendly Golden Hour Color Grade & Vignette Overlay (Zero GPU Overhead) */}
+      {/* Flyover Skip Banner */}
+      {hasStarted && isFlyoverActive && (
+        <div
+          onClick={skipFlyover}
+          style={{
+            position: 'absolute',
+            top: 'calc(18px + env(safe-area-inset-top, 0px))',
+            right: 'calc(18px + env(safe-area-inset-right, 0px))',
+            backgroundColor: 'rgba(22, 56, 43, 0.88)',
+            color: '#FFFFFF',
+            border: '2px solid #81C784',
+            borderRadius: '9999px',
+            padding: '8px 18px',
+            fontSize: '0.85rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            zIndex: 65,
+            boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            userSelect: 'none'
+          }}
+        >
+          <span>⏭️</span>
+          <span>Skip Intro (Space / Tap)</span>
+        </div>
+      )}
+
+      {/* Subtle Mobile-Friendly Golden Hour Color Grade & Vignette Overlay */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background: 'radial-gradient(circle at center, rgba(255, 236, 179, 0.04) 40%, rgba(62, 39, 35, 0.28) 100%)',
+          background: 'radial-gradient(circle at center, rgba(255, 236, 179, 0.03) 42%, rgba(62, 39, 35, 0.26) 100%)',
           mixBlendMode: 'multiply',
           zIndex: 10
         }}
@@ -129,11 +166,26 @@ function FarmSceneInner({ onSwitchToLite }) {
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background: 'linear-gradient(180deg, rgba(230, 81, 0, 0.05) 0%, rgba(255, 179, 0, 0.03) 50%, rgba(0, 0, 0, 0.08) 100%)',
+          background: 'linear-gradient(180deg, rgba(230, 81, 0, 0.04) 0%, rgba(255, 179, 0, 0.02) 50%, rgba(0, 0, 0, 0.08) 100%)',
           mixBlendMode: 'soft-light',
           zIndex: 11
         }}
       />
+
+      {/* Subtle Organic Film Grain on High Tier (Zero post-processing bundle overhead) */}
+      {qualityConfig.filmGrain && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            opacity: 0.035,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            zIndex: 12
+          }}
+        />
+      )}
 
       {/* 2D HUD UI Overlay */}
       {hasStarted && <HUDOverlay onSwitchToLite={onSwitchToLite} />}
@@ -156,7 +208,6 @@ export default function FarmScene({ onSwitchToLite, onFallbackToLite }) {
   const [webglSupported, setWebglSupported] = useState(true)
 
   useEffect(() => {
-    // Check WebGL availability safely
     try {
       const canvas = document.createElement('canvas')
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')

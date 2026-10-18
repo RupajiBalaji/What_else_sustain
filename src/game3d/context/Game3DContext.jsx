@@ -3,6 +3,8 @@ import { sound } from '../../game/soundManager'
 import { useGame } from '../../context/GameContext'
 import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 
+import { getQualityConfig, autoDetectQualityTier } from '../config/qualityConfig'
+
 const Game3DContext = createContext(null)
 
 export function Game3DProvider({ children, onFallbackToLite }) {
@@ -13,66 +15,36 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     speedMs: 3.8,      // m/s
   })
 
-  // Quality settings: 'high' (shadows, full instancing, fog) vs 'low' (no shadows, reduced objects, minimal fog)
+  // Quality tier settings: 'high' | 'medium' | 'low'
   const [quality, setQuality] = useState(() => {
     try {
-      return localStorage.getItem('wes_3d_quality') || 'high'
+      const saved = localStorage.getItem('wes_3d_quality')
+      if (saved && (saved === 'high' || saved === 'medium' || saved === 'low')) {
+        return saved
+      }
+      return autoDetectQualityTier()
     } catch {
-      return 'high'
+      return autoDetectQualityTier()
     }
   })
 
-  // Interaction target: null or { id, x, z, scale, label }
-  const [interactionTarget, setInteractionTarget] = useState(null)
-  const [activePile, setActivePile] = useState(null)
-  const [showChoiceWheel, setShowChoiceWheel] = useState(false)
-  const [hasMadeChoice, setHasMadeChoice] = useState(false)
-  // In-world choice UI vs legacy choice wheel (switchable for Lite mode fallback)
-  const [useInWorldChoices, setUseInWorldChoices] = useState(true)
-  const [selectedChoiceId, setSelectedChoiceId] = useState('happy_seeder')
-  const [nearestPileInfo, setNearestPileInfo] = useState(null)
-  const [showOneSeasonModal, setShowOneSeasonModal] = useState(false)
-  // Harvest cycle state: 'standing' (pre-harvest green field) | 'harvesting' (harvester sweep) | 'harvested' (stubble & straw piles ready)
-  const [harvestState, setHarvestState] = useState('standing')
-  const [harvestProgress, setHarvestProgress] = useState(0)
-  const harvestTimerRef = useRef(null)
-  const harvestIntervalRef = useRef(null)
+  const qualityConfig = useMemo(() => getQualityConfig(quality), [quality])
 
-  // Burn sequence state: 'idle' | 'lighting' | 'burning' | 'consequence'
-  const [burnState, setBurnState] = useState('idle')
-  const [burnProgress, setBurnProgress] = useState(0) // 0 -> 1 over 20s
-  const [ignitedPiles, setIgnitedPiles] = useState([]) // Array of pile IDs on fire
+  // Day-night cycle state: golden-hour by default, can be paused/resumed
+  const [isDayCyclePaused, setIsDayCyclePaused] = useState(false)
+  const toggleDayCycle = useCallback(() => {
+    setIsDayCyclePaused((p) => !p)
+  }, [])
 
-  // Smoke Simulation Data (relative exposure 0-100)
-  const [smokeData, setSmokeData] = useState({
-    playerExposure: null,
-    villageExposure: null,
-    disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
-    allParamsVerified: false
-  })
+  // Cinematic Camera & Slow-Motion States
+  // 'flyover' | 'normal' | 'burn_focus' | 'alt_showcase'
+  const [cinematicMode, setCinematicMode] = useState('flyover')
+  const [isFlyoverActive, setIsFlyoverActive] = useState(true)
+  const [timeScale, setTimeScale] = useState(1.0) // 0.3 for slow motion
 
-  // FPS & Performance tracking
-  const [showFps, setShowFps] = useState(false)
-  const [fps, setFps] = useState(60)
-  const [frameTimeMs, setFrameTimeMs] = useState(16.6)
-
-  // WebGL safety / Low FPS fallback monitor
-  const lowFpsStartTimeRef = useRef(null)
-  const burnTimerRef = useRef(null)
-  const burnIntervalRef = useRef(null)
-
-  const toggleQuality = useCallback(() => {
-    sound.initAudio()
-    sound.playTap()
-    setQuality((prev) => {
-      const next = prev === 'high' ? 'low' : 'high'
-      try {
-        localStorage.setItem('wes_3d_quality', next)
-      } catch {
-        // Safe fallback
-      }
-      return next
-    })
+  const skipFlyover = useCallback(() => {
+    setIsFlyoverActive(false)
+    setCinematicMode('normal')
   }, [])
 
   const toggleFps = useCallback(() => {
@@ -113,7 +85,22 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   }, [onFallbackToLite])
 
 
-  // Initiate Burn Sequence
+  const toggleQuality = useCallback(() => {
+    sound.initAudio()
+    sound.playTap()
+    setQuality((prev) => {
+      const cycle = { high: 'medium', medium: 'low', low: 'high' }
+      const next = cycle[prev] || 'high'
+      try {
+        localStorage.setItem('wes_3d_quality', next)
+      } catch {
+        // Safe fallback
+      }
+      return next
+    })
+  }, [])
+
+  // Initiate Burn Sequence with slow-motion beat and push-in camera
   const startBurnSequence = useCallback((pile) => {
     setShowChoiceWheel(false)
     setShowOneSeasonModal(false)
@@ -121,8 +108,16 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     const targetPile = pile || activePile || interactionTarget
     setActivePile(targetPile)
     setBurnState('lighting')
+    setCinematicMode('burn_focus')
+    setTimeScale(0.3) // 0.3x time slow-motion beat for 1.5s
     sound.initAudio()
     sound.playTap()
+
+    // Slow-mo beat for 1.5s then return to regular timeScale and normal camera
+    setTimeout(() => {
+      setTimeScale(1.0)
+      setCinematicMode('normal')
+    }, 1500)
 
     // 1.8 seconds of player lighting animation with torch
     setTimeout(() => {
@@ -301,6 +296,12 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setAlternativeProgress(0)
     setRupeeCount(0)
 
+    // Smooth showcase dolly to showcase machine at work
+    setCinematicMode('alt_showcase')
+    setTimeout(() => {
+      setCinematicMode('normal')
+    }, 4500)
+
     // Clean air: zero open burning
     setSmokeData({
       playerExposure: 2,
@@ -420,7 +421,15 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         windState,
         setWindState,
         quality,
+        qualityConfig,
         toggleQuality,
+        isDayCyclePaused,
+        toggleDayCycle,
+        cinematicMode,
+        setCinematicMode,
+        isFlyoverActive,
+        skipFlyover,
+        timeScale,
         interactionTarget,
         setInteractionTarget,
         activePile,

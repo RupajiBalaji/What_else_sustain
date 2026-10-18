@@ -15,7 +15,7 @@ export const STRAW_PILES_DATA = [
 ]
 
 export default function StrawPiles() {
-  const { quality, interactionTarget, isFieldBurnt, ignitedPiles, burnState } = useGame3D()
+  const { quality, interactionTarget, isFieldBurnt, ignitedPiles, burnState, activeAlternative, alternativeProgress } = useGame3D()
   const isHigh = quality === 'high'
 
   return (
@@ -25,27 +25,52 @@ export default function StrawPiles() {
         const isIgnited = ignitedPiles?.includes(pile.id)
         const isBurnt = isFieldBurnt || (burnState === 'burning' && isIgnited)
 
-        // Palette: Rich golden straw normally, charred ash when burnt
+        // Compost darkening
+        const isComposting = activeAlternative === 'compost' && pile.id === 'straw_1'
+        const isMulching = activeAlternative === 'mulch'
+
+        // Scale factors during alternatives
+        let heightScale = 1.0
+        if (isMulching) {
+          heightScale = Math.max(0.2, 1.0 - (alternativeProgress || 0) * 0.8)
+        } else if (isComposting) {
+          heightScale = Math.max(0.35, 1.0 - (alternativeProgress || 0) * 0.65)
+        }
+
+        // Palette: Rich golden straw normally, charred ash when burnt, dark brown when composting
         const topColor = isBurnt
           ? '#2C2523'
+          : isComposting
+          ? '#2E1E11'
           : isSelected
           ? '#FFE082'
           : '#F5B041'
 
         const baseColor = isBurnt
           ? '#1C1918'
+          : isComposting
+          ? '#23160D'
           : isSelected
           ? '#FFB74D'
           : '#E59866'
 
+        // Hide original piles during Bale & Sell as they are replaced by round bales
+        if (activeAlternative === 'bale_sell' && (alternativeProgress || 0) > 0.45) {
+          return null
+        }
+
         return (
-          <group key={pile.id} position={[pile.x, 0, pile.z]} scale={pile.scale}>
+          <group
+            key={pile.id}
+            position={[pile.x, 0, pile.z]}
+            scale={[pile.scale, pile.scale * heightScale, pile.scale]}
+          >
             {/* Main straw mound (flattened cone) */}
             <mesh position={[0, 0.7, 0]} castShadow={isHigh} receiveShadow={isHigh}>
               <coneGeometry args={[1.65, 1.45, 8]} />
               <meshStandardMaterial
                 color={topColor}
-                roughness={isBurnt ? 1.0 : 0.85}
+                roughness={isBurnt || isComposting ? 1.0 : 0.85}
                 metalness={0.05}
                 emissive={isSelected && !isBurnt ? '#FF8F00' : isIgnited ? '#FF3D00' : '#000000'}
                 emissiveIntensity={isSelected && !isBurnt ? 0.35 : isIgnited ? 0.8 : 0}

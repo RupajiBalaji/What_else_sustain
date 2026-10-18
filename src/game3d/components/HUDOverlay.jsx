@@ -5,6 +5,10 @@ import { playerInput } from './FarmerPlayer'
 import ChoiceWheel from './ChoiceWheel'
 import SmokeMeterHUD from './SmokeMeterHUD'
 import OneSeasonLaterModal from './OneSeasonLaterModal'
+import RewindGlitchOverlay from './RewindGlitchOverlay'
+import RupeeCounterHUD from './RupeeCounterHUD'
+import ComparisonSliderModal from './ComparisonSliderModal'
+import KidPledgeScreen from '../../game/KidPledgeScreen'
 
 export default function HUDOverlay({ onSwitchToLite }) {
   const { t } = useLanguage()
@@ -15,6 +19,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
     interactionTarget,
     handleInteract,
     burnState,
+    showPledgeModal,
+    setShowPledgeModal,
     showFps,
     toggleFps,
     fps,
@@ -310,6 +316,42 @@ export default function HUDOverlay({ onSwitchToLite }) {
 
       {/* ONE SEASON LATER CONSEQUENCE MODAL */}
       <OneSeasonLaterModal onSwitchToLite={onSwitchToLite} />
+
+      {/* VHS REWIND VISUAL GLITCH OVERLAY */}
+      <RewindGlitchOverlay />
+
+      {/* LIVE BIOMASS REVENUE COUNTER & CLEAN AIR HUD */}
+      <RupeeCounterHUD />
+
+      {/* BEFORE & AFTER COMPARISON SPLIT SLIDER */}
+      <ComparisonSliderModal onSwitchToLite={onSwitchToLite} />
+
+      {/* SUSTAINABILITY PLEDGE MODAL */}
+      {showPledgeModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 140,
+            backgroundColor: 'rgba(0, 0, 0, 0.82)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            overflowY: 'auto',
+            pointerEvents: 'auto'
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: '640px', maxHeight: '92vh', overflowY: 'auto', borderRadius: '24px' }}>
+            <KidPledgeScreen
+              scenarioId="farm_crop_residue"
+              onExitToMap={() => setShowPledgeModal(false)}
+              onOpenScorecard={onSwitchToLite}
+            />
+          </div>
+        </div>
+      )}
 
       {/* BOTTOM TOUCH CONTROLS (for mobile / touchscreens) */}
       {isTouchDevice && (

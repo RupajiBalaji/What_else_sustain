@@ -196,31 +196,158 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }, 1800)
   }, [activePile, interactionTarget, windState, game])
 
-  // Reset / Rewind the field back to healthy golden state
-  const resetBurn = useCallback(() => {
+  // VHS Rewind state
+  const [isRewinding, setIsRewinding] = useState(false)
+  const [playerResetTrigger, setPlayerResetTrigger] = useState(0)
+
+  // Live Alternatives state: null | 'happy_seeder' | 'bale_sell' | 'mulch' | 'compost'
+  const [activeAlternative, setActiveAlternative] = useState(null)
+  const [alternativeProgress, setAlternativeProgress] = useState(0)
+  const [rupeeCount, setRupeeCount] = useState(0)
+
+  // Split-screen comparison modal
+  const [showComparison, setShowComparison] = useState(false)
+  const [showPledgeModal, setShowPledgeModal] = useState(false)
+
+  const altIntervalRef = useRef(null)
+  const altTimerRef = useRef(null)
+
+  // Trigger VHS-style Rewind
+  const triggerRewind = useCallback(() => {
     sound.stopFireCrackle()
+    sound.stopTractorEngine()
+    sound.stopBalerSound()
     sound.playRewindWhoosh()
+    setIsRewinding(true)
+
     if (burnTimerRef.current) clearTimeout(burnTimerRef.current)
     if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
-    setBurnState('idle')
-    setBurnProgress(0)
-    setIgnitedPiles([])
-    setShowChoiceWheel(false)
-    setActivePile(null)
-    setSmokeData({
-      playerExposure: null,
-      villageExposure: null,
-      disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
-      allParamsVerified: false
-    })
+    if (altTimerRef.current) clearTimeout(altTimerRef.current)
+    if (altIntervalRef.current) clearInterval(altIntervalRef.current)
+
+    setTimeout(() => {
+      setIsRewinding(false)
+      setBurnState('idle')
+      setBurnProgress(0)
+      setIgnitedPiles([])
+      setActiveAlternative(null)
+      setAlternativeProgress(0)
+      setRupeeCount(0)
+      setPlayerResetTrigger((p) => p + 1)
+      setSmokeData({
+        playerExposure: null,
+        villageExposure: null,
+        disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
+        allParamsVerified: false
+      })
+      // Automatically reopen choice wheel so player can test alternatives!
+      setShowChoiceWheel(true)
+    }, 1350)
   }, [])
+
+  // Start one of the 4 sustainable alternatives
+  const startAlternative = useCallback((altKey) => {
+    setShowChoiceWheel(false)
+    sound.initAudio()
+    sound.playTap()
+    setActiveAlternative(altKey)
+    setAlternativeProgress(0)
+    setRupeeCount(0)
+
+    // Clean air: zero open burning
+    setSmokeData({
+      playerExposure: 2,
+      villageExposure: 1,
+      disclaimer: 'Modelled game estimate: Clean Air from zero open burning.',
+      allParamsVerified: true
+    })
+
+    if (altKey === 'happy_seeder') {
+      sound.startTractorEngine()
+    } else if (altKey === 'bale_sell') {
+      sound.startBalerSound()
+    }
+
+    const durationMs = 12000
+    const startTime = Date.now()
+
+    if (altIntervalRef.current) clearInterval(altIntervalRef.current)
+    altIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const prog = Math.min(1.0, elapsed / durationMs)
+      setAlternativeProgress(prog)
+
+      if (altKey === 'bale_sell') {
+        // Increment revenue from ₹0 to ₹15,000 (5 acres * ₹3,000/acre net)
+        const targetRupees = 15000
+        const currentRupees = Math.round(targetRupees * Math.pow(prog, 1.2))
+        setRupeeCount(currentRupees)
+      }
+    }, 100)
+
+    if (altTimerRef.current) clearTimeout(altTimerRef.current)
+    altTimerRef.current = setTimeout(() => {
+      if (altIntervalRef.current) clearInterval(altIntervalRef.current)
+      sound.stopTractorEngine()
+      sound.stopBalerSound()
+      sound.playSuccessChime()
+      setAlternativeProgress(1.0)
+      if (altKey === 'bale_sell') {
+        setRupeeCount(15000)
+        sound.playCoin()
+      }
+
+      // Award game rewards
+      if (game?.modifyNatureHealth) {
+        game.modifyNatureHealth(25)
+      }
+      if (game?.addPoints) {
+        game.addPoints(50)
+      }
+      if (game?.unlockBadge) {
+        game.unlockBadge('soil_saver')
+        game.unlockBadge('curious_mind')
+      }
+      if (game?.markScenarioCompleted) {
+        game.markScenarioCompleted('farm_crop_residue')
+      }
+
+      // Record sustainable session to backend
+      const choiceId =
+        altKey === 'bale_sell'
+          ? 'choice_sell_biomass'
+          : altKey === 'compost'
+          ? 'choice_compost_decomposer'
+          : 'choice_mulch_soil'
+
+      recordPlaySession({
+        session_id: `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+        scenario: 'farm_crop_residue',
+        choice: choiceId,
+        smoke_index: 1.0,
+        language: 'en'
+      })
+
+      // Show the Before/After Comparison Split Slider!
+      setShowComparison(true)
+    }, durationMs)
+  }, [game])
+
+  // Reset / Rewind the field back to healthy golden state
+  const resetBurn = useCallback(() => {
+    triggerRewind()
+  }, [triggerRewind])
 
   // Clean up timers on unmount
   useEffect(() => {
     return () => {
       sound.stopFireCrackle()
+      sound.stopTractorEngine()
+      sound.stopBalerSound()
       if (burnTimerRef.current) clearTimeout(burnTimerRef.current)
       if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
+      if (altTimerRef.current) clearTimeout(altTimerRef.current)
+      if (altIntervalRef.current) clearInterval(altIntervalRef.current)
     }
   }, [])
 
@@ -244,6 +371,17 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         startBurnSequence,
         resetBurn,
         isFieldBurnt: burnState === 'consequence',
+        isRewinding,
+        triggerRewind,
+        playerResetTrigger,
+        activeAlternative,
+        alternativeProgress,
+        startAlternative,
+        rupeeCount,
+        showComparison,
+        setShowComparison,
+        showPledgeModal,
+        setShowPledgeModal,
         showFps,
         toggleFps,
         fps,

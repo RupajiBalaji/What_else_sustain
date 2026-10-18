@@ -34,6 +34,8 @@ The 3D game engine supports optional external `.glb` models. When available, the
     - `startFireCrackle()`: Stochastic white noise bandpass bursts (800–2000 Hz).
     - `playRewindWhoosh()`: Reverse sawtooth sweep with dynamic lowpass resonant filter sweep.
     - `playAmbient()`: Warm sub-harmonic rural village drone (146.83 Hz D3 triangle tone).
+    - `startTractorEngine()`: Low diesel engine fundamental (54 Hz) with LFO rhythmic chug modulation.
+    - `startBalerSound()`: Periodic mechanical compression and baling whoosh (180 Hz &rarr; 60 Hz).
   - **Zero External MP3s**: Audio requires no network downloads, avoids 404 broken link risks, and adheres to strict browser user-gesture policies (no autoplay without user interaction).
 
 ---

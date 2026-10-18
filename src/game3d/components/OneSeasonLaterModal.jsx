@@ -179,28 +179,31 @@ export default function OneSeasonLaterModal({ onSwitchToLite }) {
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+          {/* Prominent WHAT ELSE? Rewind Button */}
           <button
             type="button"
             onClick={resetBurn}
             style={{
-              minHeight: '48px',
-              padding: '10px 18px',
+              minHeight: '52px',
+              padding: '12px 20px',
               borderRadius: '9999px',
-              backgroundColor: '#2E7D32',
-              color: '#FFFFFF',
-              border: 'none',
-              fontWeight: 800,
-              fontSize: '0.95rem',
+              backgroundColor: '#FFD54F',
+              color: '#16382B',
+              border: '3px solid #E65100',
+              fontWeight: 900,
+              fontSize: '1.05rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 12px rgba(46, 125, 50, 0.35)'
+              gap: '10px',
+              boxShadow: '0 6px 18px rgba(230, 81, 0, 0.4)',
+              transform: 'scale(1.02)',
+              animation: 'pulse 1.8s infinite'
             }}
           >
-            <span>↺</span>
-            <span>{t('game3d.rewindBtn')}</span>
+            <span>💡</span>
+            <span>{t('game3d.whatElseBtn')} — {t('game3d.rewindBtn')}</span>
           </button>
 
           <button

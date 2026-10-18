@@ -44,6 +44,8 @@ class SoundManager {
     if (muted) {
       this.stopAmbient()
       this.stopFireCrackle()
+      this.stopTractorEngine()
+      this.stopBalerSound()
     } else if (this.hasInteracted) {
       this.playAmbient()
     }
@@ -357,6 +359,108 @@ class SoundManager {
       })
     } catch {
       // Ignore
+    }
+  }
+
+  // 9. Tractor Engine (rhythmic low diesel idle and driving rumble)
+  startTractorEngine() {
+    if (this.isMuted || !this.hasInteracted) return
+    this.stopTractorEngine()
+    try {
+      if (!this.audioCtx) return
+      const now = this.audioCtx.currentTime
+
+      const osc = this.audioCtx.createOscillator()
+      const gain = this.audioCtx.createGain()
+      const filter = this.audioCtx.createBiquadFilter()
+
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(54, now) // Low diesel fundamental
+
+      filter.type = 'lowpass'
+      filter.frequency.setValueAtTime(260, now)
+
+      // LFO for periodic engine chug
+      const lfo = this.audioCtx.createOscillator()
+      const lfoGain = this.audioCtx.createGain()
+      lfo.frequency.setValueAtTime(9.5, now) // 9.5 Hz chug rhythm
+      lfoGain.gain.setValueAtTime(0.04, now)
+
+      gain.gain.setValueAtTime(0.06, now)
+
+      lfo.connect(gain.gain)
+      osc.connect(filter)
+      filter.connect(gain)
+      gain.connect(this.audioCtx.destination)
+
+      osc.start(now)
+      lfo.start(now)
+
+      this.tractorOsc = osc
+      this.tractorLfo = lfo
+      this.tractorGain = gain
+    } catch (e) {
+      console.warn('[SoundManager] Tractor engine audio error:', e)
+    }
+  }
+
+  stopTractorEngine() {
+    try {
+      if (this.tractorGain && this.audioCtx) {
+        this.tractorGain.gain.linearRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3)
+        setTimeout(() => {
+          this.tractorOsc?.stop()
+          this.tractorLfo?.stop()
+          this.tractorOsc?.disconnect()
+          this.tractorLfo?.disconnect()
+          this.tractorOsc = null
+          this.tractorLfo = null
+          this.tractorGain = null
+        }, 350)
+      }
+    } catch {
+      this.tractorOsc = null
+      this.tractorLfo = null
+      this.tractorGain = null
+    }
+  }
+
+  // 10. Baler Mechanical Action (rhythmic clatter & compress whoosh)
+  startBalerSound() {
+    if (this.isMuted || !this.hasInteracted) return
+    this.stopBalerSound()
+
+    const makeCycle = () => {
+      if (this.isMuted || !this.audioCtx) return
+      try {
+        const now = this.audioCtx.currentTime
+        const osc = this.audioCtx.createOscillator()
+        const gain = this.audioCtx.createGain()
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(180, now)
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.12)
+
+        gain.gain.setValueAtTime(0.09, now)
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14)
+
+        osc.connect(gain)
+        gain.connect(this.audioCtx.destination)
+        osc.start(now)
+        osc.stop(now + 0.15)
+      } catch {
+        // Safe catch
+      }
+
+      this.balerTimer = setTimeout(makeCycle, 480)
+    }
+
+    makeCycle()
+  }
+
+  stopBalerSound() {
+    if (this.balerTimer) {
+      clearTimeout(this.balerTimer)
+      this.balerTimer = null
     }
   }
 }

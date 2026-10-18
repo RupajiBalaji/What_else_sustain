@@ -5,8 +5,7 @@ import { sound } from '../../game/soundManager'
 
 export default function ChoiceWheel() {
   const { t } = useLanguage()
-  const { showChoiceWheel, setShowChoiceWheel, startBurnSequence, activePile } = useGame3D()
-  const [comingSoonToast, setComingSoonToast] = useState(null)
+  const { showChoiceWheel, setShowChoiceWheel, startBurnSequence, startAlternative, activePile } = useGame3D()
 
   if (!showChoiceWheel) return null
 
@@ -14,23 +13,17 @@ export default function ChoiceWheel() {
     sound.initAudio()
     sound.playTap()
     setShowChoiceWheel(false)
-    setComingSoonToast(null)
-  }
-
-  const handleComingSoon = (name) => {
-    sound.initAudio()
-    sound.playTap()
-    setComingSoonToast(`${name}: ${t('game3d.comingSoonNotice')}`)
-    setTimeout(() => {
-      setComingSoonToast(null)
-    }, 2800)
   }
 
   const handleSelectBurn = () => {
     startBurnSequence(activePile)
   }
 
-  // 5 radial options arranged in circle (Burn top-center)
+  const handleSelectAlternative = (altKey) => {
+    startAlternative(altKey)
+  }
+
+  // 5 radial options arranged in circle
   const options = [
     {
       id: 'burn',
@@ -46,46 +39,46 @@ export default function ChoiceWheel() {
     {
       id: 'happy_seeder',
       title: t('game3d.choiceHappySeeder'),
-      desc: t('game3d.comingSoonBadge'),
-      icon: '🌱',
+      desc: '🌱 Direct Sowing',
+      icon: '🚜',
       isBurn: false,
       angle: -18, // Top-right
-      color: '#546E7A',
-      bgColor: '#ECEFF1',
-      borderColor: '#90A4AE'
+      color: '#2E7D32',
+      bgColor: '#E8F5E9',
+      borderColor: '#4CAF50'
     },
     {
       id: 'bale_sell',
       title: t('game3d.choiceBaleSell'),
-      desc: t('game3d.comingSoonBadge'),
+      desc: '💰 +₹15,000 Income',
       icon: '🚛',
       isBurn: false,
       angle: 54, // Bottom-right
-      color: '#546E7A',
-      bgColor: '#ECEFF1',
-      borderColor: '#90A4AE'
+      color: '#0D47A1',
+      bgColor: '#E3F2FD',
+      borderColor: '#1976D2'
     },
     {
       id: 'mulch',
       title: t('game3d.choiceMulch'),
-      desc: t('game3d.comingSoonBadge'),
-      icon: '🚜',
+      desc: '💧 Soil Moisture',
+      icon: '🌾',
       isBurn: false,
       angle: 126, // Bottom-left
-      color: '#546E7A',
-      bgColor: '#ECEFF1',
-      borderColor: '#90A4AE'
+      color: '#33691E',
+      bgColor: '#F1F8E9',
+      borderColor: '#689F38'
     },
     {
       id: 'compost',
       title: t('game3d.choiceCompost'),
-      desc: t('game3d.comingSoonBadge'),
+      desc: '🪱 Bio-Decomposer',
       icon: '🧪',
       isBurn: false,
       angle: 198, // Top-left
-      color: '#546E7A',
-      bgColor: '#ECEFF1',
-      borderColor: '#90A4AE'
+      color: '#4E342E',
+      bgColor: '#EFEBE9',
+      borderColor: '#8D6E63'
     }
   ]
 
@@ -158,7 +151,7 @@ export default function ChoiceWheel() {
             <button
               key={opt.id}
               type="button"
-              onClick={() => (opt.isBurn ? handleSelectBurn() : handleComingSoon(opt.title))}
+              onClick={() => (opt.isBurn ? handleSelectBurn() : handleSelectAlternative(opt.id))}
               style={{
                 position: 'absolute',
                 transform: `translate(${x}px, ${y}px)`,

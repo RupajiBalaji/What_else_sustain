@@ -16,16 +16,31 @@ import HUDOverlay from './components/HUDOverlay'
 import LoadingScreen from './components/LoadingScreen'
 import FireSmokeSystem from './components/FireSmokeSystem'
 import Villagers from './components/Villagers'
+import BirdsFlying from './components/BirdsFlying'
+import SeedlingsInstanced from './components/SeedlingsInstanced'
+import HappySeederTractor from './components/HappySeederTractor'
+import StrawBalerAndTruck from './components/StrawBalerAndTruck'
+import MulchSoilEffect from './components/MulchSoilEffect'
+import CompostSprayEffect from './components/CompostSprayEffect'
 
 function SceneContent() {
+  const { activeAlternative } = useGame3D()
+
   return (
     <>
       <WorldEnvironment />
+      <BirdsFlying />
       <FarmField />
       <StubbleRows />
       <StrawPiles />
       <Farmhouse />
-      <Tractor />
+      {/* Hide parked tractor while Happy Seeder working tractor is active */}
+      {activeAlternative !== 'happy_seeder' && <Tractor />}
+      <HappySeederTractor />
+      <SeedlingsInstanced />
+      <StrawBalerAndTruck />
+      <MulchSoilEffect />
+      <CompostSprayEffect />
       <TreesInstanced />
       <VillageHousesInstanced />
       <Villagers />

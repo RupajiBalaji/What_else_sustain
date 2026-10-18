@@ -24,7 +24,7 @@ export const playerInput = {
 }
 
 export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
-  const { quality, setInteractionTarget, burnState, activePile } = useGame3D()
+  const { quality, setInteractionTarget, burnState, activePile, playerResetTrigger, activeAlternative } = useGame3D()
   const { camera } = useThree()
 
   // Character group ref and body limb refs
@@ -44,6 +44,19 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
 
   const isHigh = quality === 'high'
   const hasFarmerModel = useModelAvailability('/models/farmer.glb')
+
+  // Reset player position and rotation when rewinding
+  useEffect(() => {
+    if (playerResetTrigger > 0) {
+      posRef.current.set(...initialPosition)
+      yawRef.current = 0
+      camYawRef.current = 0
+      if (playerRef.current) {
+        playerRef.current.position.set(...initialPosition)
+        playerRef.current.rotation.y = 0
+      }
+    }
+  }, [playerResetTrigger, initialPosition])
 
   // Desktop keyboard listeners
   useEffect(() => {
@@ -334,6 +347,13 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
                 <meshStandardMaterial color="#F9A825" roughness={0.9} />
               </mesh>
             </group>
+            {/* Backpack spray tank for bio-decomposer */}
+            {activeAlternative === 'compost' && (
+              <mesh position={[0, 0, -0.32]} castShadow={isHigh}>
+                <boxGeometry args={[0.52, 0.68, 0.22]} />
+                <meshStandardMaterial color="#0288D1" roughness={0.5} />
+              </mesh>
+            )}
           </group>
 
           {/* 2. Left Arm */}
@@ -368,6 +388,20 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
                 <mesh position={[0, 0.24, 0]}>
                   <coneGeometry args={[0.08, 0.22, 6]} />
                   <meshBasicMaterial color="#FF5722" />
+                </mesh>
+              </group>
+            )}
+
+            {/* Sprayer wand when composting */}
+            {activeAlternative === 'compost' && (
+              <group position={[0, -0.55, 0.2]} rotation={[0.7, 0, 0]}>
+                <mesh position={[0, 0, 0]}>
+                  <cylinderGeometry args={[0.02, 0.02, 0.75, 6]} />
+                  <meshStandardMaterial color="#37474F" metalness={0.8} />
+                </mesh>
+                <mesh position={[0, 0.38, 0]}>
+                  <coneGeometry args={[0.05, 0.08, 6]} />
+                  <meshStandardMaterial color="#FFB300" />
                 </mesh>
               </group>
             )}

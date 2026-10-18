@@ -13,7 +13,7 @@ const VILLAGERS_DATA = [
   { id: 'v6', x: 18, z: 46, rot: 0.15, kurtaColor: '#EF9A9A', dhotiColor: '#FAFAFA' }
 ]
 
-function SingleVillager({ data, isCoughing, quality }) {
+function SingleVillager({ data, isCoughing, isWaving, quality }) {
   const torsoRef = useRef(null)
   const leftArmRef = useRef(null)
   const rightArmRef = useRef(null)
@@ -30,6 +30,15 @@ function SingleVillager({ data, isCoughing, quality }) {
       if (headRef.current) headRef.current.rotation.x = coughShake * 0.5
       if (leftArmRef.current) leftArmRef.current.rotation.x = -1.1 + Math.sin(t * 11) * 0.12
       if (rightArmRef.current) rightArmRef.current.rotation.x = -1.1 + Math.sin(t * 11) * 0.12
+    } else if (isWaving) {
+      // Cheerful waving arm motion
+      if (torsoRef.current) torsoRef.current.rotation.x = 0
+      if (headRef.current) headRef.current.rotation.x = 0
+      if (leftArmRef.current) leftArmRef.current.rotation.x = 0
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -2.4
+        rightArmRef.current.rotation.z = Math.sin(t * 8) * 0.45 + 0.3
+      }
     } else {
       // Gentle idle breathing
       const breath = Math.sin(t * 2) * 0.03
@@ -38,7 +47,10 @@ function SingleVillager({ data, isCoughing, quality }) {
         torsoRef.current.position.y = 0.95 + breath * 0.2
       }
       if (leftArmRef.current) leftArmRef.current.rotation.x = 0
-      if (rightArmRef.current) rightArmRef.current.rotation.x = 0
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = 0
+        rightArmRef.current.rotation.z = 0
+      }
     }
   })
 
@@ -106,20 +118,53 @@ function SingleVillager({ data, isCoughing, quality }) {
           </div>
         </Html>
       )}
+
+      {/* Cheerful Waving Emote Bubble during Sustainable Alternatives */}
+      {isWaving && (
+        <Html position={[0, 2.2, 0]} center distanceFactor={28} zIndexRange={[10, 0]}>
+          <div
+            style={{
+              backgroundColor: 'rgba(232, 245, 233, 0.95)',
+              border: '2px solid #4CAF50',
+              color: '#1B5E20',
+              padding: '3px 9px',
+              borderRadius: '9999px',
+              fontSize: '11px',
+              fontWeight: 800,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              pointerEvents: 'none',
+              animation: 'bounce 1s infinite'
+            }}
+          >
+            👋 Clean Air! 🌾
+          </div>
+        </Html>
+      )}
     </group>
   )
 }
 
 export default function Villagers() {
-  const { burnState, burnProgress, quality } = useGame3D()
+  const { burnState, burnProgress, activeAlternative, quality } = useGame3D()
 
   // Smoke reaches village after ~6 seconds of burn (progress >= 0.3) or during consequence
-  const isCoughing = burnState === 'consequence' || (burnState === 'burning' && burnProgress >= 0.3)
+  const isCoughing =
+    !activeAlternative &&
+    (burnState === 'consequence' || (burnState === 'burning' && burnProgress >= 0.3))
+
+  const isWaving = Boolean(activeAlternative)
 
   return (
     <group name="VillagersGroup">
       {VILLAGERS_DATA.map((v) => (
-        <SingleVillager key={v.id} data={v} isCoughing={isCoughing} quality={quality} />
+        <SingleVillager
+          key={v.id}
+          data={v}
+          isCoughing={isCoughing}
+          isWaving={isWaving}
+          quality={quality}
+        />
       ))}
     </group>
   )

@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { sound } from '../../game/soundManager'
+import { useGame } from '../../context/GameContext'
+import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 
 const Game3DContext = createContext(null)
 
 export function Game3DProvider({ children, onFallbackToLite }) {
+  const game = useGame()
   // Shared wind parameters (used for 3D visual flag/trees and backend smoke simulation)
   const [windState, setWindState] = useState({
-    directionDeg: 75, // 0 = North, 90 = East
+    directionDeg: 75, // 0 = North, 90 = East (drifts smoke towards village at Z=45, X=5)
     speedMs: 3.8,      // m/s
   })
 
@@ -19,8 +22,23 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }
   })
 
-  // Interaction target: null or { id, type, position, label }
+  // Interaction target: null or { id, x, z, scale, label }
   const [interactionTarget, setInteractionTarget] = useState(null)
+  const [activePile, setActivePile] = useState(null)
+  const [showChoiceWheel, setShowChoiceWheel] = useState(false)
+
+  // Burn sequence state: 'idle' | 'lighting' | 'burning' | 'consequence'
+  const [burnState, setBurnState] = useState('idle')
+  const [burnProgress, setBurnProgress] = useState(0) // 0 -> 1 over 20s
+  const [ignitedPiles, setIgnitedPiles] = useState([]) // Array of pile IDs on fire
+
+  // Smoke Simulation Data (relative exposure 0-100)
+  const [smokeData, setSmokeData] = useState({
+    playerExposure: null,
+    villageExposure: null,
+    disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
+    allParamsVerified: false
+  })
 
   // FPS & Performance tracking
   const [showFps, setShowFps] = useState(false)
@@ -29,6 +47,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
 
   // WebGL safety / Low FPS fallback monitor
   const lowFpsStartTimeRef = useRef(null)
+  const burnTimerRef = useRef(null)
+  const burnIntervalRef = useRef(null)
 
   const toggleQuality = useCallback(() => {
     sound.initAudio()
@@ -81,12 +101,128 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }
   }, [onFallbackToLite])
 
+  // Player interaction with a straw pile
   const handleInteract = useCallback(() => {
     if (!interactionTarget) return
     sound.initAudio()
     sound.playPop()
-    console.log('[Game3D Interaction]:', interactionTarget)
+    setActivePile(interactionTarget)
+    setShowChoiceWheel(true)
   }, [interactionTarget])
+
+  // Initiate Burn Sequence
+  const startBurnSequence = useCallback((pile) => {
+    setShowChoiceWheel(false)
+    const targetPile = pile || activePile || interactionTarget
+    setActivePile(targetPile)
+    setBurnState('lighting')
+    sound.initAudio()
+    sound.playTap()
+
+    // 1.8 seconds of player lighting animation with torch
+    setTimeout(() => {
+      setBurnState('burning')
+      sound.startFireCrackle()
+
+      // Set initial pile on fire
+      if (targetPile?.id) {
+        setIgnitedPiles([targetPile.id])
+      }
+
+      // Query smoke simulation API in background
+      simulateSmokeApi({
+        acres: 5.0, // 8 piles represent 5 acres harvested paddy
+        windSpeedMs: windState.speedMs,
+        windDirDeg: windState.directionDeg,
+        distanceToVillageM: 180.0,
+        burnMinutes: 60.0
+      })
+        .then((data) => {
+          setSmokeData({
+            playerExposure: Math.round(data.player_smoke_index),
+            villageExposure: Math.round(data.village_smoke_index),
+            disclaimer: data.disclaimer || 'Modelled game estimate, not a measured air-quality reading.',
+            allParamsVerified: Boolean(data.all_params_verified)
+          })
+        })
+        .catch((err) => {
+          console.warn('[Game3D] Simulation API offline, using local calibrated estimate:', err)
+          setSmokeData({
+            playerExposure: 84,
+            villageExposure: 62,
+            disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
+            allParamsVerified: false
+          })
+        })
+
+      // 20-second atmospheric transition timer & progress ticker
+      const startTime = Date.now()
+      const totalDurationMs = 20000
+
+      if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
+      burnIntervalRef.current = setInterval(() => {
+        const elapsed = Date.now() - startTime
+        const prog = Math.min(1.0, elapsed / totalDurationMs)
+        setBurnProgress(prog)
+      }, 100)
+
+      if (burnTimerRef.current) clearTimeout(burnTimerRef.current)
+      burnTimerRef.current = setTimeout(() => {
+        if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
+        setBurnProgress(1.0)
+        setBurnState('consequence')
+        sound.stopFireCrackle()
+
+        // Apply game consequences
+        if (game?.modifyNatureHealth) {
+          game.modifyNatureHealth(-25)
+        }
+        if (game?.addPoints) {
+          game.addPoints(10)
+        }
+        if (game?.recordMistakeExplored) {
+          game.recordMistakeExplored('choice_burn_stubble')
+        }
+
+        // Record session to backend
+        recordPlaySession({
+          session_id: `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+          scenario: 'farm_crop_residue',
+          choice: 'choice_burn_stubble',
+          smoke_index: 62.0,
+          language: 'en'
+        })
+      }, totalDurationMs)
+    }, 1800)
+  }, [activePile, interactionTarget, windState, game])
+
+  // Reset / Rewind the field back to healthy golden state
+  const resetBurn = useCallback(() => {
+    sound.stopFireCrackle()
+    sound.playRewindWhoosh()
+    if (burnTimerRef.current) clearTimeout(burnTimerRef.current)
+    if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
+    setBurnState('idle')
+    setBurnProgress(0)
+    setIgnitedPiles([])
+    setShowChoiceWheel(false)
+    setActivePile(null)
+    setSmokeData({
+      playerExposure: null,
+      villageExposure: null,
+      disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
+      allParamsVerified: false
+    })
+  }, [])
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      sound.stopFireCrackle()
+      if (burnTimerRef.current) clearTimeout(burnTimerRef.current)
+      if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
+    }
+  }, [])
 
   return (
     <Game3DContext.Provider
@@ -97,6 +233,17 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         toggleQuality,
         interactionTarget,
         setInteractionTarget,
+        activePile,
+        showChoiceWheel,
+        setShowChoiceWheel,
+        burnState,
+        burnProgress,
+        ignitedPiles,
+        setIgnitedPiles,
+        smokeData,
+        startBurnSequence,
+        resetBurn,
+        isFieldBurnt: burnState === 'consequence',
         showFps,
         toggleFps,
         fps,

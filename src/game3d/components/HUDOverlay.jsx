@@ -2,15 +2,19 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
 import { playerInput } from './FarmerPlayer'
+import ChoiceWheel from './ChoiceWheel'
+import SmokeMeterHUD from './SmokeMeterHUD'
+import OneSeasonLaterModal from './OneSeasonLaterModal'
 
 export default function HUDOverlay({ onSwitchToLite }) {
-  const { t, language, toggleLanguage } = useLanguage()
+  const { t } = useLanguage()
   const {
     windState,
     quality,
     toggleQuality,
     interactionTarget,
     handleInteract,
+    burnState,
     showFps,
     toggleFps,
     fps,
@@ -258,8 +262,11 @@ export default function HUDOverlay({ onSwitchToLite }) {
         </div>
       </div>
 
-      {/* CENTER INTERACTION PROMPT */}
-      {interactionTarget && (
+      {/* LIVE SMOKE EXPOSURE METERS (During fire & consequence) */}
+      <SmokeMeterHUD />
+
+      {/* CENTER INTERACTION PROMPT (Only during idle exploration) */}
+      {interactionTarget && burnState === 'idle' && (
         <div
           style={{
             alignSelf: 'center',
@@ -297,6 +304,12 @@ export default function HUDOverlay({ onSwitchToLite }) {
           </button>
         </div>
       )}
+
+      {/* 5-OPTION RADIAL CHOICE WHEEL */}
+      <ChoiceWheel />
+
+      {/* ONE SEASON LATER CONSEQUENCE MODAL */}
+      <OneSeasonLaterModal onSwitchToLite={onSwitchToLite} />
 
       {/* BOTTOM TOUCH CONTROLS (for mobile / touchscreens) */}
       {isTouchDevice && (

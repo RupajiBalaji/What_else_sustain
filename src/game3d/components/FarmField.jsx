@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 
 export default function FarmField() {
-  const { quality } = useGame3D()
+  const { quality, isFieldBurnt } = useGame3D()
   const waterRef = useRef(null)
 
   // Gentle river surface shimmer
@@ -26,9 +26,9 @@ export default function FarmField() {
       >
         <planeGeometry args={[140, 140, 4, 4]} />
         <meshStandardMaterial
-          color="#C8963E" // Rich golden harvested loam
-          roughness={0.95}
-          metalness={0.05}
+          color={isFieldBurnt ? '#2B2625' : '#C8963E'} // Charred ash ground or golden harvested loam
+          roughness={0.98}
+          metalness={0.02}
         />
       </mesh>
 

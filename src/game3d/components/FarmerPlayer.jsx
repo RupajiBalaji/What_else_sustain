@@ -23,8 +23,8 @@ export const playerInput = {
   lookDeltaY: 0
 }
 
-export default function FarmerPlayer({ initialPosition = [0, 0, 5] }) {
-  const { quality, setInteractionTarget } = useGame3D()
+export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
+  const { quality, setInteractionTarget, burnState, activePile } = useGame3D()
   const { camera } = useThree()
 
   // Character group ref and body limb refs
@@ -237,9 +237,22 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 5] }) {
     playerRef.current.position.copy(posRef.current)
     playerRef.current.rotation.y = yawRef.current
 
-    // Procedural walk and idle limb animation
+    // Procedural walk, idle, and lighting animation
     const t = walkTimeRef.current
-    if (isMoving) {
+    if (burnState === 'lighting') {
+      // Lighting animation: pause walking, lean torso forward, extend torch arm down
+      if (activePile) {
+        const dx = activePile.x - posRef.current.x
+        const dz = activePile.z - posRef.current.z
+        yawRef.current = Math.atan2(dx, dz)
+      }
+      if (torsoRef.current) torsoRef.current.rotation.x = 0.32
+      if (rightArmRef.current) rightArmRef.current.rotation.x = -1.25
+      if (leftArmRef.current) leftArmRef.current.rotation.x = 0.2
+      if (leftLegRef.current) leftLegRef.current.rotation.x = 0
+      if (rightLegRef.current) rightLegRef.current.rotation.x = 0
+    } else if (isMoving) {
+      if (torsoRef.current) torsoRef.current.rotation.x = 0
       const swing = Math.sin(t) * 0.65
       if (leftLegRef.current) leftLegRef.current.rotation.x = swing
       if (rightLegRef.current) rightLegRef.current.rotation.x = -swing
@@ -248,6 +261,7 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 5] }) {
       if (torsoRef.current) torsoRef.current.position.y = 1.05 + Math.abs(Math.sin(t)) * 0.08
     } else {
       // Idle breathing
+      if (torsoRef.current) torsoRef.current.rotation.x = 0
       const idleTime = _.clock.getElapsedTime()
       const breath = Math.sin(idleTime * 2.5) * 0.02
       if (leftLegRef.current) leftLegRef.current.rotation.x = 0
@@ -336,6 +350,27 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 5] }) {
               <cylinderGeometry args={[0.09, 0.08, 0.65, 6]} />
               <meshStandardMaterial color="#8D6E63" />
             </mesh>
+
+            {/* Flaming Torch when lighting the pile */}
+            {burnState === 'lighting' && (
+              <group position={[0, -0.65, 0.15]} rotation={[0.4, 0, 0]}>
+                {/* Torch wooden handle */}
+                <mesh position={[0, -0.15, 0]}>
+                  <cylinderGeometry args={[0.04, 0.04, 0.5, 6]} />
+                  <meshStandardMaterial color="#4E342E" roughness={0.9} />
+                </mesh>
+                {/* Torch metal cup */}
+                <mesh position={[0, 0.12, 0]}>
+                  <cylinderGeometry args={[0.07, 0.05, 0.12, 8]} />
+                  <meshStandardMaterial color="#212121" metalness={0.8} />
+                </mesh>
+                {/* Torch Flame */}
+                <mesh position={[0, 0.24, 0]}>
+                  <coneGeometry args={[0.08, 0.22, 6]} />
+                  <meshBasicMaterial color="#FF5722" />
+                </mesh>
+              </group>
+            )}
           </group>
 
           {/* 4. Left Leg (Dhoti / Trousers) */}

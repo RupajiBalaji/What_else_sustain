@@ -3,16 +3,16 @@ import { useGame3D } from '../context/Game3DContext'
 import ModelWithFallback from '../assets/ModelLoader'
 
 export const TRACTOR_COLLIDER = {
-  minX: 13.0,
-  maxX: 18.0,
-  minZ: -3.5,
-  maxZ: 1.5
+  minX: 6.5,
+  maxX: 10.5,
+  minZ: 12.5,
+  maxZ: 16.5
 }
 
 /**
  * Procedural Tractor Fallback
  */
-export function ProceduralTractor({ position = [15.5, 0, -1], rotation = [0, -0.4, 0], ...props }) {
+export function ProceduralTractor({ position = [8.5, 0, 14.5], rotation = [0, -0.6, 0], ...props }) {
   const { quality } = useGame3D()
   const isHigh = quality === 'high'
 
@@ -98,8 +98,8 @@ export default function Tractor(props) {
     <ModelWithFallback
       modelUrl="/models/tractor.glb"
       fallback={ProceduralTractor}
-      position={[15.5, 0, -1]}
-      rotation={[0, -0.4, 0]}
+      position={[8.5, 0, 14.5]}
+      rotation={[0, -0.6, 0]}
       {...props}
     />
   )

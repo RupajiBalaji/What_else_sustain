@@ -14,6 +14,8 @@ import FarmerPlayer from './components/FarmerPlayer'
 import FpsMonitor from './components/FpsMonitor'
 import HUDOverlay from './components/HUDOverlay'
 import LoadingScreen from './components/LoadingScreen'
+import FireSmokeSystem from './components/FireSmokeSystem'
+import Villagers from './components/Villagers'
 
 function SceneContent() {
   return (
@@ -26,8 +28,10 @@ function SceneContent() {
       <Tractor />
       <TreesInstanced />
       <VillageHousesInstanced />
+      <Villagers />
       <WindFlag />
       <FarmerPlayer initialPosition={[0, 0, 8]} />
+      <FireSmokeSystem />
       <FpsMonitor />
     </>
   )

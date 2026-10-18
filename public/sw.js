@@ -4,7 +4,7 @@
  * for offline access and instant second-load performance.
  */
 
-const CACHE_NAME = 'wes-cache-v1'
+const CACHE_NAME = 'wes-cache-v3'
 const ASSET_PATTERNS_CACHE_FIRST = [
   /\/models\//,
   /\/draco\//,
@@ -34,7 +34,25 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Check if request matches cache-first asset patterns (.glb models, draco, fonts, icons)
+  // 1. HTML Navigation Requests: NETWORK FIRST
+  // Always fetch the freshest index.html from server so new releases are immediately seen.
+  // Falls back to cached offline shell only when disconnected.
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          }
+          return networkResponse
+        })
+        .catch(() => caches.match(event.request))
+    )
+    return
+  }
+
+  // 2. Heavy 3D models & binary assets: CACHE FIRST
   const isCacheFirst = ASSET_PATTERNS_CACHE_FIRST.some((pattern) => pattern.test(url.pathname))
 
   if (isCacheFirst) {
@@ -52,13 +70,12 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse
         }).catch(() => {
-          // If offline and not in cache, fallback gracefully
           return new Response(null, { status: 404 })
         })
       })
     )
   } else {
-    // Stale-while-revalidate for HTML and app scripts
+    // 3. Stale-while-revalidate for hashed script & style assets
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         const fetchPromise = fetch(event.request).then((networkResponse) => {

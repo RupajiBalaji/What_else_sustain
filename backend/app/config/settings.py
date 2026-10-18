@@ -3,6 +3,12 @@ from typing import List, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+from pathlib import Path
+
+_BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+_ROOT_DIR = _BACKEND_DIR.parent
+
+
 class Settings(BaseSettings):
     # Supports single key or comma-separated list of keys for rotational load-balancing
     GEMINI_API_KEY: str = ""
@@ -14,7 +20,11 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./local.db"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(
+            str(_BACKEND_DIR / ".env"),
+            str(_ROOT_DIR / ".env"),
+            ".env",
+        ),
         env_file_encoding="utf-8",
         extra="ignore",
     )

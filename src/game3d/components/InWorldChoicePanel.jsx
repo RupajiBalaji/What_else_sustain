@@ -150,7 +150,7 @@ export default function InWorldChoicePanel() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isVisible, activeOption, setSelectedId])
 
-  if (!isVisible) return null
+  if (!isVisible) return <group />
 
   // Positioning: On mobile screens, float directly above farmer [0, 2.3, 0].
   // On desktop / wide screens, float over shoulder beside farmer [0.75, 2.05, 0].

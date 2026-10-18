@@ -15,7 +15,7 @@ export default function MoneyFloatingTag({ position = [0, 2.35, 0] }) {
   const isBurnt = burnState === 'consequence'
   const isAlternativeActive = Boolean(activeAlternative)
 
-  if (!isBurnt && !isAlternativeActive) return null
+  if (!isBurnt && !isAlternativeActive) return <group />
 
   // Determine financial details based on scenarios.json data
   let tagData = null
@@ -82,7 +82,7 @@ export default function MoneyFloatingTag({ position = [0, 2.35, 0] }) {
     }
   }
 
-  if (!tagData) return null
+  if (!tagData) return <group />
 
   return (
     <group position={position}>

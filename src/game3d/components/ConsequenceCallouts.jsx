@@ -136,12 +136,14 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
     }
   }, [isBurnt, isAlternativeActive])
 
-  if (!isBurnt && !isAlternativeActive) return null
+  if (!isBurnt && !isAlternativeActive) return <group />
 
   // Positions of the 4 features in 3D world space
   const soilPos = [-4.0, 0.4, 8.2]
   const airSensorPos = [-2.5, 4.8, 40.5]
   const peoplePos = [2.0, 1.8, 44.0]
+  // Money callout floats near the farmer's start area
+  const moneyPos = [-1.2, 2.5, 10.0]
 
   return (
     <group name="ConsequenceCalloutsGroup">
@@ -202,6 +204,26 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
           borderColor={isBurnt ? '#EC407A' : '#81C784'}
           lineDirection="top-right"
           distanceFactor={28}
+        />
+      )}
+
+      {/* 4. MONEY CALLOUT (Step >= 4, 3-second gap) */}
+      {activeStep >= 4 && (
+        <SingleCallout
+          position={moneyPos}
+          icon={isBurnt ? '💸' : '💰'}
+          title={isBurnt ? 'Cost: ~₹3,500 / acre hidden loss' : 'Gain: Saved fertilizer & earnings'}
+          detail={
+            isBurnt
+              ? 'Burning destroys soil nutrients, forcing expensive synthetic urea next season.'
+              : 'Sustainable methods save irrigation costs and earn direct revenue.'
+          }
+          tag={isBurnt ? 'Financial drain every season' : 'Long-term soil wealth'}
+          color={isBurnt ? '#B71C1C' : '#1B5E20'}
+          bgColor={isBurnt ? 'rgba(255, 235, 238, 0.96)' : 'rgba(232, 245, 233, 0.96)'}
+          borderColor={isBurnt ? '#D32F2F' : '#388E3C'}
+          lineDirection="top-right"
+          distanceFactor={14}
         />
       )}
     </group>

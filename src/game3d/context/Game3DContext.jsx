@@ -387,16 +387,14 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     sound.playPop()
     setActivePile(interactionTarget)
     if (!useInWorldChoices) {
+      // Legacy wheel mode: open the radial choice wheel
       setShowChoiceWheel(true)
-    } else {
-      // In-world mode: triggers chosen action
-      if (selectedChoiceId === 'burn') {
-        startBurnSequence(interactionTarget)
-      } else {
-        startAlternative(selectedChoiceId)
-      }
     }
-  }, [interactionTarget, useInWorldChoices, selectedChoiceId, startBurnSequence, startAlternative])
+    // In in-world mode the InWorldChoicePanel is already visible whenever
+    // interactionTarget is set; pressing E / tapping the button just
+    // acknowledges the pile (pop sound + activePile set). The Confirm button
+    // inside InWorldChoicePanel calls startBurnSequence / startAlternative.
+  }, [interactionTarget, useInWorldChoices])
 
   // Reset / Rewind the field back to healthy golden state
   const resetBurn = useCallback(() => {

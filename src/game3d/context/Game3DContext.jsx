@@ -28,6 +28,11 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [showChoiceWheel, setShowChoiceWheel] = useState(false)
   const [hasMadeChoice, setHasMadeChoice] = useState(false)
   const [nearestPileInfo, setNearestPileInfo] = useState(null)
+  // Harvest cycle state: 'standing' (pre-harvest green field) | 'harvesting' (harvester sweep) | 'harvested' (stubble & straw piles ready)
+  const [harvestState, setHarvestState] = useState('standing')
+  const [harvestProgress, setHarvestProgress] = useState(0)
+  const harvestTimerRef = useRef(null)
+  const harvestIntervalRef = useRef(null)
 
   // Burn sequence state: 'idle' | 'lighting' | 'burning' | 'consequence'
   const [burnState, setBurnState] = useState('idle')
@@ -238,6 +243,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       setRupeeCount(0)
       setPlayerResetTrigger((p) => p + 1)
       setHasMadeChoice(false)
+      setHarvestState('harvested')
+      setHarvestProgress(1.0)
       setSmokeData({
         playerExposure: null,
         villageExposure: null,
@@ -247,6 +254,43 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       // Automatically reopen choice wheel so player can test alternatives!
       setShowChoiceWheel(true)
     }, 1350)
+  }, [])
+
+  // 5-second cinematic harvest pass across standing green field
+  const startHarvestSequence = useCallback(() => {
+    sound.initAudio()
+    sound.startTractorEngine()
+    setHarvestState('harvesting')
+    setHarvestProgress(0)
+
+    const startTime = Date.now()
+    const durationMs = 5200
+
+    if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
+    harvestIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const p = Math.min(1.0, elapsed / durationMs)
+      setHarvestProgress(p)
+    }, 50)
+
+    if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
+    harvestTimerRef.current = setTimeout(() => {
+      if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
+      setHarvestProgress(1.0)
+      setHarvestState('harvested')
+      sound.stopTractorEngine()
+      sound.playSuccessChime()
+    }, durationMs)
+  }, [])
+
+  // Immediate skip button action
+  const skipHarvest = useCallback(() => {
+    if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
+    if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
+    sound.stopTractorEngine()
+    sound.playTap()
+    setHarvestProgress(1.0)
+    setHarvestState('harvested')
   }, [])
 
   // Start one of the 4 sustainable alternatives
@@ -371,6 +415,10 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         hasMadeChoice,
         nearestPileInfo,
         setNearestPileInfo,
+        harvestState,
+        harvestProgress,
+        startHarvestSequence,
+        skipHarvest,
         burnState,
         burnProgress,
         ignitedPiles,

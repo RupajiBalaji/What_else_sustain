@@ -23,6 +23,8 @@ import HappySeederTractor from './components/HappySeederTractor'
 import StrawBalerAndTruck from './components/StrawBalerAndTruck'
 import MulchSoilEffect from './components/MulchSoilEffect'
 import CompostSprayEffect from './components/CompostSprayEffect'
+import StandingCropRows from './components/StandingCropRows'
+import CombineHarvester from './components/CombineHarvester'
 
 function SceneContent() {
   const { activeAlternative } = useGame3D()
@@ -33,6 +35,8 @@ function SceneContent() {
       <BirdsFlying />
       <FarmField />
       <GrassTufts />
+      <StandingCropRows />
+      <CombineHarvester />
       <StubbleRows />
       <StrawPiles />
       <Farmhouse />
@@ -55,7 +59,7 @@ function SceneContent() {
 }
 
 function FarmSceneInner({ onSwitchToLite }) {
-  const { quality } = useGame3D()
+  const { quality, startHarvestSequence } = useGame3D()
   const [hasStarted, setHasStarted] = useState(false)
   const [dpr, setDpr] = useState(1.0)
 
@@ -131,7 +135,10 @@ function FarmSceneInner({ onSwitchToLite }) {
       {/* Initial Loading Screen */}
       {!hasStarted && (
         <LoadingScreen
-          onStart={() => setHasStarted(true)}
+          onStart={() => {
+            setHasStarted(true)
+            startHarvestSequence()
+          }}
           onSwitchToLite={onSwitchToLite}
         />
       )}

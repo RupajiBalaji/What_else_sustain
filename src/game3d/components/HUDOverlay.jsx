@@ -19,6 +19,9 @@ export default function HUDOverlay({ onSwitchToLite }) {
     interactionTarget,
     nearestPileInfo,
     hasMadeChoice,
+    harvestState,
+    harvestProgress,
+    skipHarvest,
     handleInteract,
     burnState,
     showPledgeModal,
@@ -155,8 +158,58 @@ export default function HUDOverlay({ onSwitchToLite }) {
         userSelect: 'none'
       }}
     >
-      {/* TOP-CENTRE OBJECTIVE BANNER & GUIDANCE ARROW */}
-      {!hasMadeChoice && burnState === 'idle' && (
+      {/* HARVEST SEQUENCE BANNER & SKIP BUTTON */}
+      {harvestState === 'harvesting' && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(70px + env(safe-area-inset-top, 0px))',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 65,
+            pointerEvents: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            backgroundColor: 'rgba(27, 94, 32, 0.95)',
+            color: '#FFFFFF',
+            border: '2.5px solid #81C784',
+            borderRadius: '9999px',
+            padding: '6px 16px',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '0.92rem' }}>
+            <span>🚜</span>
+            <span>{t('game3d.harvestingBanner')}</span>
+            <span style={{ fontSize: '0.8rem', color: '#C8E6C9' }}>
+              {Math.round((harvestProgress || 0) * 100)}%
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={skipHarvest}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '9999px',
+              backgroundColor: '#FFD54F',
+              color: '#16382B',
+              border: 'none',
+              fontWeight: 900,
+              fontSize: '0.84rem',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+            }}
+          >
+            {t('game3d.skipHarvestBtn')}
+          </button>
+        </div>
+      )}
+
+      {/* TOP-CENTRE OBJECTIVE BANNER & GUIDANCE ARROW (After harvest completes) */}
+      {!hasMadeChoice && burnState === 'idle' && harvestState === 'harvested' && (
         <div
           style={{
             position: 'absolute',

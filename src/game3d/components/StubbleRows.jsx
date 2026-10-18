@@ -3,8 +3,11 @@ import * as THREE from 'three'
 import { useGame3D } from '../context/Game3DContext'
 
 export default function StubbleRows() {
-  const { quality, isFieldBurnt } = useGame3D()
+  const { quality, isFieldBurnt, harvestState } = useGame3D()
   const meshRef = useRef(null)
+
+  // Stubble only appears as crop is harvested
+  const isVisible = harvestState === 'harvested' || harvestState === 'harvesting'
 
   // Rows configuration: field zone in front of player start [0, 0, 8]
   const rows = quality === 'high' ? 14 : 8
@@ -38,6 +41,8 @@ export default function StubbleRows() {
     }
     meshRef.current.instanceMatrix.needsUpdate = true
   }, [rows, cols, isFieldBurnt])
+
+  if (!isVisible) return null
 
   return (
     <instancedMesh

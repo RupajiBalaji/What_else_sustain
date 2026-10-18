@@ -39,17 +39,53 @@ export default function FarmField() {
       const n3 = Math.cos(x * 0.28 - y * 0.22) * 0.25
       const t = THREE.MathUtils.clamp((n1 + n2 + n3 + 1.0) * 0.5, 0, 1)
 
-      if (isFieldBurnt) {
-        // Burnt field: deep soot, charred earth, and ash-grey patches
-        c1.set('#1E1B1A') // Deep soot
-        c2.set('#423B38') // Ash grey
-      } else {
-        // Warm golden harvest loam: rich agricultural soil & sunlit straw tones
-        c1.set('#B58434') // Warm rich loam
-        c2.set('#DBA952') // Golden sun-baked earth
-      }
+      const worldZ = -y // After -PI/2 X-rotation, -y is world Z
 
-      finalColor.lerpColors(c1, c2, t)
+      // Determine distance to cultivated crop field boundary (X: -30 to 2, Z: 5 to 36)
+      const isInsideField = x >= -30 && x <= 2 && worldZ >= 5 && worldZ <= 36
+      const distToBorder = Math.min(
+        Math.abs(x - (-30)),
+        Math.abs(x - 2),
+        Math.abs(worldZ - 5),
+        Math.abs(worldZ - 36)
+      )
+
+      if (isFieldBurnt) {
+        if (isInsideField) {
+          // Burnt field: deep soot, charred earth, and ash-grey patches
+          c1.set('#1E1B1A') // Deep soot
+          c2.set('#423B38') // Ash grey
+          finalColor.lerpColors(c1, c2, t)
+        } else {
+          // Surrounding grass verges remain earthy olive-green
+          c1.set('#4E6B2A')
+          c2.set('#5D7E32')
+          finalColor.lerpColors(c1, c2, t)
+        }
+      } else {
+        if (isInsideField) {
+          // Warm golden harvest loam: rich agricultural soil & sunlit straw tones
+          c1.set('#B58434') // Warm rich loam
+          c2.set('#DBA952') // Golden sun-baked earth
+          finalColor.lerpColors(c1, c2, t)
+        } else {
+          // Lush green grass borders along field edges, road, and canal
+          c1.set('#4E8C2B') // Fresh green grass
+          c2.set('#689F38') // Vibrant meadow grass
+          finalColor.lerpColors(c1, c2, t)
+
+          // Smooth blend along field boundary edge
+          if (distToBorder < 2.5) {
+            const blend = distToBorder / 2.5
+            const soilColor = new THREE.Color().lerpColors(
+              new THREE.Color('#B58434'),
+              new THREE.Color('#DBA952'),
+              t
+            )
+            finalColor.lerpColors(soilColor, finalColor, blend)
+          }
+        }
+      }
 
       // Micro-grain variation for authentic tactile ground feel
       const jitter = ((i % 7) - 3) * 0.012

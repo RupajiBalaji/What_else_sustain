@@ -62,9 +62,16 @@ export default function StrawPiles() {
     ignitedPiles,
     burnState,
     activeAlternative,
-    alternativeProgress
+    alternativeProgress,
+    harvestState,
+    harvestProgress
   } = useGame3D()
   const isHigh = quality === 'high'
+
+  // Straw mounds are created by the harvest cutter
+  if (harvestState === 'standing') {
+    return null
+  }
 
   return (
     <group name="StrawPilesGroup">

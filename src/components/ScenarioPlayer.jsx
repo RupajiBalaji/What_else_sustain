@@ -181,38 +181,24 @@ export default function ScenarioPlayer({ scenario, onExit, onCompleteAll, isDemo
   // Narration helper text for demo mode
   const getDemoNarration = () => {
     if (demoSeconds < 6) {
-      return lang === 'te'
-        ? 'దశ 1: సమస్య — పంట కోత తర్వాత 5 ఎకరాల్లో గడ్డి మిగిలింది.'
-        : 'Step 1: The Dilemma — 5 acres of stubble left after harvest.'
+      return 'Step 1: The Dilemma — 5 acres of stubble left after harvest.'
     }
     if (demoSeconds < 13) {
-      return lang === 'te'
-        ? 'దశ 2: సాధారణ ఎంపికలు — కాల్చడం వేగవంతంగా కనిపిస్తుంది.'
-        : 'Step 2: The Tempting Mistake — Burning looks fast and free.'
+      return 'Step 2: The Tempting Mistake — Burning looks fast and free.'
     }
     if (demoSeconds < 23) {
-      return lang === 'te'
-        ? 'దశ 3: నిజమైన నష్టం — విష పొగ, ఆరోగ్య సమస్యలు & నేల సారం నాశనం.'
-        : 'Step 3: The True Impact — Toxic smog, respiratory risk & lost soil fertility.'
+      return 'Step 3: The True Impact — Toxic smog, respiratory risk & lost soil fertility.'
     }
     if (demoSeconds < 32) {
-      return lang === 'te'
-        ? 'దశ 4: మరి ఏంచేయాలి? — మల్చింగ్, కంపోస్ట్ & బయోమాస్ అమ్మకం ప్రత్యామ్నాయాలు.'
-        : 'Step 4: What Else? — Practical alternatives (Mulch, Compost, Sell).'
+      return 'Step 4: What Else? — Practical alternatives (Mulch, Compost, Sell).'
     }
     if (demoSeconds < 38) {
-      return lang === 'te'
-        ? 'దశ 5: మంచి మార్గం — హ్యాపీ సీడర్ మల్చింగ్‌తో పొలం పచ్చగా మారింది, ఆరోగ్యం పెరిగింది!'
-        : 'Step 5: Better Choice — Happy Seeder mulch restores nature health and saves money!'
+      return 'Step 5: Better Choice — Happy Seeder mulch restores nature health and saves money!'
     }
     if (demoSeconds < 43) {
-      return lang === 'te'
-        ? 'దశ 6: ప్రతిజ్ఞ — "ఈ సీజన్‌లో నేను పంట వ్యర్థాలను కాల్చను" అని ప్రతిజ్ఞ తీసుకుంటున్నారు.'
-        : 'Step 6: The Pledge — Taking the pledge: "I will not burn crop waste this season".'
+      return 'Step 6: The Pledge — Taking the pledge: "I will not burn crop waste this season".'
     }
-    return lang === 'te'
-      ? 'ముగింపు: బోనస్ పాయింట్లు & "ప్రతిజ్ఞా రక్షకుడు" బ్యాడ్జ్ సాధించబడింది!'
-      : 'Finished: Bonus points & Pledge Keeper badge unlocked!'
+    return 'Finished: Bonus points & Pledge Keeper badge unlocked!'
   }
 
   return (

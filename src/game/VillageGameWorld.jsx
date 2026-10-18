@@ -549,7 +549,7 @@ export default function VillageGameWorld({
               whileTap={{ scale: 0.95 }}
               className="vhs-rewind-trigger-btn"
             >
-              <span>⏪ {lang === 'te' ? 'మరి ఏంచేయాలి? (సమయాన్ని వెనక్కి తిప్పండి)' : 'What Else? (Rewind Time)'}</span>
+              <span>⏪ What Else? (Rewind Time)</span>
             </motion.button>
           </motion.div>
         )}

@@ -111,7 +111,7 @@ export default function VillageMapHome({
             }}
             aria-label="Ask Sprout's AI Advisor"
           >
-            🤖 {language === 'te' ? 'సలహా' : 'AI Help'}
+            🤖 AI Help
           </button>
         </div>
       </header>
@@ -361,15 +361,11 @@ export default function VillageMapHome({
                 <span style={{ fontSize: '1.6rem' }}>🌊</span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#1B5E20' }}>
-                    {language === 'te' ? 'గ్రామ పునరుద్ధరణ & నది ఆరోగ్యం' : 'Village River & Nature Health'}
+                    Village River & Nature Health
                   </h3>
                   <span style={{ fontSize: '0.82rem', color: '#555' }}>
                     {natureHealth >= 80
-                      ? language === 'te'
-                        ? 'స్వచ్ఛమైన నీరు & పచ్చని ప్రకృతి 🌳'
-                        : 'Clean crystal water & blooming trees 🌳'
-                      : language === 'te'
-                      ? 'కాలుష్యాన్ని తగ్గించడానికి మంచి ఎంపికలు చేయండి'
+                      ? 'Clean crystal water & blooming trees 🌳'
                       : 'Make green choices to heal the river and soil'}
                   </span>
                 </div>
@@ -461,7 +457,7 @@ export default function VillageMapHome({
               onOpenBadges()
             }}
           >
-            🎨 {language === 'te' ? 'స్టిక్కర్లు & బ్యాడ్జీలు' : 'Sticker Collection'} ({badges.length}/5)
+            🎨 Sticker Collection ({badges.length}/5)
           </button>
 
           {/* Final Scorecard Button */}
@@ -475,7 +471,7 @@ export default function VillageMapHome({
               onOpenScorecard()
             }}
           >
-            📊 {language === 'te' ? 'స్కోర్ కార్డ్' : 'Scorecard'}
+            📊 Scorecard
           </button>
 
           {/* 3D Mode Switcher */}
@@ -520,7 +516,7 @@ export default function VillageMapHome({
             }}
             aria-label="Switch to Classic Mode List"
           >
-            📜 {language === 'te' ? 'క్లాసిక్ మోడ్ (జాబితా)' : 'Switch to Classic List Mode'}
+            📜 Switch to Classic List Mode
           </button>
         </footer>
       </main>

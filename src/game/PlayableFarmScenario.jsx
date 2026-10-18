@@ -462,7 +462,7 @@ export default function PlayableFarmScenario({ onExit, onTakePledge }) {
                 }}
                 onClick={handleWhatElseRewind}
               >
-                ⏪ 💡 {language === 'te' ? 'మరి ఏంచేయాలి? (సమయాన్ని వెనక్కి తిప్పండి!)' : 'What Else? (Rewind Time!)'}
+                ⏪ 💡 What Else? (Rewind Time!)
               </motion.button>
             </div>
           </div>

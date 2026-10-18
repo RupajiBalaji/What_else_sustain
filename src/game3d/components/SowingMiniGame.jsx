@@ -24,9 +24,6 @@ export default function SowingMiniGame() {
   const sweetMin = GAME_BALANCE.SOWING.SWEET_SPOT_MIN
   const sweetMax = GAME_BALANCE.SOWING.SWEET_SPOT_MAX
 
-  // Only render during sowing phase
-  if (seasonPhase !== 'sowing') return null
-
   const startHold = () => {
     if (isHolding) return
     setIsHolding(true)
@@ -84,6 +81,8 @@ export default function SowingMiniGame() {
 
   // Keyboard Spacebar listener
   useEffect(() => {
+    if (seasonPhase !== 'sowing') return
+
     const onKeyDown = (e) => {
       if (e.code === 'Space' && !e.repeat && !isHolding) {
         e.preventDefault()
@@ -102,7 +101,9 @@ export default function SowingMiniGame() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [isHolding, meterValue, currentRow])
+  }, [seasonPhase, isHolding, meterValue, currentRow])
+
+  if (seasonPhase !== 'sowing') return null
 
   return (
     <div

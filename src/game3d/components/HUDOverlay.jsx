@@ -860,7 +860,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
       )}
 
       {/* SOWING MINI-GAME (Hold-to-plant timing meter) */}
-      <SowingMiniGame />
+      {seasonPhase === 'sowing' && <SowingMiniGame />}
 
       {/* GROWING TIME-LAPSE & SEASONAL WEATHER CYCLE */}
       <GrowingTimeLapse onComplete={() => resolveSeasonalEvent(null)} />

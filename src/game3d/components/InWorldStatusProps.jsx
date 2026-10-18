@@ -57,8 +57,8 @@ export default function InWorldStatusProps() {
           <meshStandardMaterial color={bannerColor} roughness={0.7} />
         </mesh>
 
-        {/* 3D In-World Text Label on Arch */}
-        <Html position={[0, 3.4, 0.08]} center transform distanceFactor={14}>
+        {/* 3D In-World Text Label on Arch (Billboards toward camera) */}
+        <Html position={[0, 3.4, 0.08]} center distanceFactor={14}>
           <div
             style={{
               backgroundColor: bannerColor,
@@ -102,7 +102,7 @@ export default function InWorldStatusProps() {
         </mesh>
 
         {/* World Label for Reputation */}
-        <Html position={[0, 4.8, 0]} center transform distanceFactor={12}>
+        <Html position={[0, 4.8, 0]} center distanceFactor={12}>
           <div
             style={{
               backgroundColor: 'rgba(22, 56, 43, 0.9)',
@@ -146,7 +146,7 @@ export default function InWorldStatusProps() {
         </mesh>
 
         {/* World Tag for Farm Capital */}
-        <Html position={[0, 1.45, 0]} center transform distanceFactor={10}>
+        <Html position={[0, 1.45, 0]} center distanceFactor={10}>
           <div
             style={{
               backgroundColor: 'rgba(27, 94, 32, 0.92)',

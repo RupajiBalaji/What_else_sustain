@@ -315,78 +315,79 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
         </React.Suspense>
       ) : (
         <>
-          {/* 1. Torso (Kurta) */}
-          <group ref={torsoRef} position={[0, 1.05, 0]}>
+          {/* 1. Torso (Kurta) - Slimmer & Natural */}
+          <group ref={torsoRef} position={[0, 1.0, 0]}>
             <mesh castShadow={isHigh} receiveShadow={isHigh}>
-              <boxGeometry args={[0.7, 0.9, 0.45]} />
-              <meshStandardMaterial color="#E0F2F1" roughness={0.8} /> {/* White/cotton kurta */}
+              <boxGeometry args={[0.52, 0.74, 0.32]} />
+              <meshStandardMaterial color="#E0F2F1" roughness={0.8} /> {/* White cotton kurta */}
             </mesh>
 
-            {/* Waist Sash */}
-            <mesh position={[0, -0.28, 0]}>
-              <boxGeometry args={[0.74, 0.18, 0.48]} />
+            {/* Waist Sash (Gamcha) */}
+            <mesh position={[0, -0.24, 0]}>
+              <boxGeometry args={[0.55, 0.15, 0.35]} />
               <meshStandardMaterial color="#E65100" /> {/* Saffron gamcha */}
             </mesh>
 
             {/* Head */}
-            <mesh position={[0, 0.72, 0]} castShadow={isHigh}>
-              <sphereGeometry args={[0.26, 12, 12]} />
+            <mesh position={[0, 0.62, 0]} castShadow={isHigh}>
+              <sphereGeometry args={[0.21, 14, 14]} />
               <meshStandardMaterial color="#8D6E63" roughness={0.7} />
             </mesh>
 
-            {/* Farmer Straw Hat / Turban */}
-            <group position={[0, 0.88, 0]}>
+            {/* Farmer Straw Hat / Turban - Proportionately sized */}
+            <group position={[0, 0.76, 0]}>
               {/* Hat Crown */}
               <mesh castShadow={isHigh}>
-                <cylinderGeometry args={[0.28, 0.32, 0.28, 10]} />
-                <meshStandardMaterial color="#F57F17" roughness={0.9} />
+                <cylinderGeometry args={[0.2, 0.23, 0.2, 10]} />
+                <meshStandardMaterial color="#F57F17" roughness={0.85} />
               </mesh>
-              {/* Wide Brim */}
-              <mesh position={[0, -0.06, 0]} castShadow={isHigh}>
-                <cylinderGeometry args={[0.62, 0.62, 0.05, 12]} />
-                <meshStandardMaterial color="#F9A825" roughness={0.9} />
+              {/* Subtle Brim */}
+              <mesh position={[0, -0.05, 0]} castShadow={isHigh}>
+                <cylinderGeometry args={[0.42, 0.42, 0.035, 14]} />
+                <meshStandardMaterial color="#F9A825" roughness={0.85} />
               </mesh>
             </group>
+
             {/* Backpack spray tank for bio-decomposer */}
             {activeAlternative === 'compost' && (
-              <mesh position={[0, 0, -0.32]} castShadow={isHigh}>
-                <boxGeometry args={[0.52, 0.68, 0.22]} />
+              <mesh position={[0, 0, -0.26]} castShadow={isHigh}>
+                <boxGeometry args={[0.42, 0.58, 0.18]} />
                 <meshStandardMaterial color="#0288D1" roughness={0.5} />
               </mesh>
             )}
           </group>
 
           {/* 2. Left Arm */}
-          <group ref={leftArmRef} position={[-0.45, 1.35, 0]}>
-            <mesh position={[0, -0.32, 0]} castShadow={isHigh}>
-              <cylinderGeometry args={[0.09, 0.08, 0.65, 6]} />
+          <group ref={leftArmRef} position={[-0.34, 1.25, 0]}>
+            <mesh position={[0, -0.28, 0]} castShadow={isHigh}>
+              <cylinderGeometry args={[0.07, 0.06, 0.58, 6]} />
               <meshStandardMaterial color="#8D6E63" />
             </mesh>
           </group>
 
           {/* 3. Right Arm */}
-          <group ref={rightArmRef} position={[0.45, 1.35, 0]}>
-            <mesh position={[0, -0.32, 0]} castShadow={isHigh}>
-              <cylinderGeometry args={[0.09, 0.08, 0.65, 6]} />
+          <group ref={rightArmRef} position={[0.34, 1.25, 0]}>
+            <mesh position={[0, -0.28, 0]} castShadow={isHigh}>
+              <cylinderGeometry args={[0.07, 0.06, 0.58, 6]} />
               <meshStandardMaterial color="#8D6E63" />
             </mesh>
 
             {/* Flaming Torch when lighting the pile */}
             {burnState === 'lighting' && (
-              <group position={[0, -0.65, 0.15]} rotation={[0.4, 0, 0]}>
+              <group position={[0, -0.58, 0.15]} rotation={[0.4, 0, 0]}>
                 {/* Torch wooden handle */}
-                <mesh position={[0, -0.15, 0]}>
-                  <cylinderGeometry args={[0.04, 0.04, 0.5, 6]} />
+                <mesh position={[0, -0.12, 0]}>
+                  <cylinderGeometry args={[0.035, 0.035, 0.45, 6]} />
                   <meshStandardMaterial color="#4E342E" roughness={0.9} />
                 </mesh>
                 {/* Torch metal cup */}
                 <mesh position={[0, 0.12, 0]}>
-                  <cylinderGeometry args={[0.07, 0.05, 0.12, 8]} />
+                  <cylinderGeometry args={[0.06, 0.045, 0.1, 8]} />
                   <meshStandardMaterial color="#212121" metalness={0.8} />
                 </mesh>
                 {/* Torch Flame */}
-                <mesh position={[0, 0.24, 0]}>
-                  <coneGeometry args={[0.08, 0.22, 6]} />
+                <mesh position={[0, 0.22, 0]}>
+                  <coneGeometry args={[0.07, 0.2, 6]} />
                   <meshBasicMaterial color="#FF5722" />
                 </mesh>
               </group>
@@ -394,41 +395,41 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
 
             {/* Sprayer wand when composting */}
             {activeAlternative === 'compost' && (
-              <group position={[0, -0.55, 0.2]} rotation={[0.7, 0, 0]}>
+              <group position={[0, -0.5, 0.2]} rotation={[0.7, 0, 0]}>
                 <mesh position={[0, 0, 0]}>
-                  <cylinderGeometry args={[0.02, 0.02, 0.75, 6]} />
+                  <cylinderGeometry args={[0.02, 0.02, 0.7, 6]} />
                   <meshStandardMaterial color="#37474F" metalness={0.8} />
                 </mesh>
-                <mesh position={[0, 0.38, 0]}>
-                  <coneGeometry args={[0.05, 0.08, 6]} />
+                <mesh position={[0, 0.35, 0]}>
+                  <coneGeometry args={[0.045, 0.08, 6]} />
                   <meshStandardMaterial color="#FFB300" />
                 </mesh>
               </group>
             )}
           </group>
 
-          {/* 4. Left Leg (Dhoti / Trousers) */}
-          <group ref={leftLegRef} position={[-0.2, 0.65, 0]}>
-            <mesh position={[0, -0.32, 0]} castShadow={isHigh}>
-              <cylinderGeometry args={[0.12, 0.1, 0.68, 6]} />
+          {/* 4. Left Leg (Dhoti) */}
+          <group ref={leftLegRef} position={[-0.15, 0.58, 0]}>
+            <mesh position={[0, -0.28, 0]} castShadow={isHigh}>
+              <cylinderGeometry args={[0.09, 0.075, 0.6, 6]} />
               <meshStandardMaterial color="#ECEFF1" roughness={0.8} />
             </mesh>
             {/* Foot */}
-            <mesh position={[0, -0.66, 0.06]}>
-              <boxGeometry args={[0.14, 0.1, 0.26]} />
+            <mesh position={[0, -0.58, 0.05]}>
+              <boxGeometry args={[0.11, 0.08, 0.22]} />
               <meshStandardMaterial color="#3E2723" />
             </mesh>
           </group>
 
           {/* 5. Right Leg */}
-          <group ref={rightLegRef} position={[0.2, 0.65, 0]}>
-            <mesh position={[0, -0.32, 0]} castShadow={isHigh}>
-              <cylinderGeometry args={[0.12, 0.1, 0.68, 6]} />
+          <group ref={rightLegRef} position={[0.15, 0.58, 0]}>
+            <mesh position={[0, -0.28, 0]} castShadow={isHigh}>
+              <cylinderGeometry args={[0.09, 0.075, 0.6, 6]} />
               <meshStandardMaterial color="#ECEFF1" roughness={0.8} />
             </mesh>
             {/* Foot */}
-            <mesh position={[0, -0.66, 0.06]}>
-              <boxGeometry args={[0.14, 0.1, 0.26]} />
+            <mesh position={[0, -0.58, 0.05]}>
+              <boxGeometry args={[0.11, 0.08, 0.22]} />
               <meshStandardMaterial color="#3E2723" />
             </mesh>
           </group>

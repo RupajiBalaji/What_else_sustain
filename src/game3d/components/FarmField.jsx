@@ -1,4 +1,5 @@
-import React, { useRef } from 'react'
+import React, { useMemo, useRef } from 'react'
+import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 
@@ -16,31 +17,102 @@ export default function FarmField() {
 
   const isHigh = quality === 'high'
 
+  // Subdivided ground geometry with procedural vertex colors (Zero large image textures)
+  const groundGeometry = useMemo(() => {
+    // 36x36 segments on 140x140 gives 1,369 vertices (~16KB buffer), ultra mobile-friendly
+    const geo = new THREE.PlaneGeometry(140, 140, 36, 36)
+    const count = geo.attributes.position.count
+    const colors = new Float32Array(count * 3)
+    const pos = geo.attributes.position
+
+    const c1 = new THREE.Color()
+    const c2 = new THREE.Color()
+    const finalColor = new THREE.Color()
+
+    for (let i = 0; i < count; i++) {
+      const x = pos.getX(i)
+      const y = pos.getY(i) // In PlaneGeometry (XY) before -PI/2 X-rotation
+
+      // Natural multi-frequency soil variation
+      const n1 = Math.sin(x * 0.14) * Math.cos(y * 0.16)
+      const n2 = Math.sin(x * 0.045 + y * 0.055) * 0.5
+      const n3 = Math.cos(x * 0.28 - y * 0.22) * 0.25
+      const t = THREE.MathUtils.clamp((n1 + n2 + n3 + 1.0) * 0.5, 0, 1)
+
+      if (isFieldBurnt) {
+        // Burnt field: deep soot, charred earth, and ash-grey patches
+        c1.set('#1E1B1A') // Deep soot
+        c2.set('#423B38') // Ash grey
+      } else {
+        // Warm golden harvest loam: rich agricultural soil & sunlit straw tones
+        c1.set('#B58434') // Warm rich loam
+        c2.set('#DBA952') // Golden sun-baked earth
+      }
+
+      finalColor.lerpColors(c1, c2, t)
+
+      // Micro-grain variation for authentic tactile ground feel
+      const jitter = ((i % 7) - 3) * 0.012
+      colors[i * 3] = THREE.MathUtils.clamp(finalColor.r + jitter, 0, 1)
+      colors[i * 3 + 1] = THREE.MathUtils.clamp(finalColor.g + jitter, 0, 1)
+      colors[i * 3 + 2] = THREE.MathUtils.clamp(finalColor.b + jitter, 0, 1)
+    }
+
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    return geo
+  }, [isFieldBurnt])
+
+  // Far surrounding plains with subtle pastoral gradient
+  const plainsGeometry = useMemo(() => {
+    const geo = new THREE.PlaneGeometry(260, 260, 16, 16)
+    const count = geo.attributes.position.count
+    const colors = new Float32Array(count * 3)
+    const pos = geo.attributes.position
+
+    const c1 = new THREE.Color('#7E9848') // Warm harvest meadow
+    const c2 = new THREE.Color('#94B056') // Sunlit grassy knolls
+    const finalColor = new THREE.Color()
+
+    for (let i = 0; i < count; i++) {
+      const x = pos.getX(i)
+      const y = pos.getY(i)
+      const t = THREE.MathUtils.clamp((Math.sin(x * 0.03) * Math.cos(y * 0.03) + 1.0) * 0.5, 0, 1)
+      finalColor.lerpColors(c1, c2, t)
+
+      colors[i * 3] = finalColor.r
+      colors[i * 3 + 1] = finalColor.g
+      colors[i * 3 + 2] = finalColor.b
+    }
+
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    return geo
+  }, [])
+
   return (
     <group name="FarmFieldWorld">
-      {/* 1. Main Harvested Ground Plane */}
+      {/* 1. Main Harvested Ground Plane with Vertex Colors */}
       <mesh
+        geometry={groundGeometry}
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, -0.01, 0]}
         receiveShadow={isHigh}
       >
-        <planeGeometry args={[140, 140, 4, 4]} />
         <meshStandardMaterial
-          color={isFieldBurnt ? '#2B2625' : '#C8963E'} // Charred ash ground or golden harvested loam
-          roughness={0.98}
+          vertexColors
+          roughness={0.96}
           metalness={0.02}
         />
       </mesh>
 
-      {/* 2. Far Surrounding Green Plains */}
+      {/* 2. Far Surrounding Green Plains with Subtle Vertex Tonal Variation */}
       <mesh
+        geometry={plainsGeometry}
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, -0.05, 0]}
         receiveShadow={false}
       >
-        <planeGeometry args={[260, 260]} />
         <meshStandardMaterial
-          color="#8BA858"
+          vertexColors
           roughness={1.0}
         />
       </mesh>

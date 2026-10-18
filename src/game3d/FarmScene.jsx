@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { Game3DProvider, useGame3D } from './context/Game3DContext'
 import WorldEnvironment from './components/WorldEnvironment'
 import FarmField from './components/FarmField'
+import GrassTufts from './components/GrassTufts'
 import StubbleRows from './components/StubbleRows'
 import StrawPiles from './components/StrawPiles'
 import Farmhouse from './components/Farmhouse'
@@ -31,6 +32,7 @@ function SceneContent() {
       <WorldEnvironment />
       <BirdsFlying />
       <FarmField />
+      <GrassTufts />
       <StubbleRows />
       <StrawPiles />
       <Farmhouse />

@@ -183,13 +183,20 @@ function SingleVillager({ data, isCoughing, isWaving, qualityConfig }) {
 }
 
 export default function Villagers() {
-  const { burnState, burnProgress, activeAlternative, qualityConfig } = useGame3D()
+  const { burnState, burnProgress, activeAlternative, qualityConfig, persistentState } = useGame3D()
 
+  const villageHealth = persistentState?.villageHealth ?? 75
+
+  // Coughing triggers if actively burning/burnt, OR if persistent village health has deteriorated
   const isCoughing =
     !activeAlternative &&
-    (burnState === 'consequence' || (burnState === 'burning' && burnProgress >= 0.3))
+    (burnState === 'consequence' ||
+      (burnState === 'burning' && burnProgress >= 0.3) ||
+      (villageHealth < 50 && burnState !== 'lighting'))
 
-  const isWaving = Boolean(activeAlternative)
+  // Waving triggers on sustainable choices OR high village health
+  const isWaving =
+    Boolean(activeAlternative) || (villageHealth >= 78 && burnState === 'idle')
 
   return (
     <group name="VillagersGroup">

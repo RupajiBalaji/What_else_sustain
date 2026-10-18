@@ -9,7 +9,7 @@ const _cropDummy = new THREE.Object3D()
  * Creates a slender paddy/wheat crop cluster with vertex color gradient
  * (Lush green stalk base -> vibrant green mid -> golden ripe grain ear tip)
  */
-function createCropGeometry() {
+function createCropGeometry(soilHealth = 70) {
   const g1 = new THREE.PlaneGeometry(0.55, 1.15, 1, 3)
   g1.translate(0, 0.57, 0)
   const g2 = new THREE.PlaneGeometry(0.55, 1.15, 1, 3)
@@ -37,13 +37,15 @@ function createCropGeometry() {
   const offset = g1.attributes.position.count
   for (let i = 0; i < idx2.length; i++) indices.push(idx2[i] + offset)
 
-  // Vertex colors: Lush green roots/stems -> golden yellow grain heads
+  // Vertex colors modulated by soilHealth:
+  // Low health -> pale/yellow chlorosis; High health -> rich deep emerald green
+  const healthT = Math.max(0, Math.min(1, soilHealth / 100))
   const vertexCount = (pos1.length + pos2.length) / 3
   const colors = new Float32Array(vertexCount * 3)
 
-  const cBase = new THREE.Color('#2E7D32') // Deep paddy green
-  const cMid = new THREE.Color('#43A047')  // Lush vibrant green
-  const cTip = new THREE.Color('#F9A825')  // Golden ripe grain tip
+  const cBase = new THREE.Color().lerpColors(new THREE.Color('#6D4C41'), new THREE.Color('#2E7D32'), Math.max(0.25, healthT))
+  const cMid = new THREE.Color().lerpColors(new THREE.Color('#C0CA33'), new THREE.Color('#43A047'), healthT)
+  const cTip = new THREE.Color().lerpColors(new THREE.Color('#FFF176'), new THREE.Color('#F9A825'), healthT)
   const finalColor = new THREE.Color()
 
   for (let i = 0; i < vertexCount; i++) {
@@ -69,31 +71,36 @@ function createCropGeometry() {
 }
 
 export default function StandingCropRows() {
-  const { qualityConfig, windState, harvestState, harvestProgress } = useGame3D()
+  const { qualityConfig, windState, harvestState, harvestProgress, persistentState } = useGame3D()
   const isShadows = qualityConfig.shadows
   const meshRef = useRef(null)
   const shaderRef = useRef(null)
+
+  const soilHealth = persistentState?.soilHealth ?? 70
 
   // Rows and cols covering the main field based on quality tier
   const rows = qualityConfig.cropRows || 14
   const cols = qualityConfig.cropCols || 14
   const count = rows * cols
 
-  const geometry = useMemo(() => createCropGeometry(), [])
+  const geometry = useMemo(() => createCropGeometry(soilHealth), [soilHealth])
 
-  // Crop instance position data
+  // Crop instance position data modulated by soil health (sparser & stunted when low)
   const cropData = useMemo(() => {
     const items = []
     const xStart = -27
     const zStart = 7
     const xStep = 28 / rows
     const zStep = 26 / cols
+    const heightMultiplier = 0.72 + (soilHealth / 100) * 0.42
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const x = xStart + r * xStep + (Math.sin(r + c * 2) * 0.18)
         const z = zStart + c * zStep + (Math.cos(r * 2 + c) * 0.18)
-        const scale = 0.9 + (Math.sin(r * 3 + c) * 0.15)
+        const isDepleted = soilHealth < 48 && ((r * 3 + c * 7) % 5 === 0)
+        const baseScale = 0.9 + (Math.sin(r * 3 + c) * 0.15)
+        const scale = baseScale * heightMultiplier * (isDepleted ? 0.35 : 1.0)
         const rotY = (r * 0.4 + c * 0.7)
         const cutOrder = (r / rows) * 0.6 + (c / cols) * 0.4
 
@@ -101,7 +108,7 @@ export default function StandingCropRows() {
       }
     }
     return items
-  }, [rows, cols])
+  }, [rows, cols, soilHealth])
 
   // Initial layout for instanced mesh
   useLayoutEffect(() => {

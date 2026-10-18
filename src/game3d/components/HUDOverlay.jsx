@@ -10,10 +10,25 @@ import RupeeCounterHUD from './RupeeCounterHUD'
 import ComparisonSliderModal from './ComparisonSliderModal'
 import KidPledgeScreen from '../../game/KidPledgeScreen'
 import SettingsDrawer from './SettingsDrawer'
+import SowingMiniGame from './SowingMiniGame'
+import GrowingTimeLapse from './GrowingTimeLapse'
+import SeasonalEventModal from './SeasonalEventModal'
+import SeasonReportModal from './SeasonReportModal'
+import AchievementsPanel from './AchievementsPanel'
 
 export default function HUDOverlay({ onSwitchToLite }) {
   const { t } = useLanguage()
   const {
+    persistentState,
+    seasonPhase,
+    activeSeasonalEvent,
+    resolveSeasonalEvent,
+    showSeasonReport,
+    setShowSeasonReport,
+    showAchievements,
+    setShowAchievements,
+    nextSeason,
+    replaySeason,
     windState,
     quality,
     toggleQuality,
@@ -452,6 +467,165 @@ export default function HUDOverlay({ onSwitchToLite }) {
         </div>
       </div>
 
+      {/* SEASON & FARM STATUS BANNER */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '8px',
+          marginTop: '6px',
+          pointerEvents: 'auto'
+        }}
+      >
+        {/* Season & Year Badge */}
+        <div
+          style={{
+            backgroundColor: 'rgba(27, 94, 32, 0.92)',
+            color: '#FFFFFF',
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            fontWeight: 900,
+            fontSize: '0.86rem',
+            border: '2px solid #81C784',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <span>🌾</span>
+          <span>
+            Season {persistentState?.seasonIndex || 1} • Year {persistentState?.yearIndex || 1} ({((persistentState?.seasonIndex || 1) % 2 === 1) ? 'Kharif' : 'Rabi'})
+          </span>
+          <span style={{ fontSize: '0.74rem', backgroundColor: '#388E3C', padding: '2px 8px', borderRadius: '12px' }}>
+            {seasonPhase.toUpperCase()}
+          </span>
+        </div>
+
+        {/* Compact In-World Status Overview Strip */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          <div
+            title="Soil Health (Microbes, organic carbon & earthworms)"
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#3E2723',
+              border: '2px solid #8D6E63',
+              borderRadius: '9999px',
+              padding: '4px 10px',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>🪱</span>
+            <span>{Math.round(persistentState?.soilHealth ?? 70)}%</span>
+          </div>
+
+          <div
+            title="Village Community Air & Respiratory Health"
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#1B5E20',
+              border: '2px solid #81C784',
+              borderRadius: '9999px',
+              padding: '4px 10px',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>🏡</span>
+            <span>{Math.round(persistentState?.villageHealth ?? 75)}%</span>
+          </div>
+
+          <div
+            title="Farmer Funds & Capital"
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#BF360C',
+              border: '2px solid #FFB74D',
+              borderRadius: '9999px',
+              padding: '4px 10px',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>💰</span>
+            <span>₹{(persistentState?.money ?? 12000).toLocaleString('en-IN')}</span>
+          </div>
+
+          <div
+            title="Farmer Community Reputation"
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#4A148C',
+              border: '2px solid #BA68C8',
+              borderRadius: '9999px',
+              padding: '4px 10px',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>👑</span>
+            <span>{Math.round(persistentState?.reputation ?? 50)}</span>
+          </div>
+
+          <div
+            title="Consecutive Sustainable Seasons Streak"
+            style={{
+              backgroundColor: (persistentState?.streak || 0) > 0 ? '#FFF3E0' : '#ECEFF1',
+              color: (persistentState?.streak || 0) > 0 ? '#E65100' : '#78909C',
+              border: '2px solid #FF9800',
+              borderRadius: '9999px',
+              padding: '4px 10px',
+              fontWeight: 900,
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>🔥</span>
+            <span>{persistentState?.streak ?? 0}</span>
+          </div>
+
+          {/* Achievements Panel Trigger */}
+          <button
+            type="button"
+            onClick={() => setShowAchievements(true)}
+            style={{
+              backgroundColor: '#FFF8E1',
+              color: '#F57F17',
+              border: '2px solid #FBC02D',
+              borderRadius: '9999px',
+              padding: '4px 10px',
+              fontWeight: 900,
+              fontSize: '0.8rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title="View 12 Farmer Achievements"
+          >
+            <span>🏆</span>
+            <span>Badges</span>
+          </button>
+        </div>
+      </div>
+
       {/* LIVE SMOKE EXPOSURE METERS (During fire & consequence) */}
       <SmokeMeterHUD />
 
@@ -684,6 +858,33 @@ export default function HUDOverlay({ onSwitchToLite }) {
           <span>{toastNotice}</span>
         </div>
       )}
+
+      {/* SOWING MINI-GAME (Hold-to-plant timing meter) */}
+      <SowingMiniGame />
+
+      {/* GROWING TIME-LAPSE & SEASONAL WEATHER CYCLE */}
+      <GrowingTimeLapse onComplete={() => resolveSeasonalEvent(null)} />
+
+      {/* SEASONAL RANDOM EVENT MODAL */}
+      <SeasonalEventModal
+        event={activeSeasonalEvent}
+        onResolve={resolveSeasonalEvent}
+      />
+
+      {/* COMPREHENSIVE SEASON REPORT SCREEN */}
+      {showSeasonReport && (
+        <SeasonReportModal
+          onNextSeason={nextSeason}
+          onRewindSeason={replaySeason}
+          onOpenAchievements={() => setShowAchievements(true)}
+        />
+      )}
+
+      {/* 12 STRUCTURED ACHIEVEMENTS PANEL */}
+      <AchievementsPanel
+        isOpen={showAchievements}
+        onClose={() => setShowAchievements(false)}
+      />
 
       {/* Settings Drawer Slide-Over */}
       <SettingsDrawer

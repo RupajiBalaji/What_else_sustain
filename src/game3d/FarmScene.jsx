@@ -29,6 +29,7 @@ import CombineHarvester from './components/CombineHarvester'
 import SoilCutawayCrossSection from './components/SoilCutawayCrossSection'
 import AirSensorPole from './components/AirSensorPole'
 import ConsequenceCallouts from './components/ConsequenceCallouts'
+import InWorldStatusProps from './components/InWorldStatusProps'
 import CinematicCamera from './components/CinematicCamera'
 import PerformanceGovernor from './perf/PerformanceGovernor'
 import MemoryStatsOverlay, { MemoryStatsSampler } from './perf/MemoryStatsOverlay'
@@ -62,6 +63,7 @@ function SceneContent() {
       <Villagers />
       <AirSensorPole position={[-2.5, 0, 40.5]} />
       <SoilCutawayCrossSection position={[-4.0, 0, 8.2]} rotation={[0, 0.25, 0]} />
+      <InWorldStatusProps />
       <ConsequenceCallouts />
       <WindFlag />
       <FarmerPlayer initialPosition={[-1.2, 0, 10.0]} />

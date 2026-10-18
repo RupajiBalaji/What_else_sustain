@@ -3,17 +3,55 @@ import { sound } from '../../game/soundManager'
 import { audioManager } from '../audio/AudioManager'
 import { useGame } from '../../context/GameContext'
 import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
-
 import { getQualityConfig, autoDetectQualityTier } from '../config/qualityConfig'
+import { GAME_BALANCE, getSeasonEvent } from '../config/gameBalance'
 
 const Game3DContext = createContext(null)
 
 export function Game3DProvider({ children, onFallbackToLite }) {
   const game = useGame()
-  // Shared wind parameters (used for 3D visual flag/trees, audio, and backend smoke simulation)
+
+  // ==========================================
+  // 1. PERSISTENT STATE & STORAGE (Carried over across seasons)
+  // ==========================================
+  const [persistentState, setPersistentState] = useState(() => {
+    try {
+      const raw = localStorage.getItem('wes_season_save')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        return { ...GAME_BALANCE.INITIAL_STATE, ...parsed }
+      }
+    } catch (e) {
+      console.warn('[Game3D] Failed to read wes_season_save, using initial balance:', e)
+    }
+    return { ...GAME_BALANCE.INITIAL_STATE }
+  })
+
+  const savePersistentState = useCallback((stateToSave) => {
+    try {
+      localStorage.setItem('wes_season_save', JSON.stringify(stateToSave))
+    } catch (e) {
+      console.warn('[Game3D] Failed to persist state to localStorage:', e)
+    }
+  }, [])
+
+  // ==========================================
+  // 2. SEASON STATE MACHINE
+  // 'sowing' -> 'growing' -> 'harvest' -> 'decision' -> 'consequence' -> 'season_report'
+  // ==========================================
+  const [seasonPhase, setSeasonPhase] = useState('sowing')
+  const [activeSeasonalEvent, setActiveSeasonalEvent] = useState(null)
+  const [seasonReportData, setSeasonReportData] = useState(null)
+  const [showSeasonReport, setShowSeasonReport] = useState(false)
+  const [showAchievements, setShowAchievements] = useState(false)
+  const lastSowingWasPerfectRef = useRef(false)
+
+  // ==========================================
+  // 3. SHARED WORLD & ATMOSPHERE
+  // ==========================================
   const [windState, setWindState] = useState({
-    directionDeg: 75, // 0 = North, 90 = East (drifts smoke towards village at Z=45, X=5)
-    speedMs: 3.8,      // m/s
+    directionDeg: 75, // 0 = North, 90 = East (drifts smoke towards village)
+    speedMs: 3.8
   })
 
   // Quality tier settings: 'high' | 'medium' | 'low'
@@ -37,10 +75,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }
   })
 
-  // Dynamic Resolution Scale (1.0 = native, down to 0.72 under heavy load)
   const [dprScale, setDprScale] = useState(1.0)
 
-  // Persist tier lock state
   useEffect(() => {
     try {
       localStorage.setItem('wes_tier_locked', isTierLocked ? 'true' : 'false')
@@ -52,7 +88,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
 
   const qualityConfig = useMemo(() => getQualityConfig(quality), [quality])
 
-  // Toast Notification System ("Adjusted graphics for smooth play")
+  // Toast Notification System
   const [toastNotice, setToastNotice] = useState(null)
   const toastTimeoutRef = useRef(null)
   const triggerToast = useCallback((msg) => {
@@ -60,8 +96,65 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setToastNotice(msg)
     toastTimeoutRef.current = setTimeout(() => {
       setToastNotice(null)
-    }, 3200)
+    }, 3400)
   }, [])
+
+  // Check achievements helper
+  const checkAndUnlockAchievements = useCallback((stateSnapshot) => {
+    const unlocked = stateSnapshot.unlockedAchievements || []
+    const newUnlocked = [...unlocked]
+    let newlyFound = false
+
+    GAME_BALANCE.ACHIEVEMENTS.forEach((ach) => {
+      if (!newUnlocked.includes(ach.id) && ach.condition(stateSnapshot)) {
+        newUnlocked.push(ach.id)
+        newlyFound = true
+        triggerToast(`🏆 Achievement Unlocked: ${ach.title}!`)
+        sound.initAudio()
+        sound.playWin()
+      }
+    })
+
+    if (newlyFound) {
+      const updated = { ...stateSnapshot, unlockedAchievements: newUnlocked }
+      setPersistentState(updated)
+      savePersistentState(updated)
+      return updated
+    }
+    return stateSnapshot
+  }, [triggerToast, savePersistentState])
+
+  // Add Farmer XP & Level progression
+  const addFarmerXP = useCallback((xpAmount) => {
+    setPersistentState((prev) => {
+      const currentXP = (prev.farmerXP || 0) + xpAmount
+      let newLevel = prev.farmerLevel || 1
+      for (let i = GAME_BALANCE.LEVELS.length - 1; i >= 0; i--) {
+        if (currentXP >= GAME_BALANCE.LEVELS[i].xpNeeded) {
+          newLevel = GAME_BALANCE.LEVELS[i].level
+          break
+        }
+      }
+      if (newLevel > (prev.farmerLevel || 1)) {
+        const lvlDef = GAME_BALANCE.LEVELS.find((l) => l.level === newLevel)
+        triggerToast(`🎉 Level Up! You are now a ${lvlDef?.title || 'Master Farmer'}!`)
+        sound.initAudio()
+        sound.playSuccessChime()
+      }
+      const updated = { ...prev, farmerXP: currentXP, farmerLevel: newLevel }
+      savePersistentState(updated)
+      return updated
+    })
+  }, [triggerToast, savePersistentState])
+
+  const incrementPerfectSowing = useCallback(() => {
+    setPersistentState((prev) => {
+      const count = (prev.perfectSowingCount || 0) + 1
+      const updated = { ...prev, perfectSowingCount: count }
+      savePersistentState(updated)
+      return updated
+    })
+  }, [savePersistentState])
 
   // Settings Drawer & Diagnostics
   const [showSettings, setShowSettings] = useState(false)
@@ -84,7 +177,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     })
   }, [])
 
-  // Accessibility & Controls: Reduced Motion & Invert Look
+  // Accessibility & Controls
   const [reducedMotion, setReducedMotion] = useState(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       return window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -94,7 +187,6 @@ export function Game3DProvider({ children, onFallbackToLite }) {
 
   const [invertLook, setInvertLook] = useState(false)
 
-  // Haptic feedback trigger (respects reducedMotion)
   const triggerHaptic = useCallback((pattern) => {
     if (reducedMotion) return
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -106,17 +198,16 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }
   }, [reducedMotion])
 
-  // Day-night cycle state: golden-hour by default, can be paused/resumed
+  // Day-night cycle state
   const [isDayCyclePaused, setIsDayCyclePaused] = useState(false)
   const toggleDayCycle = useCallback(() => {
     setIsDayCyclePaused((p) => !p)
   }, [])
 
   // Cinematic Camera & Slow-Motion States
-  // 'flyover' | 'normal' | 'burn_focus' | 'alt_showcase'
   const [cinematicMode, setCinematicMode] = useState('flyover')
   const [isFlyoverActive, setIsFlyoverActive] = useState(true)
-  const [timeScale, setTimeScale] = useState(1.0) // 0.3 for slow motion
+  const [timeScale, setTimeScale] = useState(1.0)
 
   const skipFlyover = useCallback(() => {
     setIsFlyoverActive(false)
@@ -135,7 +226,6 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setShowFps((prev) => !prev)
   }, [])
 
-  // Keyboard shortcuts: Press 'F' to toggle FPS, 'G' to toggle GPU stats overlay
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
@@ -149,7 +239,6 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [toggleFps, toggleDevStats])
 
-  // Update wind audio loop when wind speed changes
   useEffect(() => {
     audioManager.updateWind(windState.speedMs)
   }, [windState.speedMs])
@@ -158,7 +247,6 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setFps(currentFps)
     setFrameTimeMs(frameTime)
 
-    // Check if FPS stays under 15 for 5 seconds
     if (currentFps < 15 && currentFps > 0) {
       if (!lowFpsStartTimeRef.current) {
         lowFpsStartTimeRef.current = Date.now()
@@ -188,42 +276,364 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     })
   }, [])
 
+  // ==========================================
+  // 4. GAMEPLAY INTERACTION & RESIDUE STATES
+  // ==========================================
+  const [interactionTarget, setInteractionTarget] = useState(null)
+  const [activePile, setActivePile] = useState(null)
+  const [showChoiceWheel, setShowChoiceWheel] = useState(false)
+  const [hasMadeChoice, setHasMadeChoice] = useState(false)
+  const [useInWorldChoices, setUseInWorldChoices] = useState(true)
+  const [selectedChoiceId, setSelectedChoiceId] = useState('happy_seeder')
+  const [nearestPileInfo, setNearestPileInfo] = useState(null)
+  const [showOneSeasonModal, setShowOneSeasonModal] = useState(false)
+
+  // Harvest cycle state: 'standing' | 'harvesting' | 'harvested'
+  const [harvestState, setHarvestState] = useState('standing')
+  const [harvestProgress, setHarvestProgress] = useState(0)
+  const harvestTimerRef = useRef(null)
+  const harvestIntervalRef = useRef(null)
+
+  // Burn sequence state: 'idle' | 'lighting' | 'burning' | 'consequence'
+  const [burnState, setBurnState] = useState('idle')
+  const [burnProgress, setBurnProgress] = useState(0)
+  const [ignitedPiles, setIgnitedPiles] = useState([])
+  const burnTimerRef = useRef(null)
+  const burnIntervalRef = useRef(null)
+
+  // Smoke Simulation Data
+  const [smokeData, setSmokeData] = useState({
+    playerExposure: null,
+    villageExposure: null,
+    disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
+    allParamsVerified: false
+  })
+
+  // VHS Rewind state
+  const [isRewinding, setIsRewinding] = useState(false)
+  const [playerResetTrigger, setPlayerResetTrigger] = useState(0)
+
+  // Live Alternatives state: null | 'happy_seeder' | 'bale_sell' | 'mulch' | 'compost'
+  const [activeAlternative, setActiveAlternative] = useState(null)
+  const [alternativeProgress, setAlternativeProgress] = useState(0)
+  const [rupeeCount, setRupeeCount] = useState(0)
+
+  const [showComparison, setShowComparison] = useState(false)
+  const [showPledgeModal, setShowPledgeModal] = useState(false)
+
+  const altIntervalRef = useRef(null)
+  const altTimerRef = useRef(null)
+
+  // ==========================================
+  // 5. SEASON FLOW ACTIONS
+  // ==========================================
+
+  // Step A: Complete Sowing (from SowingMiniGame)
+  const completeSowing = useCallback((isPerfect) => {
+    lastSowingWasPerfectRef.current = isPerfect
+    setSeasonPhase('growing')
+    const currentEvent = getSeasonEvent(persistentState.seasonIndex || 1)
+    setActiveSeasonalEvent(currentEvent)
+  }, [persistentState.seasonIndex])
+
+  // Step B: Resolve Seasonal Random Event
+  const resolveSeasonalEvent = useCallback((option) => {
+    if (option && option.apply) {
+      setPersistentState((prev) => {
+        const nextState = option.apply(prev)
+        savePersistentState(nextState)
+        checkAndUnlockAchievements(nextState)
+        return nextState
+      })
+    }
+    setActiveSeasonalEvent(null)
+    triggerToast('Field growth cycle complete! Ready for harvest.')
+    // Automatically transition to harvest sequence
+    setSeasonPhase('harvest')
+    startHarvestSequence()
+  }, [savePersistentState, checkAndUnlockAchievements, triggerToast])
+
+  // Step C: Harvest Sequence
+  const startHarvestSequence = useCallback(() => {
+    sound.initAudio()
+    sound.startTractorEngine()
+    setHarvestState('harvesting')
+    setHarvestProgress(0)
+
+    const startTime = Date.now()
+    const durationMs = 5200
+
+    if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
+    harvestIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const p = Math.min(1.0, elapsed / durationMs)
+      setHarvestProgress(p)
+    }, 50)
+
+    if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
+    harvestTimerRef.current = setTimeout(() => {
+      if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
+      setHarvestProgress(1.0)
+      setHarvestState('harvested')
+      setSeasonPhase('decision')
+      sound.stopTractorEngine()
+      sound.playSuccessChime()
+      triggerToast('🌾 Paddy harvested! Approach the straw pile to decide residue action.')
+    }, durationMs)
+  }, [triggerToast])
+
+  const skipHarvest = useCallback(() => {
+    if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
+    if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
+    sound.stopTractorEngine()
+    sound.playTap()
+    setHarvestProgress(1.0)
+    setHarvestState('harvested')
+    setSeasonPhase('decision')
+    triggerToast('🌾 Harvest complete! Choose how to manage the stubble.')
+  }, [triggerToast])
+
+  // Step D: Finish Season & Calculate Carry-Over Consequences
+  const finishSeason = useCallback((choiceKey) => {
+    const decisionConfig = GAME_BALANCE.DECISIONS[choiceKey] || GAME_BALANCE.DECISIONS.burn
+    const soilHealth = persistentState.soilHealth || 70
+    const villageHealth = persistentState.villageHealth || 75
+    const isPerfectSow = lastSowingWasPerfectRef.current
+
+    // Base grain revenue scaled by current soil health + sowing precision
+    const baseRevenue = GAME_BALANCE.HARVEST.BASE_CROP_REVENUE
+    const minRevenue = GAME_BALANCE.HARVEST.MIN_CROP_REVENUE
+    const healthMult = Math.max(0.4, soilHealth / 100)
+    const sowBonus = isPerfectSow ? 1.10 : 1.0
+    const cropRevenue = Math.max(minRevenue, Math.round(baseRevenue * healthMult * sowBonus))
+
+    // Decision specific costs / gains
+    const decisionRevenue = (decisionConfig.baleSaleGrossIncome || 0) + (decisionConfig.moneyCost || 0)
+    const netSeasonBalance = cropRevenue + decisionRevenue
+
+    const soilDelta = decisionConfig.soilHealthDelta
+    const villageDelta = decisionConfig.villageHealthDelta
+    const repDelta = decisionConfig.reputationDelta
+    const xpGained = decisionConfig.xpAward
+
+    const nextStreak = decisionConfig.streakReset ? 0 : (persistentState.streak || 0) + 1
+
+    // Calculate score (0-100) for letter rank
+    const compositeScore = Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(
+          (soilHealth + soilDelta) * 0.4 +
+          (villageHealth + villageDelta) * 0.4 +
+          (choiceKey !== 'burn' ? 20 : 0) +
+          nextStreak * 2
+        )
+      )
+    )
+
+    let rank = GAME_BALANCE.RANKS.C
+    if (compositeScore >= GAME_BALANCE.RANKS.S.minScore) rank = GAME_BALANCE.RANKS.S
+    else if (compositeScore >= GAME_BALANCE.RANKS.A.minScore) rank = GAME_BALANCE.RANKS.A
+    else if (compositeScore >= GAME_BALANCE.RANKS.B.minScore) rank = GAME_BALANCE.RANKS.B
+
+    const summaryText =
+      choiceKey === 'burn'
+        ? 'Stubble was burnt. Heavy smog drifted into the village, and soil microbes perished in the heat.'
+        : choiceKey === 'happy_seeder'
+        ? 'Happy Seeder zero-till drilling preserved field moisture and kept the village skies pure.'
+        : choiceKey === 'bale_sell'
+        ? 'Residue was baled and transported to the bio-energy refinery, generating ₹15,000 extra income.'
+        : choiceKey === 'mulch'
+        ? 'Mulching shielded topsoil moisture, nurtured earthworms, and boosted next season root vitality.'
+        : 'Bio-decomposer converted straw into fertile organic humus, reviving soil biodiversity.'
+
+    const report = {
+      rank,
+      choiceKey,
+      cropRevenue,
+      decisionRevenue,
+      netSeasonBalance,
+      soilDelta,
+      villageDelta,
+      repDelta,
+      xpGained,
+      streak: nextStreak,
+      summaryText
+    }
+
+    setSeasonReportData(report)
+
+    // Apply carry-over to persistent state
+    setPersistentState((prev) => {
+      const nextSoil = Math.max(0, Math.min(100, (prev.soilHealth || 70) + soilDelta))
+      const nextVillage = Math.max(0, Math.min(100, (prev.villageHealth || 75) + villageDelta))
+      const nextMoney = Math.max(0, (prev.money || 12000) + netSeasonBalance)
+      const nextRep = Math.max(0, Math.min(100, (prev.reputation || 50) + repDelta))
+      const nextXP = (prev.farmerXP || 0) + xpGained
+
+      let nextLevel = prev.farmerLevel || 1
+      for (let i = GAME_BALANCE.LEVELS.length - 1; i >= 0; i--) {
+        if (nextXP >= GAME_BALANCE.LEVELS[i].xpNeeded) {
+          nextLevel = GAME_BALANCE.LEVELS[i].level
+          break
+        }
+      }
+
+      const updated = {
+        ...prev,
+        soilHealth: nextSoil,
+        villageHealth: nextVillage,
+        money: nextMoney,
+        reputation: nextRep,
+        streak: nextStreak,
+        farmerXP: nextXP,
+        farmerLevel: nextLevel,
+        totalBaleIncome: (prev.totalBaleIncome || 0) + (decisionConfig.baleSaleGrossIncome || 0),
+        happySeederUses: (prev.happySeederUses || 0) + (choiceKey === 'happy_seeder' ? 1 : 0),
+        compostUses: (prev.compostUses || 0) + (choiceKey === 'compost' ? 1 : 0),
+        mulchUses: (prev.mulchUses || 0) + (choiceKey === 'mulch' ? 1 : 0),
+        history: [...(prev.history || []), { seasonIndex: prev.seasonIndex || 1, choiceKey, netSeasonBalance, rank: rank.rank }]
+      }
+
+      savePersistentState(updated)
+      checkAndUnlockAchievements(updated)
+      return updated
+    })
+
+    // Advance to season report
+    setSeasonPhase('season_report')
+    setShowSeasonReport(true)
+  }, [persistentState, savePersistentState, checkAndUnlockAchievements])
+
+  // Step E: Next Season Transition
+  const nextSeason = useCallback(() => {
+    setShowSeasonReport(false)
+    setShowComparison(false)
+    setShowOneSeasonModal(false)
+    setBurnState('idle')
+    setBurnProgress(0)
+    setIgnitedPiles([])
+    setActiveAlternative(null)
+    setAlternativeProgress(0)
+    setRupeeCount(0)
+    setHasMadeChoice(false)
+    setHarvestState('standing')
+    setHarvestProgress(0)
+    setPlayerResetTrigger((p) => p + 1)
+    audioManager.setMusicState('calm')
+
+    setPersistentState((prev) => {
+      const nextSeasonIdx = (prev.seasonIndex || 1) + 1
+      const nextYearIdx = Math.floor((nextSeasonIdx - 1) / 2) + 1
+      const updated = {
+        ...prev,
+        seasonIndex: nextSeasonIdx,
+        yearIndex: nextYearIdx
+      }
+      savePersistentState(updated)
+      triggerToast(`🌾 Welcome to Season ${nextSeasonIdx} • Year ${nextYearIdx}! Time to sow.`)
+      return updated
+    })
+
+    setSeasonPhase('sowing')
+  }, [savePersistentState, triggerToast])
+
+  // Replay Current Season (Rewind & Try Alternate Choice)
+  const replaySeason = useCallback(() => {
+    setShowSeasonReport(false)
+    setShowComparison(false)
+    setShowOneSeasonModal(false)
+    sound.stopFireCrackle()
+    sound.stopTractorEngine()
+    sound.stopBalerSound()
+    sound.playRewindWhoosh()
+    audioManager.setMusicState('calm')
+    setIsRewinding(true)
+
+    if (burnTimerRef.current) clearTimeout(burnTimerRef.current)
+    if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
+    if (altTimerRef.current) clearTimeout(altTimerRef.current)
+    if (altIntervalRef.current) clearInterval(altIntervalRef.current)
+
+    setTimeout(() => {
+      setIsRewinding(false)
+      setBurnState('idle')
+      setBurnProgress(0)
+      setIgnitedPiles([])
+      setActiveAlternative(null)
+      setAlternativeProgress(0)
+      setRupeeCount(0)
+      setPlayerResetTrigger((p) => p + 1)
+      setHasMadeChoice(false)
+      setHarvestState('harvested')
+      setHarvestProgress(1.0)
+      setSeasonPhase('decision')
+      setShowChoiceWheel(true)
+      triggerToast('Rewound to harvest! Explore an alternative approach.')
+    }, 1350)
+  }, [triggerToast])
+
+  // Start New Game (Reset all progression)
+  const resetNewGame = useCallback(() => {
+    try {
+      localStorage.removeItem('wes_season_save')
+    } catch {
+      // Safe fallback
+    }
+    const fresh = { ...GAME_BALANCE.INITIAL_STATE }
+    setPersistentState(fresh)
+    setShowSeasonReport(false)
+    setShowComparison(false)
+    setShowOneSeasonModal(false)
+    setBurnState('idle')
+    setBurnProgress(0)
+    setIgnitedPiles([])
+    setActiveAlternative(null)
+    setAlternativeProgress(0)
+    setRupeeCount(0)
+    setHasMadeChoice(false)
+    setHarvestState('standing')
+    setHarvestProgress(0)
+    setSeasonPhase('sowing')
+    setPlayerResetTrigger((p) => p + 1)
+    audioManager.setMusicState('calm')
+    triggerToast('🔄 New Farm Game started! First sowing season ready.')
+  }, [triggerToast])
+
   // Initiate Burn Sequence with slow-motion beat and push-in camera
   const startBurnSequence = useCallback((pile) => {
     setShowChoiceWheel(false)
     setShowOneSeasonModal(false)
     setHasMadeChoice(true)
+    setSeasonPhase('consequence')
     const targetPile = pile || activePile || interactionTarget
     setActivePile(targetPile)
     setBurnState('lighting')
     setCinematicMode('burn_focus')
     if (!reducedMotion) {
-      setTimeScale(0.3) // 0.3x time slow-motion beat for 1.5s
+      setTimeScale(0.3)
     }
     sound.initAudio()
     sound.playTap()
     triggerHaptic([40, 30, 40])
     audioManager.setMusicState('tense')
 
-    // Slow-mo beat for 1.5s then return to regular timeScale and normal camera
     setTimeout(() => {
       setTimeScale(1.0)
       setCinematicMode('normal')
     }, 1500)
 
-    // 1.8 seconds of player lighting animation with torch
     setTimeout(() => {
       setBurnState('burning')
       sound.startFireCrackle()
 
-      // Set initial pile on fire
       if (targetPile?.id) {
         setIgnitedPiles([targetPile.id])
       }
 
-      // Query smoke simulation API in background
       simulateSmokeApi({
-        acres: 5.0, // 8 piles represent 5 acres harvested paddy
+        acres: 5.0,
         windSpeedMs: windState.speedMs,
         windDirDeg: windState.directionDeg,
         distanceToVillageM: 180.0,
@@ -247,7 +657,6 @@ export function Game3DProvider({ children, onFallbackToLite }) {
           })
         })
 
-      // 20-second atmospheric transition timer & progress ticker
       const startTime = Date.now()
       const totalDurationMs = 20000
 
@@ -265,18 +674,10 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         setBurnState('consequence')
         sound.stopFireCrackle()
 
-        // Apply game consequences
-        if (game?.modifyNatureHealth) {
-          game.modifyNatureHealth(-25)
-        }
-        if (game?.addPoints) {
-          game.addPoints(10)
-        }
-        if (game?.recordMistakeExplored) {
-          game.recordMistakeExplored('choice_burn_stubble')
-        }
+        if (game?.modifyNatureHealth) game.modifyNatureHealth(-25)
+        if (game?.addPoints) game.addPoints(10)
+        if (game?.recordMistakeExplored) game.recordMistakeExplored('choice_burn_stubble')
 
-        // Record session to backend
         recordPlaySession({
           session_id: `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
           scenario: 'farm_crop_residue',
@@ -284,105 +685,23 @@ export function Game3DProvider({ children, onFallbackToLite }) {
           smoke_index: 62.0,
           language: 'en'
         })
+
+        // Conclude season
+        finishSeason('burn')
       }, totalDurationMs)
     }, 1800)
-  }, [activePile, interactionTarget, windState, game])
-
-  // VHS Rewind state
-  const [isRewinding, setIsRewinding] = useState(false)
-  const [playerResetTrigger, setPlayerResetTrigger] = useState(0)
-
-  // Live Alternatives state: null | 'happy_seeder' | 'bale_sell' | 'mulch' | 'compost'
-  const [activeAlternative, setActiveAlternative] = useState(null)
-  const [alternativeProgress, setAlternativeProgress] = useState(0)
-  const [rupeeCount, setRupeeCount] = useState(0)
-
-  // Split-screen comparison modal
-  const [showComparison, setShowComparison] = useState(false)
-  const [showPledgeModal, setShowPledgeModal] = useState(false)
-
-  const altIntervalRef = useRef(null)
-  const altTimerRef = useRef(null)
+  }, [activePile, interactionTarget, windState, reducedMotion, triggerHaptic, game, finishSeason])
 
   // Trigger VHS-style Rewind
   const triggerRewind = useCallback(() => {
-    sound.stopFireCrackle()
-    sound.stopTractorEngine()
-    sound.stopBalerSound()
-    sound.playRewindWhoosh()
-    audioManager.setMusicState('calm')
-    setIsRewinding(true)
-
-    if (burnTimerRef.current) clearTimeout(burnTimerRef.current)
-    if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
-    if (altTimerRef.current) clearTimeout(altTimerRef.current)
-    if (altIntervalRef.current) clearInterval(altIntervalRef.current)
-
-    setTimeout(() => {
-      setIsRewinding(false)
-      setBurnState('idle')
-      setBurnProgress(0)
-      setIgnitedPiles([])
-      setActiveAlternative(null)
-      setAlternativeProgress(0)
-      setRupeeCount(0)
-      setPlayerResetTrigger((p) => p + 1)
-      setHasMadeChoice(false)
-      setShowOneSeasonModal(false)
-      setHarvestState('harvested')
-      setHarvestProgress(1.0)
-      setSmokeData({
-        playerExposure: null,
-        villageExposure: null,
-        disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
-        allParamsVerified: false
-      })
-      // Automatically reopen choice wheel so player can test alternatives!
-      setShowChoiceWheel(true)
-    }, 1350)
-  }, [])
-
-  // 5-second cinematic harvest pass across standing green field
-  const startHarvestSequence = useCallback(() => {
-    sound.initAudio()
-    sound.startTractorEngine()
-    setHarvestState('harvesting')
-    setHarvestProgress(0)
-
-    const startTime = Date.now()
-    const durationMs = 5200
-
-    if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
-    harvestIntervalRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime
-      const p = Math.min(1.0, elapsed / durationMs)
-      setHarvestProgress(p)
-    }, 50)
-
-    if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
-    harvestTimerRef.current = setTimeout(() => {
-      if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
-      setHarvestProgress(1.0)
-      setHarvestState('harvested')
-      sound.stopTractorEngine()
-      sound.playSuccessChime()
-    }, durationMs)
-  }, [])
-
-  // Immediate skip button action
-  const skipHarvest = useCallback(() => {
-    if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
-    if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
-    sound.stopTractorEngine()
-    sound.playTap()
-    setHarvestProgress(1.0)
-    setHarvestState('harvested')
-  }, [])
+    replaySeason()
+  }, [replaySeason])
 
   // Start one of the 4 sustainable alternatives
   const startAlternative = useCallback((altKey) => {
     setShowChoiceWheel(false)
     setHasMadeChoice(true)
+    setSeasonPhase('consequence')
     sound.initAudio()
     sound.playTap()
     audioManager.setMusicState('hopeful')
@@ -390,13 +709,11 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setAlternativeProgress(0)
     setRupeeCount(0)
 
-    // Smooth showcase dolly to showcase machine at work
     setCinematicMode('alt_showcase')
     setTimeout(() => {
       setCinematicMode('normal')
     }, 4500)
 
-    // Clean air: zero open burning
     setSmokeData({
       playerExposure: 2,
       villageExposure: 1,
@@ -420,7 +737,6 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       setAlternativeProgress(prog)
 
       if (altKey === 'bale_sell') {
-        // Increment revenue from ₹0 to ₹15,000 (5 acres * ₹3,000/acre net)
         const targetRupees = 15000
         const currentRupees = Math.round(targetRupees * Math.pow(prog, 1.2))
         setRupeeCount(currentRupees)
@@ -440,22 +756,14 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         sound.playCoin()
       }
 
-      // Award game rewards
-      if (game?.modifyNatureHealth) {
-        game.modifyNatureHealth(25)
-      }
-      if (game?.addPoints) {
-        game.addPoints(50)
-      }
+      if (game?.modifyNatureHealth) game.modifyNatureHealth(25)
+      if (game?.addPoints) game.addPoints(50)
       if (game?.unlockBadge) {
         game.unlockBadge('soil_saver')
         game.unlockBadge('curious_mind')
       }
-      if (game?.markScenarioCompleted) {
-        game.markScenarioCompleted('farm_crop_residue')
-      }
+      if (game?.markScenarioCompleted) game.markScenarioCompleted('farm_crop_residue')
 
-      // Record sustainable session to backend
       const choiceId =
         altKey === 'bale_sell'
           ? 'choice_sell_biomass'
@@ -471,29 +779,25 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         language: 'en'
       })
 
-      // Show the Before/After Comparison Split Slider!
       setShowComparison(true)
+      finishSeason(altKey)
     }, durationMs)
-  }, [game, triggerHaptic])
+  }, [game, triggerHaptic, finishSeason])
 
-  // Player interaction with a straw pile (handles both in-world choices and legacy wheel)
   const handleInteract = useCallback(() => {
     if (!interactionTarget) return
     sound.initAudio()
     sound.playPop()
     setActivePile(interactionTarget)
     if (!useInWorldChoices) {
-      // Legacy wheel mode: open the radial choice wheel
       setShowChoiceWheel(true)
     }
   }, [interactionTarget, useInWorldChoices])
 
-  // Reset / Rewind the field back to healthy golden state
   const resetBurn = useCallback(() => {
     triggerRewind()
   }, [triggerRewind])
 
-  // Clean up timers on unmount
   useEffect(() => {
     return () => {
       sound.stopFireCrackle()
@@ -503,12 +807,33 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       if (burnIntervalRef.current) clearInterval(burnIntervalRef.current)
       if (altTimerRef.current) clearTimeout(altTimerRef.current)
       if (altIntervalRef.current) clearInterval(altIntervalRef.current)
+      if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
+      if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
     }
   }, [])
 
   return (
     <Game3DContext.Provider
       value={{
+        persistentState,
+        setPersistentState,
+        seasonPhase,
+        setSeasonPhase,
+        activeSeasonalEvent,
+        setActiveSeasonalEvent,
+        seasonReportData,
+        showSeasonReport,
+        setShowSeasonReport,
+        showAchievements,
+        setShowAchievements,
+        completeSowing,
+        resolveSeasonalEvent,
+        finishSeason,
+        nextSeason,
+        replaySeason,
+        resetNewGame,
+        addFarmerXP,
+        incrementPerfectSowing,
         windState,
         setWindState,
         quality,
@@ -547,6 +872,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         interactionTarget,
         setInteractionTarget,
         activePile,
+        setActivePile,
         showChoiceWheel,
         setShowChoiceWheel,
         useInWorldChoices,

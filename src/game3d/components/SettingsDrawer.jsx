@@ -23,7 +23,8 @@ export default function SettingsDrawer({ isOpen, onClose }) {
     isMuted,
     toggleMute,
     showDevStats,
-    toggleDevStats
+    toggleDevStats,
+    resetNewGame
   } = useGame3D()
 
   if (!isOpen) return null
@@ -260,6 +261,38 @@ export default function SettingsDrawer({ isOpen, onClose }) {
               style={{ width: '18px', height: '18px', accentColor: '#2E7D32' }}
             />
           </label>
+        </div>
+
+        {/* Career Progression & Reset */}
+        <div style={{ borderTop: '1px solid #EEEEEE', paddingTop: '14px' }}>
+          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#C62828', marginBottom: '4px' }}>
+            Season Career
+          </div>
+          <p style={{ fontSize: '0.74rem', color: '#757575', margin: '0 0 10px 0' }}>
+            Reset all multi-season records and restart from Season 1 sowing.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm('Are you sure you want to start a New Game? This will reset all seasons, achievements and farm progress.')) {
+                resetNewGame()
+                onClose()
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#FFEBEE',
+              color: '#C62828',
+              border: '1.5px solid #EF9A9A',
+              borderRadius: '10px',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Start New Game
+          </button>
         </div>
 
         {/* Done Button */}

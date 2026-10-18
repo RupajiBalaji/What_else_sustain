@@ -188,11 +188,16 @@ function LightShafts({ sunPosition, visible = true }) {
 }
 
 export default function WorldEnvironment() {
-  const { qualityConfig, burnProgress, burnState, windState, isDayCyclePaused } = useGame3D()
+  const { qualityConfig, burnProgress, burnState, windState, isDayCyclePaused, persistentState } = useGame3D()
   const sunLightRef = useRef(null)
   const sunPosRef = useRef(new THREE.Vector3(42, 38, 28))
 
-  const effectiveProgress = burnState === 'consequence' ? 1.0 : burnProgress || 0
+  const villageHealth = persistentState?.villageHealth ?? 75
+  const villageSmogHaze = villageHealth < 65 ? ((65 - villageHealth) / 65) * 0.35 : 0
+  const effectiveProgress = Math.min(
+    1.0,
+    (burnState === 'consequence' ? 1.0 : burnProgress || 0) + villageSmogHaze
+  )
 
   // Day/night cycle: slow orbit around field (pausable via isDayCyclePaused)
   useFrame(({ clock }) => {

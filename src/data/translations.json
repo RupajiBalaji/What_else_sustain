@@ -244,14 +244,6 @@
       "unverifiedBadge": "Unverified (Approximate data for prototype)",
       "verifiedBadge": "Verified Source"
     },
-    "game3d": {
-      "objectiveWalkToPile": "Walk to a straw pile",
-      "objectiveInteractDesktop": "Press E to choose what to do",
-      "objectiveInteractTouch": "Tap the button to choose",
-      "switchToLite": "Lite Mode",
-      "qualityHigh": "High",
-      "qualityLow": "Low"
-    },
     "footer": {
       "tagline": "Make the mistake. Understand it. Choose what else.",
       "offlineNote": "Works offline & on low-bandwidth mobile networks.",

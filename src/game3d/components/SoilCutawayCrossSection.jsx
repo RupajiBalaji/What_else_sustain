@@ -4,13 +4,16 @@ import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
 
+const _soilDummy = new THREE.Object3D()
+
 /**
  * Cutaway cross-section of the field soil showing vertical layers,
  * instanced worms, microbes, and downward heat glow during fires.
  */
 export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rotation = [0, 0.25, 0] }) {
-  const { quality, burnState, burnProgress, activeAlternative } = useGame3D()
+  const { quality, burnState, burnProgress, activeAlternative, persistentState } = useGame3D()
   const isHigh = quality === 'high'
+  const soilHealth = persistentState?.soilHealth ?? 70
 
   const wormsRef = useRef(null)
   const microbesRef = useRef(null)
@@ -103,26 +106,29 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
 
     // 2. Topsoil color lerp (Rich loam -> charred ash / deep humus)
     if (topsoilRef.current) {
-      const healthyColor = new THREE.Color('#4E342E') // Normal rich loam
+      // Base healthy color is richer & darker when soilHealth is high
+      const loamT = Math.max(0, Math.min(1, soilHealth / 100))
+      const baseLoamColor = new THREE.Color().lerpColors(new THREE.Color('#6D4C41'), new THREE.Color('#3E2723'), loamT)
       const burntColor = new THREE.Color('#1B1615')    // Scorched soot
       const enrichedColor = new THREE.Color('#211510') // Dark humus
 
       if (burnRatio > 0) {
-        topsoilRef.current.material.color.lerpColors(healthyColor, burntColor, burnRatio)
+        topsoilRef.current.material.color.lerpColors(baseLoamColor, burntColor, burnRatio)
       } else if (isEnriched) {
         topsoilRef.current.material.color.lerp(enrichedColor, 0.05)
       } else {
-        topsoilRef.current.material.color.lerp(healthyColor, 0.05)
+        topsoilRef.current.material.color.lerp(baseLoamColor, 0.05)
       }
     }
 
-    // 3. Animate worms
+    // 3. Animate worms using hoisted _soilDummy
     if (wormsRef.current) {
-      const dummy = new THREE.Object3D()
+      // If soil health is depleted, fewer active worms survive
+      const activeWormLimit = Math.max(2, Math.round(wormCount * (soilHealth / 100)))
+
       for (let i = 0; i < wormCount; i++) {
         const w = wormData[i]
-        // Dead and shrunk during burn
-        let scale = 1.0
+        let scale = i < activeWormLimit ? 1.0 : 0.01
         let wiggle = Math.sin(t * w.speed) * 0.12
 
         if (burnRatio > 0.15) {
@@ -133,18 +139,17 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
           wiggle = Math.sin(t * w.speed * 2.2) * 0.22
         }
 
-        dummy.position.set(w.x, w.y, w.z)
-        dummy.rotation.set(0, 0, w.rotZ + wiggle)
-        dummy.scale.set(scale, scale, scale)
-        dummy.updateMatrix()
-        wormsRef.current.setMatrixAt(i, dummy.matrix)
+        _soilDummy.position.set(w.x, w.y, w.z)
+        _soilDummy.rotation.set(0, 0, w.rotZ + wiggle)
+        _soilDummy.scale.set(scale, scale, scale)
+        _soilDummy.updateMatrix()
+        wormsRef.current.setMatrixAt(i, _soilDummy.matrix)
       }
       wormsRef.current.instanceMatrix.needsUpdate = true
     }
 
-    // 4. Animate microbes
+    // 4. Animate microbes using hoisted _soilDummy
     if (microbesRef.current) {
-      const dummy = new THREE.Object3D()
       for (let i = 0; i < microbeCount; i++) {
         const m = microbeData[i]
         let scale = 1.0
@@ -156,10 +161,10 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
           scale = 1.0 + Math.sin(t * 2 + m.phase) * 0.25
         }
 
-        dummy.position.set(m.x, m.y + Math.sin(t * 2 + m.phase) * 0.02, m.z)
-        dummy.scale.set(scale, scale, scale)
-        dummy.updateMatrix()
-        microbesRef.current.setMatrixAt(i, dummy.matrix)
+        _soilDummy.position.set(m.x, m.y + Math.sin(t * 2 + m.phase) * 0.02, m.z)
+        _soilDummy.scale.set(scale, scale, scale)
+        _soilDummy.updateMatrix()
+        microbesRef.current.setMatrixAt(i, _soilDummy.matrix)
       }
       microbesRef.current.instanceMatrix.needsUpdate = true
     }

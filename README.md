@@ -58,28 +58,61 @@ The app features an interactive AI Advisor drawer where players can type or spea
 
 ---
 
-## 🚀 Local Setup Instructions
+## 💻 Run Locally
 
-### Prerequisites
-- Node.js (v18.0.0 or higher)
-- npm (v9.0.0 or higher)
+### 1. Backend Setup (FastAPI & Python 3.11+)
 
-### Installation
 ```bash
-# Clone or navigate to the project directory
-cd "What else sustain"
+# 1. Navigate to the backend directory
+cd backend
 
-# Install dependencies
+# 2. Create and activate a virtual environment
+python -m venv .venv
+# On Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+# On macOS / Linux:
+source .venv/bin/activate
+
+# 3. Install backend dependencies
+pip install -r requirements.txt
+# (Alternatively with uv: uv pip install -r requirements.txt)
+
+# 4. (Optional) Configure environment variables
+cp .env.example .env
+# Set GEMINI_API_KEY in .env if you wish to test live AI calls
+
+# 5. Run the backend pytest suite
+pytest tests
+
+# 6. Start the FastAPI backend server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+The backend API is served at `http://localhost:8000` with interactive Swagger docs at `http://localhost:8000/docs`.
+
+---
+
+### 2. Frontend Setup (Vite & React)
+
+```bash
+# 1. In the project root, install frontend dependencies
 npm install
 
-# (Optional) Copy environment template and configure your Gemini API key
-cp .env.example .env
-# Edit .env and set: GEMINI_API_KEY=your_actual_key_here
-
-# Start the local development server
+# 2. Start the Vite development server (automatically proxies /api -> http://localhost:8000)
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser or mobile device.
+Open [http://localhost:5173](http://localhost:5173) in your browser. All API requests (`/api/health`, `/api/advisor`, `/api/simulate/smoke`, `/api/sessions`, `/api/stats`) are proxied directly to the backend.
+
+---
+
+### 3. Production Build (Single Service Host)
+
+```bash
+# Build the production frontend assets (output to dist/)
+npm run build
+
+# The FastAPI backend automatically serves dist/ as static files in production:
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
 ---
 

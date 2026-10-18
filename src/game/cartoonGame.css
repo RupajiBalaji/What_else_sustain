@@ -1,0 +1,362 @@
+/* ==========================================================================
+   cartoonGame.css - Playful Cartoon Game Styles for "What Else Sustain"
+   Designed for kids aged 8-14:
+   - High contrast, bright sunny palette
+   - Big tap targets (min 56px x 56px)
+   - Rounded chunky pill buttons with playful shadows
+   - Accessible, mobile-first (360px portrait up to desktop)
+   - Reduced motion safety
+   ========================================================================== */
+
+:root {
+  --kid-sky-top: #4FC3F7;
+  --kid-sky-bottom: #B3E5FC;
+  --kid-grass-light: #81C784;
+  --kid-grass-dark: #388E3C;
+  --kid-sun-gold: #FFD54F;
+  --kid-sun-border: #FFA000;
+  --kid-wood-brown: #8D6E63;
+  --kid-soil-rich: #5D4037;
+  --kid-water-blue: #0288D1;
+  --kid-card-bg: #FFFFFF;
+  --kid-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --kid-shadow: 0 6px 0 rgba(0, 0, 0, 0.18), 0 8px 18px rgba(0, 0, 0, 0.12);
+  --kid-shadow-press: 0 2px 0 rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.12);
+  --min-tap: 56px;
+}
+
+/* Base Cartoon Game Container */
+.cartoon-game-root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  font-family: var(--kid-font);
+  background: linear-gradient(180deg, var(--kid-sky-top) 0%, var(--kid-sky-bottom) 60%, var(--kid-grass-light) 100%);
+  display: flex;
+  flex-direction: column;
+  color: #1A382B;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Primary Chunky Game Buttons (Min 56px tap target) */
+.kid-btn {
+  min-height: var(--min-tap);
+  min-width: var(--min-tap);
+  padding: 12px 22px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border-radius: 9999px;
+  border: 3px solid #16382B;
+  background-color: var(--kid-sun-gold);
+  color: #16382B;
+  box-shadow: var(--kid-shadow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.kid-btn:hover {
+  transform: translateY(-2px);
+}
+
+.kid-btn:active {
+  transform: translateY(4px);
+  box-shadow: var(--kid-shadow-press);
+}
+
+.kid-btn-green {
+  background-color: #66BB6A;
+  color: #FFFFFF;
+  border-color: #1B5E20;
+}
+
+.kid-btn-blue {
+  background-color: #42A5F5;
+  color: #FFFFFF;
+  border-color: #0D47A1;
+}
+
+.kid-btn-orange {
+  background-color: #FFA726;
+  color: #212121;
+  border-color: #E65100;
+}
+
+.kid-btn-red {
+  background-color: #EF5350;
+  color: #FFFFFF;
+  border-color: #B71C1C;
+}
+
+.kid-btn-circle {
+  width: var(--min-tap);
+  height: var(--min-tap);
+  border-radius: 50%;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Top Game HUD Bar */
+.kid-hud-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  gap: 8px;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  border-bottom: 3.5px solid #2E7D32;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.kid-hud-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 2.5px solid #2E7D32;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 44px;
+}
+
+/* Interactive Village Map Canvas / Layout */
+.village-map-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Location Pins / Landmarks on the Map */
+.map-node-card {
+  background: #FFFFFF;
+  border: 3.5px solid #16382B;
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: var(--kid-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-node-card:hover {
+  transform: translateY(-4px) scale(1.01);
+}
+
+.map-node-card:active {
+  transform: translateY(2px);
+  box-shadow: var(--kid-shadow-press);
+}
+
+.map-node-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  flex-shrink: 0;
+  border: 3px solid #16382B;
+}
+
+/* Draggable Straw & Drop Targets */
+.straw-dragger {
+  width: 120px;
+  height: 90px;
+  background: #FFE082;
+  border: 3.5px solid #E65100;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 30;
+  font-weight: 800;
+  color: #E65100;
+}
+
+.straw-dragger:active {
+  cursor: grabbing;
+}
+
+.drop-target-card {
+  background: #FFFFFF;
+  border: 3.5px solid #16382B;
+  border-radius: 20px;
+  padding: 14px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: var(--kid-shadow);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+.drop-target-card:hover {
+  transform: scale(1.03);
+}
+
+.drop-target-card.target-fire {
+  border-color: #D32F2F;
+  background: #FFEBEE;
+}
+
+.drop-target-card.target-mulch {
+  border-color: #388E3C;
+  background: #E8F5E9;
+}
+
+.drop-target-card.target-compost {
+  border-color: #00796B;
+  background: #E0F2F1;
+}
+
+.drop-target-card.target-biomass {
+  border-color: #F57C00;
+  background: #FFF3E0;
+}
+
+/* Animated Visual Consequence Meters */
+.kid-meter-box {
+  background: #FFFFFF;
+  border: 3px solid #16382B;
+  border-radius: 16px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.kid-meter-bar-track {
+  flex: 1;
+  height: 16px;
+  background: #ECEFF1;
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 2px solid #37474F;
+  position: relative;
+}
+
+.kid-meter-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* "Did you know?" fact bubble */
+.did-you-know-card {
+  background: #FFF9C4;
+  border: 3px dashed #F57F17;
+  border-radius: 18px;
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #3E2723;
+  margin-top: 12px;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Plastic Falling Sorting Game Layout */
+.plastic-game-viewport {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  background: linear-gradient(180deg, #E1F5FE 0%, #B3E5FC 70%, #81D4FA 100%);
+  border: 4px solid #0277BD;
+  border-radius: 28px;
+  overflow: hidden;
+  margin: 12px 0;
+  box-shadow: inset 0 6px 14px rgba(0, 0, 0, 0.1), var(--kid-shadow);
+}
+
+.falling-item {
+  position: absolute;
+  width: 60px;
+  height: 70px;
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  z-index: 20;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+}
+
+.falling-item:active {
+  cursor: grabbing;
+}
+
+.sorting-bins-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.sorting-bin {
+  min-height: 90px;
+  border-radius: 20px;
+  border: 3.5px solid #16382B;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px;
+  text-align: center;
+  box-shadow: var(--kid-shadow);
+  touch-action: manipulation;
+  transition: transform 0.1s ease;
+}
+
+.sorting-bin:active {
+  transform: scale(0.95);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

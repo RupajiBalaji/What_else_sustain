@@ -16,16 +16,6 @@ export default function Header({ onOpenBadges, onOpenScorecard, onOpenAdvisor })
             <p className="brand-tagline">{t('app.tagline')}</p>
           </div>
         </div>
-
-        <button
-          onClick={toggleLanguage}
-          className="lang-toggle-btn"
-          aria-label={`Switch language to ${lang === 'en' ? 'Telugu' : 'English'}`}
-          type="button"
-        >
-          <span aria-hidden="true">🌐</span>
-          <span>{lang === 'en' ? 'తెలుగు' : 'English'}</span>
-        </button>
       </div>
 
       {/* Main Stats Row */}
@@ -67,8 +57,34 @@ export default function Header({ onOpenBadges, onOpenScorecard, onOpenAdvisor })
         </div>
       </div>
 
-      {/* Quick Access Action Bar for AI Advisor and Scorecard */}
+      {/* Quick Access Action Bar for Story Mode, AI Advisor and Scorecard */}
       <div style={{ display: 'flex', gap: '6px', paddingTop: '2px' }}>
+        {onOpenStoryMode && (
+          <button
+            type="button"
+            onClick={onOpenStoryMode}
+            style={{
+              flex: 1.2,
+              background: 'linear-gradient(135deg, var(--color-leaf-green) 0%, #155743 100%)',
+              border: '1.5px solid var(--color-lime)',
+              color: '#FFFFFF',
+              padding: '7px 10px',
+              borderRadius: 'var(--radius-full)',
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              boxShadow: 'var(--shadow-sm)'
+            }}
+          >
+            <span>🌾</span>
+            <span>Story Mode</span>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={onOpenAdvisor}

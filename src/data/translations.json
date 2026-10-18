@@ -10,7 +10,6 @@
       "points": "Pts",
       "badges": "Badges",
       "level": "Rank",
-      "switchLang": "తెలుగు",
       "advisorBtn": "Ask What Else 🤖",
       "scorecardBtn": "Scorecard 📊"
     },
@@ -97,6 +96,23 @@
       "statusStressed": "Under Pressure 🌾",
       "statusCritical": "Ecosystem in Danger 🥀",
       "instruction": "Your choices shape the health of nature around us"
+    },
+    "game3d": {
+      "modeName": "3D Village World",
+      "liteModeName": "Lite Mode",
+      "switchToLite": "Switch to Lite Mode 📱",
+      "switchTo3D": "Explore in 3D 🌐",
+      "loadingTitle": "Loading 3D Village...",
+      "loadingTip": "Walking through the harvest fields. Use WASD to move!",
+      "startBtn": "Start 3D Experience 🚀",
+      "interactPromptDesktop": "Press [E] to Inspect Straw Pile",
+      "interactPromptMobile": "Tap to Inspect 🌾",
+      "interactSuccess": "Inspecting straw pile... alternatives available!",
+      "windSpeed": "Wind",
+      "qualityHigh": "High Graphics",
+      "qualityLow": "Low Graphics",
+      "fpsToggle": "FPS (Press F)",
+      "webglFallbackMessage": "3D graphics could not run smoothly on this device. Switched to Lite mode for best performance."
     },
     "scenarioList": {
       "heading": "Explore Scenarios",
@@ -187,197 +203,6 @@
       "offlineNote": "Works offline & on low-bandwidth mobile networks.",
       "giveFeedback": "Give Feedback 💬",
       "resetProgress": "Reset Progress"
-    }
-  },
-  "te": {
-    "_reviewNotes": "Specific technical phrases marked with /* REVIEW_NEEDED */ for native speaker validation in TRANSLATION_REVIEW_NOTES.md",
-    "app": {
-      "title": "వాట్ ఎల్స్ సస్టైన్",
-      "tagline": "తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి.",
-      "shortName": "డబ్ల్యూఈఎస్"
-    },
-    "header": {
-      "language": "భాష",
-      "points": "పాయింట్లు",
-      "badges": "బ్యాడ్జీలు",
-      "level": "స్థాయి",
-      "switchLang": "English",
-      "advisorBtn": "సలహా అడగండి 🤖",
-      "scorecardBtn": "స్కోర్‌కార్డ్ 📊"
-    },
-    "levels": {
-      "seedling": "మొలక 🌱",
-      "sapling": "మొక్క 🌿",
-      "tree": "వృక్షం 🌳",
-      "forest": "మహారణ్యం 🌲"
-    },
-    "badges": {
-      "modalTitle": "మీ సుస్థిరత బ్యాడ్జీలు",
-      "modalSubtitle": "సరియైన ఎంపికలతో ప్రకృతిని కాపాడి బ్యాడ్జీలను గెలవండి",
-      "close": "మూసివేయి",
-      "locked": "లాక్ చేయబడింది",
-      "unlocked": "గెలుచుకున్నారు!",
-      "soilSaverTitle": "నేల సంరక్షకుడు 🌾",
-      "soilSaverDesc": "పొలంలో గడ్డిని కాల్చకుండా సుస్థిర పద్ధతిని ఎంచుకున్నారు.",
-      "plasticBusterTitle": "ప్లాస్టిక్ రక్షకుడు 🧴",
-      "plasticBusterDesc": "ప్లాస్టిక్ బాటిళ్లను కాల్చకుండా రీసైక్లింగ్ లేదా పునర్వినియోగం చేశారు.",
-      "curiousMindTitle": "ఆసక్తిగల అన్వేషకుడు 🔍",
-      "curiousMindDesc": "పూర్తి ప్రభావాన్ని అర్థం చేసుకోవడానికి 'మరి ఏంచేయాలి' ప్రత్యామ్నాయాలను పరిశీలించారు.",
-      "greenGuardianTitle": "హరిత సంరక్షకుడు 🌳",
-      "greenGuardianDesc": "ప్రకృతి ఆరోగ్యాన్ని 80% లేదా అంతకంటే ఎక్కువ పెంచారు.",
-      "pledgeKeeperTitle": "ప్రతిజ్ఞా రక్షకుడు 🤝",
-      "pledgeKeeperDesc": "నిత్య జీవితంలో పర్యావరణాన్ని కాపాడేందుకు వ్యక్తిగత ప్రతిజ్ఞ చేశారు."
-    },
-    "badgePage": {
-      "heading": "బ్యాడ్జీల సేకరణ",
-      "subheading": "ప్రతి బ్యాడ్జ్ ఒక నివారించబడిన తప్పుకు మరియు ఒక కొత్త సుస్థిర అలవాటుకు ప్రతీక.",
-      "back": "సన్నివేశాలకు వెళ్లండి",
-      "viewScorecard": "స్కోర్‌కార్డ్ చూడండి",
-      "currentRank": "ప్రస్తుత స్థాయి",
-      "unlocked": "సాధించినవి",
-      "howToEarn": "ఎలా సాధించాలి",
-      "soilSaverCriteria": "పొలంలో గడ్డిని కాల్చకుండా మల్చింగ్, కంపోస్టింగ్ లేదా బయోమాస్ అమ్మకం ఎంచుకోండి.",
-      "plasticBusterCriteria": "ప్లాస్టిక్‌ను పారవేయకుండా లేదా కాల్చకుండా కుండీగా మార్చడం లేదా స్క్రాప్ డీలర్‌కు అమ్మడం ఎంచుకోండి.",
-      "curiousMindCriteria": "ఏదైనా సన్నివేశంలో 'మరి ఏంచేయాలి' బటన్ నొక్కి ప్రత్యామ్నాయాలను చూడండి.",
-      "greenGuardianCriteria": "మంచి ఎంపికలతో ప్రకృతి ఆరోగ్యాన్ని 80% కంటే ఎక్కువగా ఉంచండి.",
-      "pledgeKeeperCriteria": "ఏదైనా సవాలు పూర్తయిన తర్వాత పర్యావరణ ప్రతిజ్ఞను స్వీకరించండి."
-    },
-    "scoreScreen": {
-      "back": "వెనుకకు",
-      "heroTitle": "పర్యావరణ విజేత ప్రయాణం",
-      "heroSubtitle": "మీరు తప్పుల పరిణామాలను పరిశీలించారు, వాస్తవాలను తెలుసుకున్నారు, భూమి కోసం మంచి మార్గాలను ఎంచుకున్నారు.",
-      "metricPoints": "మొత్తం పాయింట్లు",
-      "metricHealth": "ప్రకృతి ఆరోగ్యం",
-      "metricBadges": "సాధించిన బ్యాడ్జీలు",
-      "metricScenarios": "పూర్తయిన సవాళ్లు",
-      "shareHeading": "మీ స్కోర్‌కార్డ్‌ను పంచుకోండి",
-      "copyBtn": "సారాంశాన్ని కాపీ చేయండి",
-      "copied": "కాపీ అయింది!",
-      "shareBtn": "షేర్ చేయండి",
-      "shareScoreBtn": "నా స్కోర్‌ను షేర్ చేయండి 📲",
-      "shareScoreCopied": "స్కోర్‌కార్డ్ సారాంశం క్లిప్‌బోర్డ్‌కి కాపీ చేయబడింది! 📋",
-      "playMoreBtn": "మరిన్ని సవాళ్లు ఆడండి"
-    },
-    "pledge": {
-      "cardTitle": "ప్రతిజ్ఞ చేయండి 🤝",
-      "cardSubtitle": "మీ అభ్యాసాన్ని ప్రకృతి రక్షణ కోసం నిజ జీవిత వ్యక్తిగత నిబద్ధతగా మార్చుకోండి.",
-      "farmPledge": "ఈ సీజన్‌లో నేను పంట వ్యర్థాలను కాల్చను",
-      "plasticPledge": "నేను నా ప్లాస్టిక్ బాటిళ్లను తిరిగి ఉపయోగిస్తాను లేదా విక్రయిస్తాను",
-      "defaultPledge": "నా నిత్య జీవితంలో ప్రకృతిని కాపాడేందుకు స్థిరమైన ప్రత్యామ్నాయాలను ఎంచుకుంటాను",
-      "pledgeBtn": "నేను ప్రతిజ్ఞ చేస్తున్నాను ✋",
-      "pledgedBtn": "ప్రతిజ్ఞ క్రియాశీలంగా ఉంది ✓",
-      "bonusNotice": "+25 బోనస్ పాయింట్లు & 'ప్రతిజ్ఞా రక్షకుడు' బ్యాడ్జ్",
-      "successMessage": "ప్రతిజ్ఞ స్వీకరించబడింది! మీకు +25 పాయింట్లు మరియు ప్రతిజ్ఞా రక్షకుడు బ్యాడ్జ్ లభించాయి! 🌟",
-      "alreadyPledgedMessage": "మీరు ఈ ప్రతిజ్ఞ చేశారు! ధృవీకరించబడిన ప్రతిజ్ఞా రక్షకుడు 🌟",
-      "viewScoreBtn": "నా తుది స్కోర్‌కార్డ్ చూడండి 📊",
-      "skipBtn": "స్కోర్‌కార్డ్‌కు వెళ్లండి →",
-      "backBtn": "సవాళ్లకు తిరిగి వెళ్లండి"
-    },
-    "advisor": {
-      "title": "వాట్ ఎల్స్ AI సలహాదారు",
-      "subtitle": "ఆచరణాత్మక, తక్కువ ఖర్చు పర్యావరణ సూచనలు",
-      "close": "మూసివేయి",
-      "thinking": "ఆచరణాత్మక పరిష్కారాలను ఆలోచిస్తోంది",
-      "inputPlaceholder": "మీ ప్రశ్నను అడగండి (ఉదా: ప్లాస్టిక్ బాటిళ్లను ఎలా రీసైకిల్ చేయాలి)...",
-      "send": "పంపు"
-    },
-    "healthBar": {
-      "title": "ప్రకృతి ఆరోగ్యం",
-      "statusThriving": "సమృద్ధ పర్యావరణం 🌳",
-      "statusStable": "స్థిరమైన సమతుల్యత 🌿",
-      "statusStressed": "ఒత్తిడిలో ప్రకృతి 🌾",
-      "statusCritical": "ప్రమాదంలో పర్యావరణం 🥀",
-      "instruction": "మీరు చేసే ఎంపికలు మన చుట్టూ ఉన్న ప్రకృతిని ప్రభావితం చేస్తాయి"
-    },
-    "scenarioList": {
-      "heading": "సన్నివేశాలను ఎంచుకోండి",
-      "subheading": "నేర్చుకోవడం ప్రారంభించడానికి నిజ జీవిత సన్నివేశాన్ని ఎంచుకోండి",
-      "totalAvailable": "అందుబాటులో ఉన్నాయి",
-      "categories": {
-        "all": "అన్నీ",
-        "students": "విద్యార్థులు",
-        "farming": "వ్యవసాయం",
-        "daily_life": "దైనందిన జీవితం",
-        "waste": "వ్యర్థాలు & పునర్వినియోగం",
-        "energy": "విద్యుత్ & నీరు"
-      },
-      "audiences": {
-        "students": "విద్యార్థులు",
-        "farmers": "రైతులు",
-        "rural_families": "గ్రామీణ కుటుంబాలు",
-        "everyone": "అందరికీ"
-      },
-      "difficulties": {
-        "starter": "ప్రాథమిక",
-        "intermediate": "సాధారణ",
-        "expert": "ఉన్నత"
-      },
-      "card": {
-        "startBtn": "ఆడండి",
-        "completed": "పూర్తయింది ✓",
-        "new": "కొత్తది",
-        "pointsReward": "పాయింట్లు"
-      },
-      "empty": {
-        "title": "ఈ విభాగంలో సన్నివేశాలు లేవు",
-        "description": "మరిన్ని ఎంపికలను చూడటానికి విభాగాన్ని మార్చండి."
-      }
-    },
-    "scenarioFlow": {
-      "back": "వెనుకకు",
-      "exit": "ముగించు",
-      "step": "దశ",
-      "of": "/",
-      "introBadge": "సుస్థిర ఎంపిక",
-      "readyPrompt": "ఈ పరిస్థితిలో మీరు ఏం చేస్తారు?",
-      "introHelper": "నిర్ణయం తీసుకోండి మరియు మన ఆరోగ్యం, పర్యావరణంపై దాని నిజమైన ప్రభావాన్ని తెలుసుకోండి.",
-      "startChoiceBtn": "మీ నిర్ణయం తీసుకోండి",
-      "choicesHeading": "మీరు ఏం చేయాలో ఎంచుకోండి:",
-      "quickEasyTag": "⚡ వేగవంతం & సులభం",
-      "sustainableTag": "🌱 ప్రకృతి హితమైనది",
-      "impactHeading": "నిజ జీవితంలో కలిగే ప్రభావం",
-      "impactSubheading": "ప్రకృతి, ఆరోగ్యం మరియు ఆర్థిక స్థితిపై తెరవెనుక జరిగే నష్టం ఇది:",
-      "whatElseBtn": "మరి ఏంచేయాలి? ప్రత్యామ్నాయాలు 💡",
-      "whatElseHeading": "మరి ఏంచేయాలి? మెరుగైన మార్గాలు",
-      "whatElseSubheading": "ఖర్చులను తగ్గిస్తూ, ఆరోగ్యాన్ని కాపాడుతూ, ప్రకృతిని పునరుజ్జీవింపజేసే పద్ధతులు:",
-      "costLabel": "ఖర్చు:",
-      "effortLabel": "శ్రమ:",
-      "financialLabel": "ఆర్థిక ఫలితం:",
-      "howToLabel": "ఎలా చేయాలి:",
-      "effortLow": "తక్కువ",
-      "effortMedium": "మధ్యస్థం",
-      "effortHigh": "ఎక్కువ",
-      "tryBetterChoiceBtn": "మంచి ఎంపికతో మళ్లీ ఆడండి 🌱",
-      "replayHeading": "సుస్థిర ఎంపికను ప్రయత్నించండి",
-      "replaySubheading": "మంచి మార్పును చూడటానికి ఒక ప్రత్యామ్నాయాన్ని ఎంచుకోండి:",
-      "comparisonHeading": "ముందు vs తర్వాత పోలిక",
-      "burnedStateLabel": "తప్పు ఎంపిక ⚠️",
-      "sustainableStateLabel": "మీ సుస్థిర ఎంపిక 🌱",
-      "fertilityLoss": "పర్యావరణ నష్టం & కంటికి కనిపించని ఆర్థిక భారం",
-      "netGain": "సమతుల్య పర్యావరణం & నికర ఆర్థిక ఆదా",
-      "healthDrop": "-25% ప్రకృతి ఆరోగ్యం (కాలుష్యం & విషవాయువులు)",
-      "healthRise": "+25% ప్రకృతి ఆరోగ్యం (సారవంతమైన నేల & రీసైక్లింగ్)",
-      "claimRewardBtn": "బహుమతులు & బ్యాడ్జీలు పొందండి 🏆",
-      "rewardTitle": "అద్భుతమైన అవగాహన! 🎉",
-      "rewardSubtitle": "మీరు తప్పును పరిశీలించారు, దాని నిజమైన నష్టాన్ని గ్రహించారు, మెరుగైన మార్గాన్ని ఎంచుకున్నారు.",
-      "pointsEarned": "సాధించిన పాయింట్లు",
-      "tryingBonus": "తప్పు నుండి నేర్చుకున్నందుకు",
-      "alternativeBonus": "సుస్థిర ఎంపికకు బహుమతి",
-      "explorerBonus": "అన్ని మార్గాలను తెలుసుకున్నందుకు",
-      "badgeUnlocked": "బ్యాడ్జ్ లభించింది!",
-      "playAgainBtn": "మళ్లీ ఆడండి 🔄",
-      "backToListBtn": "మరిన్ని సన్నివేశాలు చూడండి 📋"
-    },
-    "dataNotice": {
-      "sourcePrefix": "ఆధారం:",
-      "unverifiedBadge": "ధృవీకరించబడలేదు (ప్రోటోటైప్ కోసం సుమారు లెక్క)",
-      "verifiedBadge": "ధృవీకరించిన ఆధారం"
-    },
-    "footer": {
-      "tagline": "తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి.",
-      "offlineNote": "తక్కువ ఇంటర్నెట్ మరియు సాధారణ మొబైల్ ఫోన్లలో కూడా పనిచేస్తుంది.",
-      "giveFeedback": "అభిప్రాయాన్ని తెలియజేయండి 💬",
-      "resetProgress": "మొదటి నుండి ప్రారంభించండి"
     }
   }
 }

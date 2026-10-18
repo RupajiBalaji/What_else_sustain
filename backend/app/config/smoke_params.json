@@ -1,0 +1,68 @@
+{
+  "emission_factor_pm25_g_per_kg": {
+    "value": 6.3,
+    "unit": "g/kg",
+    "source": null,
+    "verified": false
+  },
+  "straw_yield_kg_per_acre": {
+    "value": 2400.0,
+    "unit": "kg/acre",
+    "source": null,
+    "verified": false
+  },
+  "dispersion_ay": {
+    "value": 0.32,
+    "unit": "dimensionless",
+    "source": null,
+    "verified": false
+  },
+  "dispersion_az": {
+    "value": 0.24,
+    "unit": "dimensionless",
+    "source": null,
+    "verified": false
+  },
+  "dispersion_power_p": {
+    "value": 0.78,
+    "unit": "dimensionless",
+    "source": null,
+    "verified": false
+  },
+  "dispersion_power_q": {
+    "value": 0.72,
+    "unit": "dimensionless",
+    "source": null,
+    "verified": false
+  },
+  "player_distance_m": {
+    "value": 30.0,
+    "unit": "m",
+    "source": null,
+    "verified": false
+  },
+  "index_scale_player": {
+    "value": 4.5,
+    "unit": "dimensionless_scale",
+    "source": null,
+    "verified": false
+  },
+  "index_scale_village": {
+    "value": 85.0,
+    "unit": "dimensionless_scale",
+    "source": null,
+    "verified": false
+  },
+  "grid_size": {
+    "value": 40,
+    "unit": "cells",
+    "source": null,
+    "verified": false
+  },
+  "grid_extent_m": {
+    "value": 2000.0,
+    "unit": "m",
+    "source": null,
+    "verified": false
+  }
+}

@@ -26,3 +26,14 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+
+# Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+*.db
+*.sqlite3
+.pytest_cache/

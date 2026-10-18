@@ -1,0 +1,31 @@
+# Render Blueprint Specification for What Else Sustain
+# https://render.com/docs/blueprint-spec
+
+version: "1"
+
+services:
+  - type: web
+    name: what-else-sustain
+    runtime: python
+    region: oregon
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /api/health
+    buildCommand: "npm install && npm run build && cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: NODE_VERSION
+        value: 20.12.0
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: DATABASE_URL
+        value: "sqlite:///./local.db"
+      # Secure secret keys configured in the Render Dashboard modal on launch
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEYS
+        sync: false

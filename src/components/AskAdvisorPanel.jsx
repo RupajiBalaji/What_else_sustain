@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { getOfflineAnswer } from '../data/aiOfflineKnowledge'
+import { askAdvisorApi } from '../utils/api'
 
 export default function AskAdvisorPanel({ onClose }) {
   const { t, lang } = useLanguage()
@@ -9,9 +10,7 @@ export default function AskAdvisorPanel({ onClose }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      text: lang === 'te'
-        ? 'నమస్కారం! నేను "వాట్ ఎల్స్ సస్టైన్" AI సలహాదారుని. పర్యావరణ పరిరక్షణ, పంట వ్యర్థాల నిర్వహణ లేదా ప్లాస్టిక్ పునర్వినియోగం గురించి ఏదైనా ప్రశ్న అడగండి.'
-        : 'Hello! I am your "What Else Sustain" AI Advisor. Ask any practical question about managing crop straw, home plastic waste, or eco-friendly alternatives.',
+      text: 'Hello! I am your "What Else Sustain" AI Advisor. Ask any practical question about managing crop straw, home plastic waste, or eco-friendly alternatives.',
       source: 'system'
     }
   ])
@@ -32,17 +31,11 @@ export default function AskAdvisorPanel({ onClose }) {
   }, [messages, loading])
 
   // Sample prompt chips
-  const samplePrompts = lang === 'te'
-    ? [
-        'నా దగ్గర 5 ఎకరాల వరి గడ్డి ఉంది, ఏం చేయగలను?',
-        'ఇంట్లో ప్లాస్టిక్ బాటిళ్లను ఎలా పునర్వినియోగించాలి?',
-        'తక్కువ ఖర్చుతో కిచెన్ కంపోస్ట్ ఎలా తయారు చేయాలి?'
-      ]
-    : [
-        'I have 5 acres of paddy straw, what can I do?',
-        'How can I reuse old plastic bottles at home?',
-        'Best low-cost organic kitchen composting method?'
-      ]
+  const samplePrompts = [
+    'I have 5 acres of paddy straw, what can I do?',
+    'How can I reuse old plastic bottles at home?',
+    'Best low-cost organic kitchen composting method?'
+  ]
 
   const handleAsk = async (textToAsk) => {
     const question = (textToAsk || query).trim()
@@ -55,18 +48,8 @@ export default function AskAdvisorPanel({ onClose }) {
     setLoading(true)
 
     try {
-      // Call backend serverless endpoint
-      const response = await fetch('/api/ask-advisor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: question, lang })
-      })
-
-      if (!response.ok) {
-        throw new Error('Endpoint unreachable')
-      }
-
-      const data = await response.json()
+      // Call backend FastAPI endpoint via resilient api.js wrapper (timeout: 6s)
+      const data = await askAdvisorApi(question, lang)
 
       if (data.answer && data.source === 'gemini') {
         setMessages((prev) => [
@@ -123,7 +106,7 @@ export default function AskAdvisorPanel({ onClose }) {
 
     try {
       const recognition = new SpeechRecognition()
-      recognition.lang = lang === 'te' ? 'te-IN' : 'en-US'
+      recognition.lang = 'en-US'
       recognition.interimResults = false
       recognition.maxAlternatives = 1
 

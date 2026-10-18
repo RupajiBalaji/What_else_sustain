@@ -80,10 +80,11 @@ function geminiAdvisorPlugin() {
               return
             }
 
-            // 3. API key check without exposing secret
-            const apiKey = process.env.GEMINI_API_KEY
+            // 3. API key check with rotation support across comma-separated keys
+            const rawKeys = `${process.env.GEMINI_API_KEYS || ''},${process.env.GEMINI_API_KEY || ''}`
+            const keyPool = rawKeys.split(',').map((k) => k.trim()).filter(Boolean)
 
-            if (!apiKey) {
+            if (keyPool.length === 0) {
               res.end(JSON.stringify({
                 fallbackNeeded: true,
                 source: 'offline',
@@ -92,58 +93,72 @@ function geminiAdvisorPlugin() {
               return
             }
 
-            const systemInstruction = `You are "What Else Sustain AI Advisor", an expert assistant helping students, farmers, and everyday people adopt practical, low-cost sustainable alternatives.
+            const systemInstruction = `You are "What Else Sustain AI Advisor", an expert assistant helping students, farmers, and families adopt practical, low-cost sustainable alternatives.
 RULES:
-1. Answer in the user's requested language: if lang is "te", respond strictly in natural, conversational Telugu; if "en", respond in English.
-2. Provide maximum 2 to 3 practical, low-cost options.
+1. Respond strictly in clear, friendly English.
+2. Provide 2 to 3 practical, low-cost options.
 3. For each option, clearly state:
    - Option title with an emoji
-   - Approximate Cost (ఖర్చు)
-   - Effort Level (శ్రమ: Low/Medium/High)
-   - Brief practical how-to action step
-4. CRITICAL DATA RULE: Do NOT invent statistics or exact figures. If exact numbers are uncertain, explicitly state that these are approximate regional estimates.
+   - Approximate Cost
+   - Effort Level (Low/Medium/High)
+   - Brief practical action step
+4. CRITICAL DATA INTEGRITY: Do NOT invent statistics or exact figures. If exact numbers are uncertain, state that these are approximate regional estimates.
 5. Keep the total response under 180 words, formatted with clean bullet points.`
 
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
-            
-            const geminiResponse = await fetch(geminiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                system_instruction: {
-                  parts: [{ text: systemInstruction }]
-                },
-                contents: [
-                  {
-                    role: 'user',
-                    parts: [{ text: `User Language: ${lang}\nQuestion: ${prompt.trim()}` }]
-                  }
-                ],
-                generationConfig: {
-                  temperature: 0.2,
-                  maxOutputTokens: 600
+            let textResponse = null
+            let reachedQuota = false
+
+            // Key rotation loop
+            for (const key of keyPool) {
+              const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`
+              try {
+                const geminiResponse = await fetch(geminiUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    system_instruction: {
+                      parts: [{ text: systemInstruction }]
+                    },
+                    contents: [
+                      {
+                        role: 'user',
+                        parts: [{ text: `Question: ${prompt.trim()}` }]
+                      }
+                    ],
+                    generationConfig: {
+                      temperature: 0.2,
+                      maxOutputTokens: 600
+                    }
+                  })
+                })
+
+                if (geminiResponse.status === 429) {
+                  reachedQuota = true
+                  continue // Try next key in rotation
                 }
-              })
-            })
 
-            // Never echo raw upstream error bodies
-            if (!geminiResponse.ok) {
-              res.end(JSON.stringify({
-                fallbackNeeded: true,
-                source: 'offline',
-                message: 'AI advisor is temporarily unavailable; using offline knowledge base.'
-              }))
-              return
+                if (!geminiResponse.ok) {
+                  continue
+                }
+
+                const data = await geminiResponse.json()
+                const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text
+                if (candidateText && candidateText.trim()) {
+                  textResponse = candidateText.trim()
+                  break
+                }
+              } catch {
+                continue
+              }
             }
-
-            const data = await geminiResponse.json()
-            const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text
 
             if (!textResponse) {
               res.end(JSON.stringify({
                 fallbackNeeded: true,
                 source: 'offline',
-                message: 'AI response was empty; using offline knowledge base.'
+                message: reachedQuota
+                  ? 'Free quota limit reached on key; using offline knowledge base.'
+                  : 'AI advisor is temporarily unavailable; using offline knowledge base.'
               }))
               return
             }
@@ -172,6 +187,25 @@ export default defineConfig({
   plugins: [react(), geminiAdvisorPlugin()],
   server: {
     port: 5173,
-    host: true
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      }
+    }
+  },
+  build: {
+    chunkSizeWarningLimit: 1400,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-framer': ['framer-motion'],
+          'vendor-howler': ['howler'],
+          'vendor-three': ['three', '@react-three/fiber', '@react-three/drei']
+        }
+      }
+    }
   }
 })
+

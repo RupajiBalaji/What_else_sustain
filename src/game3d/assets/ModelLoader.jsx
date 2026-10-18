@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect } from 'react'
+import React, { Suspense, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 
 // Configure default Draco decoder path for compressed .glb models
@@ -6,46 +6,20 @@ if (useGLTF && useGLTF.setDecoderPath) {
   useGLTF.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.5/')
 }
 
+// Statically discover any .glb files physically present in public/models/ at build/dev time.
+// This completely avoids runtime HTTP network requests that trigger 405/404 errors in DevTools.
+const AVAILABLE_MODELS_GLOB = import.meta.glob('/public/models/*.glb')
+
 /**
- * Hook to verify if a model file actually exists on the host
- * to avoid unhandled 404 console errors or R3F crashes.
+ * Instant check to verify if a model file exists in public/models/.
+ * Returns false immediately if absent, eliminating network 405/404 errors.
  */
 export function useModelAvailability(url) {
-  const [available, setAvailable] = useState(null) // null = checking, true = exists, false = does not exist
-
-  useEffect(() => {
-    let active = true
-    if (!url) {
-      setAvailable(false)
-      return
-    }
-
-    // Quick HEAD check to see if the file is present in public/
-    fetch(url, { method: 'HEAD' })
-      .then((res) => {
-        if (!active) return
-        if (res.ok) {
-          const contentType = res.headers.get('content-type') || ''
-          // Ensure it's not an HTML 404 fallback page from Vite dev server or SPA routing
-          if (contentType.includes('text/html')) {
-            setAvailable(false)
-          } else {
-            setAvailable(true)
-          }
-        } else {
-          setAvailable(false)
-        }
-      })
-      .catch(() => {
-        if (active) setAvailable(false)
-      })
-
-    return () => {
-      active = false
-    }
+  return useMemo(() => {
+    if (!url) return false
+    const normKey = url.startsWith('/public') ? url : `/public${url}`
+    return Boolean(AVAILABLE_MODELS_GLOB[normKey] || AVAILABLE_MODELS_GLOB[url])
   }, [url])
-
-  return available
 }
 
 /**

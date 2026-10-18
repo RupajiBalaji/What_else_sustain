@@ -5,9 +5,9 @@ import scenariosData from '../../data/scenarios.json'
 
 export default function OneSeasonLaterModal({ onSwitchToLite }) {
   const { language, t } = useLanguage()
-  const { burnState, resetBurn, smokeData } = useGame3D()
+  const { burnState, resetBurn, smokeData, showOneSeasonModal } = useGame3D()
 
-  if (burnState !== 'consequence') return null
+  if (burnState !== 'consequence' || !showOneSeasonModal) return null
 
   // Fetch the farm crop residue scenario and burn choice impact cards
   const farmScenario = scenariosData.find((s) => s.id === 'farm_crop_residue') || scenariosData[0]

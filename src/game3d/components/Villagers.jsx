@@ -24,12 +24,20 @@ function SingleVillager({ data, isCoughing, isWaving, quality }) {
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime() + data.x
     if (isCoughing) {
-      // Rapid coughing hunch animation
-      const coughShake = Math.sin(t * 11) * 0.18 + 0.35
+      // Rapid coughing hunch animation with hands covering face
+      const coughShake = Math.sin(t * 11) * 0.18 + 0.38
       if (torsoRef.current) torsoRef.current.rotation.x = coughShake
-      if (headRef.current) headRef.current.rotation.x = coughShake * 0.5
-      if (leftArmRef.current) leftArmRef.current.rotation.x = -1.1 + Math.sin(t * 11) * 0.12
-      if (rightArmRef.current) rightArmRef.current.rotation.x = -1.1 + Math.sin(t * 11) * 0.12
+      if (headRef.current) headRef.current.rotation.x = coughShake * 0.6
+      // Right arm raised over mouth and nose
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -1.9 + Math.sin(t * 11) * 0.12
+        rightArmRef.current.rotation.z = -0.55
+      }
+      // Left arm bent coughing into elbow
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -1.6 + Math.sin(t * 11) * 0.12
+        leftArmRef.current.rotation.z = 0.45
+      }
     } else if (isWaving) {
       // Cheerful waving arm motion
       if (torsoRef.current) torsoRef.current.rotation.x = 0
@@ -96,12 +104,12 @@ function SingleVillager({ data, isCoughing, isWaving, quality }) {
         <meshStandardMaterial color={data.dhotiColor} roughness={0.9} />
       </mesh>
 
-      {/* Cough Emote Bubble */}
+      {/* Cough Emote Bubble with Cough Icon */}
       {isCoughing && (
         <Html position={[0, 2.2, 0]} center distanceFactor={28} zIndexRange={[10, 0]}>
           <div
             style={{
-              backgroundColor: 'rgba(255, 235, 238, 0.94)',
+              backgroundColor: 'rgba(255, 235, 238, 0.96)',
               border: '2px solid #E53935',
               color: '#B71C1C',
               padding: '3px 8px',
@@ -111,10 +119,14 @@ function SingleVillager({ data, isCoughing, isWaving, quality }) {
               whiteSpace: 'nowrap',
               boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
               pointerEvents: 'none',
-              animation: 'bounce 0.8s infinite'
+              animation: 'bounce 0.8s infinite',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
             }}
           >
-            💨 *Cough!*
+            <span>😷</span>
+            <span>*Cough!*</span>
           </div>
         </Html>
       )}

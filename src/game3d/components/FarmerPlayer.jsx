@@ -8,6 +8,8 @@ import { VILLAGE_COLLIDERS } from './VillageHousesInstanced'
 import { STRAW_PILES_DATA } from './StrawPiles'
 import { useModelAvailability } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
+import InWorldChoicePanel from './InWorldChoicePanel'
+import MoneyFloatingTag from './MoneyFloatingTag'
 
 // Global input state for desktop & mobile
 export const playerInput = {
@@ -28,6 +30,8 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     quality,
     setInteractionTarget,
     setNearestPileInfo,
+    harvestState,
+    hasMadeChoice,
     burnState,
     activePile,
     playerResetTrigger,
@@ -259,53 +263,9 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     playerRef.current.position.copy(posRef.current)
     playerRef.current.rotation.y = yawRef.current
 
-    // Procedural walk, idle, and lighting animation
-    const t = walkTimeRef.current
-    if (burnState === 'lighting') {
-      // Lighting animation: pause walking, lean torso forward, extend torch arm down
-      if (activePile) {
-        const dx = activePile.x - posRef.current.x
-        const dz = activePile.z - posRef.current.z
-        yawRef.current = Math.atan2(dx, dz)
-      }
-      if (torsoRef.current) torsoRef.current.rotation.x = 0.32
-      if (rightArmRef.current) rightArmRef.current.rotation.x = -1.25
-      if (leftArmRef.current) leftArmRef.current.rotation.x = 0.2
-      if (leftLegRef.current) leftLegRef.current.rotation.x = 0
-      if (rightLegRef.current) rightLegRef.current.rotation.x = 0
-    } else if (isMoving) {
-      if (torsoRef.current) torsoRef.current.rotation.x = 0
-      const swing = Math.sin(t) * 0.65
-      if (leftLegRef.current) leftLegRef.current.rotation.x = swing
-      if (rightLegRef.current) rightLegRef.current.rotation.x = -swing
-      if (leftArmRef.current) leftArmRef.current.rotation.x = -swing * 0.7
-      if (rightArmRef.current) rightArmRef.current.rotation.x = swing * 0.7
-      if (torsoRef.current) torsoRef.current.position.y = 1.05 + Math.abs(Math.sin(t)) * 0.08
-    } else {
-      // Idle breathing
-      if (torsoRef.current) torsoRef.current.rotation.x = 0
-      const idleTime = _.clock.getElapsedTime()
-      const breath = Math.sin(idleTime * 2.5) * 0.02
-      if (leftLegRef.current) leftLegRef.current.rotation.x = 0
-      if (rightLegRef.current) rightLegRef.current.rotation.x = 0
-      if (leftArmRef.current) leftArmRef.current.rotation.x = 0
-      if (rightArmRef.current) rightArmRef.current.rotation.x = 0
-      if (torsoRef.current) torsoRef.current.position.y = 1.05 + breath
-    }
-
-    // 3rd Person Camera Smooth Follow with Damping
-    const camDistance = 5.8
-    const camHeight = 3.2
-    const targetCamX = posRef.current.x - Math.sin(camYawRef.current) * camDistance
-    const targetCamZ = posRef.current.z - Math.cos(camYawRef.current) * camDistance
-    const targetCamY = posRef.current.y + camHeight
-
-    camera.position.lerp(new THREE.Vector3(targetCamX, targetCamY, targetCamZ), 0.12)
-    camera.lookAt(posRef.current.x, posRef.current.y + 1.4, posRef.current.z)
-
-    // Proximity check against straw piles
+    // 1. Proximity check against straw piles
     let nearestPile = null
-    let minDist = 5.0 // Increased interaction radius from 3.5m to 5.0m
+    let minDist = 5.0 // Increased interaction radius to 5.0m
     let absoluteClosest = null
     let absoluteMinDist = Infinity
 
@@ -321,6 +281,20 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       }
     }
     setInteractionTarget(nearestPile)
+
+    const isAtPile =
+      Boolean(nearestPile) &&
+      harvestState === 'harvested' &&
+      burnState === 'idle' &&
+      !activeAlternative &&
+      !hasMadeChoice
+
+    if (isAtPile && !isMoving) {
+      const dx = nearestPile.x - posRef.current.x
+      const dz = nearestPile.z - posRef.current.z
+      const pileAngle = Math.atan2(dx, dz)
+      yawRef.current = THREE.MathUtils.lerp(yawRef.current, pileAngle, 0.08)
+    }
 
     // Report nearest pile navigation coordinates for HUD guidance arrow
     if (_.clock.getElapsedTime() - lastNavUpdateRef.current > 0.08) {
@@ -338,6 +312,191 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         })
       }
     }
+
+    // 2. Procedural walk, idle, and matching choice animations
+    const t = walkTimeRef.current
+    const elapsed = _.clock.getElapsedTime()
+
+    if (burnState === 'lighting') {
+      // 1. Burn: Torch lighting animation (lean forward, extend torch arm down to pile)
+      if (activePile) {
+        const dx = activePile.x - posRef.current.x
+        const dz = activePile.z - posRef.current.z
+        yawRef.current = Math.atan2(dx, dz)
+      }
+      if (torsoRef.current) torsoRef.current.rotation.x = 0.32
+      if (rightArmRef.current) rightArmRef.current.rotation.x = -1.25
+      if (leftArmRef.current) leftArmRef.current.rotation.x = 0.2
+      if (leftLegRef.current) leftLegRef.current.rotation.x = 0
+      if (rightLegRef.current) rightLegRef.current.rotation.x = 0
+    } else if (activeAlternative === 'happy_seeder') {
+      // 2. Happy Seeder: Climbing into tractor animation
+      if (torsoRef.current) {
+        torsoRef.current.position.y = 1.26
+        torsoRef.current.rotation.x = 0.18
+        torsoRef.current.rotation.y = 0
+      }
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -2.1
+        leftArmRef.current.rotation.z = -0.35
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -1.6
+        rightArmRef.current.rotation.y = 0
+        rightArmRef.current.rotation.z = 0.3
+      }
+      if (rightLegRef.current) {
+        rightLegRef.current.rotation.x = -1.15
+        rightLegRef.current.position.y = 0.72
+      }
+      if (leftLegRef.current) {
+        leftLegRef.current.rotation.x = 0.2
+        leftLegRef.current.position.y = 0.58
+      }
+    } else if (activeAlternative === 'bale_sell') {
+      // 3. Bale & Sell: Waving to the baler / truck operator animation
+      if (torsoRef.current) {
+        torsoRef.current.position.y = 1.05
+        torsoRef.current.rotation.x = -0.05
+        torsoRef.current.rotation.y = 0
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -2.45
+        rightArmRef.current.rotation.y = 0
+        rightArmRef.current.rotation.z = Math.sin(elapsed * 7.0) * 0.4 + 0.3
+      }
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -0.45
+        leftArmRef.current.rotation.z = -0.45
+      }
+      if (leftLegRef.current) {
+        leftLegRef.current.rotation.x = 0
+        leftLegRef.current.position.y = 0.58
+      }
+      if (rightLegRef.current) {
+        rightLegRef.current.rotation.x = 0
+        rightLegRef.current.position.y = 0.58
+      }
+    } else if (activeAlternative === 'mulch') {
+      // 4. Mulch: Bending down inspecting soil and spreading mulch
+      if (torsoRef.current) {
+        torsoRef.current.position.y = 0.8
+        torsoRef.current.rotation.x = 0.52
+        torsoRef.current.rotation.y = 0
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -1.35
+        rightArmRef.current.rotation.y = Math.sin(elapsed * 3.0) * 0.25
+        rightArmRef.current.rotation.z = 0.1
+      }
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = 0.35
+        leftArmRef.current.rotation.z = 0.15
+      }
+      if (leftLegRef.current) {
+        leftLegRef.current.rotation.x = -0.4
+        leftLegRef.current.position.y = 0.58
+      }
+      if (rightLegRef.current) {
+        rightLegRef.current.rotation.x = 0.3
+        rightLegRef.current.position.y = 0.58
+      }
+    } else if (activeAlternative === 'compost') {
+      // 5. Compost: Spraying bio-decomposer wand sweep
+      if (torsoRef.current) {
+        torsoRef.current.position.y = 1.05
+        torsoRef.current.rotation.x = 0.18
+        torsoRef.current.rotation.y = Math.sin(elapsed * 3.5) * 0.15
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -0.9 + Math.sin(elapsed * 3.5) * 0.2
+        rightArmRef.current.rotation.y = Math.cos(elapsed * 3.5) * 0.35
+        rightArmRef.current.rotation.z = 0
+      }
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = 0.2
+        leftArmRef.current.rotation.z = 0.1
+      }
+      if (leftLegRef.current) {
+        leftLegRef.current.rotation.x = 0
+        leftLegRef.current.position.y = 0.58
+      }
+      if (rightLegRef.current) {
+        rightLegRef.current.rotation.x = 0
+        rightLegRef.current.position.y = 0.58
+      }
+    } else if (isMoving) {
+      if (torsoRef.current) {
+        torsoRef.current.rotation.x = 0
+        torsoRef.current.rotation.y = 0
+        torsoRef.current.position.y = 1.05 + Math.abs(Math.sin(t)) * 0.08
+      }
+      const swing = Math.sin(t) * 0.65
+      if (leftLegRef.current) {
+        leftLegRef.current.rotation.x = swing
+        leftLegRef.current.position.y = 0.58
+      }
+      if (rightLegRef.current) {
+        rightLegRef.current.rotation.x = -swing
+        rightLegRef.current.position.y = 0.58
+      }
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -swing * 0.7
+        leftArmRef.current.rotation.z = 0
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = swing * 0.7
+        rightArmRef.current.rotation.y = 0
+        rightArmRef.current.rotation.z = 0
+      }
+    } else {
+      // Idle breathing
+      if (torsoRef.current) {
+        torsoRef.current.rotation.x = 0
+        torsoRef.current.rotation.y = 0
+      }
+      const idleTime = _.clock.getElapsedTime()
+      const breath = Math.sin(idleTime * 2.5) * 0.02
+      if (leftLegRef.current) {
+        leftLegRef.current.rotation.x = 0
+        leftLegRef.current.position.y = 0.58
+      }
+      if (rightLegRef.current) {
+        rightLegRef.current.rotation.x = 0
+        rightLegRef.current.position.y = 0.58
+      }
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = 0
+        leftArmRef.current.rotation.z = 0
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = 0
+        rightArmRef.current.rotation.y = 0
+        rightArmRef.current.rotation.z = 0
+      }
+      if (torsoRef.current) torsoRef.current.position.y = 1.05 + breath
+    }
+
+    // 3. 3rd Person Camera Smooth Follow with Over-The-Shoulder Glide when at pile
+    const camDistance = isAtPile ? 3.4 : 5.8
+    const camHeight = isAtPile ? 2.15 : 3.2
+    const shoulderOffset = isAtPile ? 0.72 : 0
+
+    const behindX = -Math.sin(camYawRef.current) * camDistance
+    const behindZ = -Math.cos(camYawRef.current) * camDistance
+    const sideX = Math.cos(camYawRef.current) * shoulderOffset
+    const sideZ = -Math.sin(camYawRef.current) * shoulderOffset
+
+    const targetCamX = posRef.current.x + behindX + sideX
+    const targetCamY = posRef.current.y + camHeight
+    const targetCamZ = posRef.current.z + behindZ + sideZ
+
+    const targetLookX = isAtPile ? posRef.current.x + sideX * 0.25 : posRef.current.x
+    const targetLookY = isAtPile ? posRef.current.y + 1.25 : posRef.current.y + 1.4
+    const targetLookZ = isAtPile ? posRef.current.z + sideZ * 0.25 : posRef.current.z
+
+    camera.position.lerp(new THREE.Vector3(targetCamX, targetCamY, targetCamZ), isAtPile ? 0.08 : 0.12)
+    camera.lookAt(targetLookX, targetLookY, targetLookZ)
   })
 
   return (
@@ -439,6 +598,30 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
                 </mesh>
               </group>
             )}
+
+            {/* Hand trowel / rake when mulching */}
+            {activeAlternative === 'mulch' && (
+              <group position={[0, -0.45, 0.15]} rotation={[0.6, 0, 0]}>
+                <mesh position={[0, 0, 0]}>
+                  <cylinderGeometry args={[0.02, 0.02, 0.35, 6]} />
+                  <meshStandardMaterial color="#5D4037" roughness={0.8} />
+                </mesh>
+                <mesh position={[0, 0.18, 0]}>
+                  <boxGeometry args={[0.08, 0.12, 0.02]} />
+                  <meshStandardMaterial color="#78909C" metalness={0.7} />
+                </mesh>
+              </group>
+            )}
+
+            {/* Tractor grab bar when climbing tractor */}
+            {activeAlternative === 'happy_seeder' && (
+              <group position={[-0.15, -0.2, 0.22]} rotation={[0, 0, 0.2]}>
+                <mesh position={[0, 0, 0]}>
+                  <cylinderGeometry args={[0.025, 0.025, 0.6, 6]} />
+                  <meshStandardMaterial color="#FFB300" metalness={0.8} />
+                </mesh>
+              </group>
+            )}
           </group>
 
           {/* 4. Left Leg (Dhoti) */}
@@ -468,6 +651,12 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
           </group>
         </>
       )}
+
+      {/* Floating In-World Choice Panel anchored to the farmer */}
+      <InWorldChoicePanel />
+
+      {/* Floating Money Outcome Badge above the farmer */}
+      <MoneyFloatingTag position={[0, 2.35, 0]} />
     </group>
   )
 }

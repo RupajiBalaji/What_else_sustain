@@ -24,6 +24,9 @@ export default function HUDOverlay({ onSwitchToLite }) {
     skipHarvest,
     handleInteract,
     burnState,
+    useInWorldChoices,
+    showOneSeasonModal,
+    setShowOneSeasonModal,
     showPledgeModal,
     setShowPledgeModal,
     showFps,
@@ -58,6 +61,16 @@ export default function HUDOverlay({ onSwitchToLite }) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [interactionTarget, handleInteract])
+
+  // Auto-advance to OneSeasonLaterModal after letting in-world consequence callouts play
+  useEffect(() => {
+    if (burnState === 'consequence' && !showOneSeasonModal) {
+      const timer = setTimeout(() => {
+        setShowOneSeasonModal(true)
+      }, 6500)
+      return () => clearTimeout(timer)
+    }
+  }, [burnState, showOneSeasonModal, setShowOneSeasonModal])
 
   // Touch handlers for virtual joystick
   const handleJoystickTouchStart = (e) => {
@@ -446,8 +459,47 @@ export default function HUDOverlay({ onSwitchToLite }) {
         </div>
       )}
 
-      {/* 5-OPTION RADIAL CHOICE WHEEL */}
-      <ChoiceWheel />
+      {/* 5-OPTION RADIAL CHOICE WHEEL (Legacy fallback behind flag) */}
+      {!useInWorldChoices && <ChoiceWheel />}
+
+      {/* IN-WORLD CONSEQUENCES: CONTINUATION BUTTON TO ONE SEASON LATER */}
+      {burnState === 'consequence' && !showOneSeasonModal && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 'calc(35px + env(safe-area-inset-bottom, 0px))',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            pointerEvents: 'auto',
+            zIndex: 80,
+            animation: 'fadeInUp 0.5s ease'
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setShowOneSeasonModal(true)}
+            style={{
+              minHeight: '52px',
+              padding: '12px 28px',
+              borderRadius: '9999px',
+              backgroundColor: '#D84315',
+              color: '#FFFFFF',
+              border: '3px solid #FFAB91',
+              fontWeight: 900,
+              fontSize: '1rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span>📜</span>
+            <span>One Season Later ➡️</span>
+          </button>
+        </div>
+      )}
 
       {/* ONE SEASON LATER CONSEQUENCE MODAL */}
       <OneSeasonLaterModal onSwitchToLite={onSwitchToLite} />

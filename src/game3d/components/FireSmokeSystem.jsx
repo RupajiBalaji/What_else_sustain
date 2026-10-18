@@ -16,6 +16,8 @@ export default function FireSmokeSystem() {
   const lightRef = useRef(null)
 
   const isBurning = burnState === 'burning'
+  const isConsequence = burnState === 'consequence'
+  const isSmokeActive = isBurning || isConsequence
 
   // Initialize particle states
   const fireParticles = useMemo(() => {
@@ -92,15 +94,19 @@ export default function FireSmokeSystem() {
 
   // Frame update for particle physics
   useFrame(({ clock }, delta) => {
-    if (!isBurning) return
+    if (!isSmokeActive) return
     const time = clock.getElapsedTime()
 
-    // 1. Point Light Flicker
+    // 1. Point Light Flicker (dims down to smolder during consequence)
     if (lightRef.current && activePilePositions.length > 0) {
       const center = activePilePositions[0]
       lightRef.current.position.set(center.x, 2.2, center.z)
-      const flicker = 1.9 + Math.sin(time * 18) * 0.6 + Math.cos(time * 28) * 0.35
-      lightRef.current.intensity = Math.max(0.6, flicker)
+      if (isBurning) {
+        const flicker = 1.9 + Math.sin(time * 18) * 0.6 + Math.cos(time * 28) * 0.35
+        lightRef.current.intensity = Math.max(0.6, flicker)
+      } else {
+        lightRef.current.intensity = 0.35 + Math.sin(time * 4) * 0.15
+      }
     }
 
     const dummy = new THREE.Object3D()
@@ -109,10 +115,18 @@ export default function FireSmokeSystem() {
     const windDirZ = Math.cos(windRad)
     const windSpeed = windState?.speedMs ?? 3.8
 
-    // 2. Fire Particles Update
+    // 2. Fire Particles Update (only active while burning)
     if (fireMeshRef.current) {
       for (let i = 0; i < MAX_FIRE_PARTICLES; i++) {
         const p = fireParticles[i]
+        if (!isBurning) {
+          dummy.position.set(0, -10, 0)
+          dummy.scale.set(0, 0, 0)
+          dummy.updateMatrix()
+          fireMeshRef.current.setMatrixAt(i, dummy.matrix)
+          continue
+        }
+
         p.life += delta
 
         if (p.life >= p.maxLife) {
@@ -178,7 +192,7 @@ export default function FireSmokeSystem() {
     }
   })
 
-  if (!isBurning) return null
+  if (!isSmokeActive) return null
 
   return (
     <group name="FireSmokeSystem">

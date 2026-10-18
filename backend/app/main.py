@@ -55,8 +55,8 @@ if DIST_DIR.exists() and DIST_DIR.is_dir():
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
 
-    # SPA catch-all fallback for non-API routes
-    @app.get("/{full_path:path}", include_in_schema=False)
+    # SPA catch-all fallback for non-API routes (supports GET and HEAD)
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"], include_in_schema=False)
     async def serve_spa(request: Request, full_path: str):
         if full_path.startswith("api/"):
             return {"error": "Not found"}

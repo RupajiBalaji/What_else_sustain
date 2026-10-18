@@ -27,7 +27,11 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [activePile, setActivePile] = useState(null)
   const [showChoiceWheel, setShowChoiceWheel] = useState(false)
   const [hasMadeChoice, setHasMadeChoice] = useState(false)
+  // In-world choice UI vs legacy choice wheel (switchable for Lite mode fallback)
+  const [useInWorldChoices, setUseInWorldChoices] = useState(true)
+  const [selectedChoiceId, setSelectedChoiceId] = useState('happy_seeder')
   const [nearestPileInfo, setNearestPileInfo] = useState(null)
+  const [showOneSeasonModal, setShowOneSeasonModal] = useState(false)
   // Harvest cycle state: 'standing' (pre-harvest green field) | 'harvesting' (harvester sweep) | 'harvested' (stubble & straw piles ready)
   const [harvestState, setHarvestState] = useState('standing')
   const [harvestProgress, setHarvestProgress] = useState(0)
@@ -108,18 +112,11 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }
   }, [onFallbackToLite])
 
-  // Player interaction with a straw pile
-  const handleInteract = useCallback(() => {
-    if (!interactionTarget) return
-    sound.initAudio()
-    sound.playPop()
-    setActivePile(interactionTarget)
-    setShowChoiceWheel(true)
-  }, [interactionTarget])
 
   // Initiate Burn Sequence
   const startBurnSequence = useCallback((pile) => {
     setShowChoiceWheel(false)
+    setShowOneSeasonModal(false)
     setHasMadeChoice(true)
     const targetPile = pile || activePile || interactionTarget
     setActivePile(targetPile)
@@ -243,6 +240,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       setRupeeCount(0)
       setPlayerResetTrigger((p) => p + 1)
       setHasMadeChoice(false)
+      setShowOneSeasonModal(false)
       setHarvestState('harvested')
       setHarvestProgress(1.0)
       setSmokeData({
@@ -317,7 +315,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       sound.startBalerSound()
     }
 
-    const durationMs = 12000
+    const durationMs = 14500
     const startTime = Date.now()
 
     if (altIntervalRef.current) clearInterval(altIntervalRef.current)
@@ -382,6 +380,24 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }, durationMs)
   }, [game])
 
+  // Player interaction with a straw pile (handles both in-world choices and legacy wheel)
+  const handleInteract = useCallback(() => {
+    if (!interactionTarget) return
+    sound.initAudio()
+    sound.playPop()
+    setActivePile(interactionTarget)
+    if (!useInWorldChoices) {
+      setShowChoiceWheel(true)
+    } else {
+      // In-world mode: triggers chosen action
+      if (selectedChoiceId === 'burn') {
+        startBurnSequence(interactionTarget)
+      } else {
+        startAlternative(selectedChoiceId)
+      }
+    }
+  }, [interactionTarget, useInWorldChoices, selectedChoiceId, startBurnSequence, startAlternative])
+
   // Reset / Rewind the field back to healthy golden state
   const resetBurn = useCallback(() => {
     triggerRewind()
@@ -412,6 +428,10 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         activePile,
         showChoiceWheel,
         setShowChoiceWheel,
+        useInWorldChoices,
+        setUseInWorldChoices,
+        selectedChoiceId,
+        setSelectedChoiceId,
         hasMadeChoice,
         nearestPileInfo,
         setNearestPileInfo,
@@ -434,6 +454,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         alternativeProgress,
         startAlternative,
         rupeeCount,
+        showOneSeasonModal,
+        setShowOneSeasonModal,
         showComparison,
         setShowComparison,
         showPledgeModal,

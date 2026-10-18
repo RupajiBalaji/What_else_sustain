@@ -25,6 +25,9 @@ import MulchSoilEffect from './components/MulchSoilEffect'
 import CompostSprayEffect from './components/CompostSprayEffect'
 import StandingCropRows from './components/StandingCropRows'
 import CombineHarvester from './components/CombineHarvester'
+import SoilCutawayCrossSection from './components/SoilCutawayCrossSection'
+import AirSensorPole from './components/AirSensorPole'
+import ConsequenceCallouts from './components/ConsequenceCallouts'
 
 function SceneContent() {
   const { activeAlternative } = useGame3D()
@@ -50,6 +53,9 @@ function SceneContent() {
       <TreesInstanced />
       <VillageHousesInstanced />
       <Villagers />
+      <AirSensorPole position={[-2.5, 0, 40.5]} />
+      <SoilCutawayCrossSection position={[-4.0, 0, 8.2]} rotation={[0, 0.25, 0]} />
+      <ConsequenceCallouts />
       <WindFlag />
       <FarmerPlayer initialPosition={[-1.2, 0, 10.0]} />
       <FireSmokeSystem />

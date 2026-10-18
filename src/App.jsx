@@ -130,10 +130,10 @@ function MainContent() {
     setMode('lite')
   }, [language])
 
-  // 1. PRIMARY 3D GAME MODE (Scene: The Farm)
+  // 1. PRIMARY 3D GAME MODE (Scene: The Farm - Fullscreen fixed 100dvh)
   if (mode === '3d') {
     return (
-      <div style={{ width: '100%', height: '100%', minHeight: '100vh', position: 'relative' }}>
+      <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100dvh', overflow: 'hidden' }}>
         <FarmScene
           onSwitchToLite={handleSwitchToLite}
           onFallbackToLite={handleFallbackToLite}

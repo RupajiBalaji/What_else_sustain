@@ -47,7 +47,7 @@ function SceneContent() {
       <VillageHousesInstanced />
       <Villagers />
       <WindFlag />
-      <FarmerPlayer initialPosition={[0, 0, 8]} />
+      <FarmerPlayer initialPosition={[-1.2, 0, 10.0]} />
       <FireSmokeSystem />
       <FpsMonitor />
     </>
@@ -63,15 +63,35 @@ function FarmSceneInner({ onSwitchToLite }) {
     // Cap devicePixelRatio at 1.5 for mid-range phone performance
     const pixelRatio = window.devicePixelRatio || 1
     setDpr(Math.min(pixelRatio, 1.5))
+
+    // Hide page scrollbars while in 3D world mode
+    const origBodyOverflow = document.body.style.overflow
+    const origHtmlOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = origBodyOverflow
+      document.documentElement.style.overflow = origHtmlOverflow
+    }
   }, [])
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100dvh',
+        overflow: 'hidden',
+        zIndex: 5
+      }}
+    >
       {/* 3D Canvas */}
       <Canvas
         shadows={quality === 'high'}
         dpr={dpr}
-        camera={{ position: [0, 4, 14], fov: 50, near: 0.1, far: 200 }}
+        camera={{ position: [-1.78, 3.2, 4.23], fov: 50, near: 0.1, far: 200 }}
         gl={{
           antialias: quality === 'high',
           powerPreference: 'high-performance'

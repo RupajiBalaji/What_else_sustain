@@ -5,11 +5,14 @@ import { sound } from '../../game/soundManager'
 import SproutMascot from '../../game/SproutMascot'
 
 export default function LoadingScreen({ onStart, onSwitchToLite }) {
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const [progress, setProgress] = useState(15)
   const [isReady, setIsReady] = useState(false)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
 
   useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0)
+
     // Simulated progress bar loading assets
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -34,7 +37,7 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
   return (
     <div
       style={{
-        position: 'absolute',
+        position: 'fixed',
         inset: 0,
         backgroundColor: '#F6E2B3',
         zIndex: 100,
@@ -42,9 +45,10 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px calc(16px + env(safe-area-inset-bottom, 0px)) 20px',
         fontFamily: 'system-ui, -apple-system, sans-serif',
-        textAlign: 'center'
+        textAlign: 'center',
+        overflow: 'hidden'
       }}
     >
       <SproutMascot
@@ -58,13 +62,83 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
         bubblePosition="top"
       />
 
-      <div style={{ marginTop: '24px', maxWidth: '380px', width: '100%' }}>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#16382B', margin: '0 0 8px 0' }}>
+      <div style={{ marginTop: '16px', maxWidth: '380px', width: '100%' }}>
+        <h2 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#16382B', margin: '0 0 6px 0' }}>
           {t('game3d.loadingTitle')}
         </h2>
-        <p style={{ fontSize: '0.88rem', color: '#5D4037', margin: '0 0 16px 0' }}>
-          {t('game3d.loadingTip')}
-        </p>
+
+        {/* One-time Controls Card */}
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '2px solid #8D6E63',
+            borderRadius: '16px',
+            padding: '10px 14px',
+            margin: '10px 0 14px 0',
+            textAlign: 'left',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.06)'
+          }}
+        >
+          <div
+            style={{
+              fontSize: '0.78rem',
+              fontWeight: 900,
+              color: '#2E7D32',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              marginBottom: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🎮</span>
+            <span>Controls Guide</span>
+          </div>
+          {!isTouchDevice ? (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '3px',
+                fontSize: '0.82rem',
+                color: '#3E2723',
+                fontWeight: 700
+              }}
+            >
+              <div>
+                <span style={{ color: '#E65100' }}>⌨️ Move:</span> WASD or arrow keys to move
+              </div>
+              <div>
+                <span style={{ color: '#0288D1' }}>🖱️ Look:</span> Drag the mouse to look around
+              </div>
+              <div>
+                <span style={{ color: '#2E7D32' }}>🔘 Action:</span> E to interact
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '3px',
+                fontSize: '0.82rem',
+                color: '#3E2723',
+                fontWeight: 700
+              }}
+            >
+              <div>
+                <span style={{ color: '#E65100' }}>🕹️ Move:</span> Use virtual joystick to move
+              </div>
+              <div>
+                <span style={{ color: '#0288D1' }}>👆 Look:</span> Drag right side to look around
+              </div>
+              <div>
+                <span style={{ color: '#2E7D32' }}>🔘 Action:</span> Tap button or straw pile to interact
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Progress Bar Track */}
         <div

@@ -23,8 +23,16 @@ export const playerInput = {
   lookDeltaY: 0
 }
 
-export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
-  const { quality, setInteractionTarget, burnState, activePile, playerResetTrigger, activeAlternative } = useGame3D()
+export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
+  const {
+    quality,
+    setInteractionTarget,
+    setNearestPileInfo,
+    burnState,
+    activePile,
+    playerResetTrigger,
+    activeAlternative
+  } = useGame3D()
   const { camera } = useThree()
 
   // Character group ref and body limb refs
@@ -38,9 +46,10 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
   // Player state
   const posRef = useRef(new THREE.Vector3(...initialPosition))
   const yawRef = useRef(0) // Player orientation angle
-  const camYawRef = useRef(0)
+  const camYawRef = useRef(0.08) // Slight offset so camera frames straw piles, tractor, and village
   const isMovingRef = useRef(false)
   const walkTimeRef = useRef(0)
+  const lastNavUpdateRef = useRef(0)
 
   const isHigh = quality === 'high'
   const hasFarmerModel = useModelAvailability('/models/farmer.glb')
@@ -296,15 +305,39 @@ export default function FarmerPlayer({ initialPosition = [0, 0, 8] }) {
 
     // Proximity check against straw piles
     let nearestPile = null
-    let minDist = 3.5 // 3.5m interaction radius
+    let minDist = 5.0 // Increased interaction radius from 3.5m to 5.0m
+    let absoluteClosest = null
+    let absoluteMinDist = Infinity
+
     for (const pile of STRAW_PILES_DATA) {
       const dist = posRef.current.distanceTo(new THREE.Vector3(pile.x, 0, pile.z))
+      if (dist < absoluteMinDist) {
+        absoluteMinDist = dist
+        absoluteClosest = pile
+      }
       if (dist < minDist) {
         minDist = dist
         nearestPile = pile
       }
     }
     setInteractionTarget(nearestPile)
+
+    // Report nearest pile navigation coordinates for HUD guidance arrow
+    if (_.clock.getElapsedTime() - lastNavUpdateRef.current > 0.08) {
+      lastNavUpdateRef.current = _.clock.getElapsedTime()
+      if (absoluteClosest) {
+        const dx = absoluteClosest.x - posRef.current.x
+        const dz = absoluteClosest.z - posRef.current.z
+        const worldAngle = Math.atan2(dx, dz)
+        const relAngleRad = worldAngle - camYawRef.current
+        const relAngleDeg = (relAngleRad * 180) / Math.PI
+        setNearestPileInfo({
+          id: absoluteClosest.id,
+          distance: absoluteMinDist,
+          angleDeg: relAngleDeg
+        })
+      }
+    }
   })
 
   return (

@@ -26,6 +26,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [interactionTarget, setInteractionTarget] = useState(null)
   const [activePile, setActivePile] = useState(null)
   const [showChoiceWheel, setShowChoiceWheel] = useState(false)
+  const [hasMadeChoice, setHasMadeChoice] = useState(false)
+  const [nearestPileInfo, setNearestPileInfo] = useState(null)
 
   // Burn sequence state: 'idle' | 'lighting' | 'burning' | 'consequence'
   const [burnState, setBurnState] = useState('idle')
@@ -113,6 +115,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   // Initiate Burn Sequence
   const startBurnSequence = useCallback((pile) => {
     setShowChoiceWheel(false)
+    setHasMadeChoice(true)
     const targetPile = pile || activePile || interactionTarget
     setActivePile(targetPile)
     setBurnState('lighting')
@@ -234,6 +237,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       setAlternativeProgress(0)
       setRupeeCount(0)
       setPlayerResetTrigger((p) => p + 1)
+      setHasMadeChoice(false)
       setSmokeData({
         playerExposure: null,
         villageExposure: null,
@@ -248,6 +252,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   // Start one of the 4 sustainable alternatives
   const startAlternative = useCallback((altKey) => {
     setShowChoiceWheel(false)
+    setHasMadeChoice(true)
     sound.initAudio()
     sound.playTap()
     setActiveAlternative(altKey)
@@ -363,6 +368,9 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         activePile,
         showChoiceWheel,
         setShowChoiceWheel,
+        hasMadeChoice,
+        nearestPileInfo,
+        setNearestPileInfo,
         burnState,
         burnProgress,
         ignitedPiles,

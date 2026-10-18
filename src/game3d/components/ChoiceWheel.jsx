@@ -100,7 +100,8 @@ export default function ChoiceWheel() {
         userSelect: 'none',
         pointerEvents: 'auto',
         fontFamily: 'system-ui, -apple-system, sans-serif',
-        padding: '16px'
+        padding: 'calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)) 16px',
+        overflow: 'hidden'
       }}
       onClick={handleClose}
     >
@@ -111,9 +112,13 @@ export default function ChoiceWheel() {
           position: 'relative',
           width: '360px',
           height: '360px',
+          maxWidth: '94vw',
+          maxHeight: '94vw',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          transform: 'scale(min(1, calc(100vw / 400), calc(100vh / 520)))',
+          transformOrigin: 'center center'
         }}
       >
         {/* Central Hub */}

@@ -17,6 +17,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
     quality,
     toggleQuality,
     interactionTarget,
+    nearestPileInfo,
+    hasMadeChoice,
     handleInteract,
     burnState,
     showPledgeModal,
@@ -147,12 +149,88 @@ export default function HUDOverlay({ onSwitchToLite }) {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: '14px',
+        padding: 'calc(14px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px))',
         zIndex: 50,
         fontFamily: 'system-ui, -apple-system, sans-serif',
         userSelect: 'none'
       }}
     >
+      {/* TOP-CENTRE OBJECTIVE BANNER & GUIDANCE ARROW */}
+      {!hasMadeChoice && burnState === 'idle' && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(70px + env(safe-area-inset-top, 0px))',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 60,
+            pointerEvents: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '6px',
+            width: 'max-content',
+            maxWidth: '92vw'
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: interactionTarget ? '#FFD54F' : 'rgba(22, 56, 43, 0.92)',
+              color: interactionTarget ? '#16382B' : '#FFFFFF',
+              border: interactionTarget ? '2.5px solid #E65100' : '2px solid rgba(255, 255, 255, 0.45)',
+              borderRadius: '9999px',
+              padding: '8px 20px',
+              fontWeight: 800,
+              fontSize: '0.92rem',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            <span>🌾</span>
+            <span>
+              {interactionTarget
+                ? (isTouchDevice ? t('game3d.objectiveInteractTouch') : t('game3d.objectiveInteractDesktop'))
+                : t('game3d.objectiveWalkToPile')}
+            </span>
+          </div>
+
+          {/* Small guidance arrow pointing towards nearest straw pile when far away */}
+          {!interactionTarget && nearestPileInfo && (
+            <div
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                color: '#16382B',
+                border: '2px solid #FFB300',
+                borderRadius: '9999px',
+                padding: '4px 14px',
+                fontSize: '0.8rem',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.18)'
+              }}
+            >
+              <span>{Math.round(nearestPileInfo.distance)}m</span>
+              <span
+                style={{
+                  display: 'inline-block',
+                  transform: `rotate(${nearestPileInfo.angleDeg}deg)`,
+                  fontSize: '1.05rem',
+                  transition: 'transform 0.1s linear'
+                }}
+              >
+                ⬆️
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* TOP HUD BAR */}
       <div
         style={{
@@ -275,10 +353,13 @@ export default function HUDOverlay({ onSwitchToLite }) {
       {interactionTarget && burnState === 'idle' && (
         <div
           style={{
-            alignSelf: 'center',
-            marginBottom: '40px',
+            position: 'absolute',
+            bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+            left: '50%',
+            transform: 'translateX(-50%)',
             pointerEvents: 'auto',
-            animation: 'pulse 1.5s infinite'
+            animation: 'pulse 1.5s infinite',
+            zIndex: 65
           }}
         >
           <button
@@ -286,7 +367,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
             onClick={handleInteract}
             style={{
               minHeight: '56px',
-              padding: '12px 24px',
+              padding: '12px 26px',
               borderRadius: '9999px',
               backgroundColor: '#FFD54F',
               color: '#16382B',
@@ -298,14 +379,15 @@ export default function HUDOverlay({ onSwitchToLite }) {
               alignItems: 'center',
               gap: '10px',
               boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-              transform: 'scale(1.05)'
+              transform: 'scale(1.05)',
+              whiteSpace: 'nowrap'
             }}
           >
             <span>🌾</span>
             <span>
               {isTouchDevice
-                ? t('game3d.interactPromptMobile')
-                : t('game3d.interactPromptDesktop')}
+                ? t('game3d.objectiveInteractTouch')
+                : t('game3d.objectiveInteractDesktop')}
             </span>
           </button>
         </div>
@@ -361,7 +443,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
             alignItems: 'flex-end',
             justifyContent: 'space-between',
             pointerEvents: 'none',
-            paddingBottom: '16px'
+            paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
+            width: '100%'
           }}
         >
           {/* Virtual Joystick (Left) */}

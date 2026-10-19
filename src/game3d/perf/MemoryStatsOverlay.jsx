@@ -47,11 +47,13 @@ export default function MemoryStatsOverlay() {
 
   useEffect(() => {
     if (!showDevStats) return
+    console.log(`[3D Farm Metrics] Tier: ${quality?.toUpperCase()} | Draw Calls: ${renderStatsRef.calls} | Triangles: ${renderStatsRef.triangles} | Geometries: ${renderStatsRef.geometries} | Textures: ${renderStatsRef.textures}`)
     const interval = setInterval(() => {
       setStats({ ...renderStatsRef })
-    }, 250)
+      console.log(`[3D Farm Metrics] Tier: ${quality?.toUpperCase()} | Draw Calls: ${renderStatsRef.calls} | Triangles: ${renderStatsRef.triangles} | Geometries: ${renderStatsRef.geometries} | Textures: ${renderStatsRef.textures}`)
+    }, 1500)
     return () => clearInterval(interval)
-  }, [showDevStats])
+  }, [showDevStats, quality])
 
   if (!showDevStats) return null
 

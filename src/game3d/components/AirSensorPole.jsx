@@ -20,11 +20,18 @@ export default function AirSensorPole({ position = [-2.5, 0, 40.5] }) {
   const isBurning = burnState === 'burning'
   const isBurnt = burnState === 'consequence'
 
-  // Calculate simulated exposure ratio
-  const progressRatio = isBurnt ? 1.0 : isBurning ? Math.min(1.0, burnProgress * 1.2) : 0
-  const rawTarget = smokeData?.villageExposure ?? 62
+  // Plume reaches the village sensor after ~3.5s drift (burnProgress >= 0.18)
+  const plumeArrivalProgress = 0.18
+  const progressRatio = isBurnt
+    ? 1.0
+    : isBurning
+    ? (burnProgress || 0) < plumeArrivalProgress
+      ? 0
+      : Math.min(1.0, ((burnProgress || 0) - plumeArrivalProgress) / (1.0 - plumeArrivalProgress))
+    : 0
+  const rawTarget = Number(smokeData?.villageExposure) || 62
   const currentExposure = Math.round(
-    activeAlternative ? Math.max(1, 2) : rawTarget * progressRatio
+    activeAlternative ? 1 : rawTarget * progressRatio
   )
 
   const isHazardous = currentExposure > 30

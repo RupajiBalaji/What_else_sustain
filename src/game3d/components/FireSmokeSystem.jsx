@@ -40,12 +40,12 @@ function createParticleTexture(type) {
     ctx.arc(64, 64, 48, 0, Math.PI * 2)
     ctx.fill()
   } else {
-    // Soft turbulent smoke puff
+    // Soft turbulent smoke puff (opaque dark charcoal core fading to dark umber)
     const grad = ctx.createRadialGradient(64, 64, 4, 64, 64, 60)
-    grad.addColorStop(0, 'rgba(80, 70, 65, 0.75)')
-    grad.addColorStop(0.4, 'rgba(60, 52, 48, 0.5)')
-    grad.addColorStop(0.75, 'rgba(45, 40, 38, 0.2)')
-    grad.addColorStop(1.0, 'rgba(40, 36, 35, 0.0)')
+    grad.addColorStop(0, 'rgba(22, 19, 18, 0.96)') // Dense dark charcoal
+    grad.addColorStop(0.35, 'rgba(38, 33, 30, 0.88)') // Dark grey-brown
+    grad.addColorStop(0.7, 'rgba(60, 52, 46, 0.55)') // Smoky umber
+    grad.addColorStop(1.0, 'rgba(60, 52, 46, 0.0)')
     ctx.fillStyle = grad
     ctx.beginPath()
     ctx.arc(64, 64, 60, 0, Math.PI * 2)
@@ -54,6 +54,7 @@ function createParticleTexture(type) {
 
   const tex = new THREE.CanvasTexture(canvas)
   tex.generateMipmaps = true
+  tex.needsUpdate = true
   return tex
 }
 
@@ -215,26 +216,29 @@ export default function FireSmokeSystem() {
   }, [isBurning, windState, setIgnitedPiles])
 
   // Frame update: animate fire, embers, smoke, and flickering point light
-  useFrame(({ clock }, delta) => {
+  useFrame(({ clock, camera }, delta) => {
     const elapsed = clock.getElapsedTime()
     const windRad = ((windState?.directionDeg ?? 75) * Math.PI) / 180
     const windSpeed = windState?.speedMs ?? 3.8
     const windX = Math.sin(windRad) * windSpeed * 0.35
     const windZ = Math.cos(windRad) * windSpeed * 0.35
     // Smoke drift explicitly oriented toward the northern village (+Z) with wind deflection
-    const smokeDriftZ = Math.max(0.65, Math.cos(windRad)) * windSpeed * 0.45 + 0.4
-    const smokeDriftX = Math.sin(windRad) * windSpeed * 0.35
+    const smokeDriftZ = Math.max(0.7, Math.cos(windRad)) * windSpeed * 0.5 + 0.45
+    const smokeDriftX = Math.sin(windRad) * windSpeed * 0.4
 
     const activePilesList = STRAW_PILES_DATA.filter((p) => ignitedPiles.includes(p.id))
+    if (activePilesList.length === 0 && (isBurning || isSmokeActive)) {
+      activePilesList.push(STRAW_PILES_DATA[0])
+    }
     const hasPiles = activePilesList.length > 0
 
     // 1. Point Light Flicker
     if (lightRef.current && hasPiles) {
       if (isBurning) {
         const flicker = Math.sin(elapsed * 22) * 0.3 + Math.cos(elapsed * 37) * 0.2 + 1.2
-        lightRef.current.intensity = flicker * (activePilesList.length * 1.5)
+        lightRef.current.intensity = flicker * (activePilesList.length * 1.8)
         const lead = activePilesList[0]
-        lightRef.current.position.set(lead.x, 1.8, lead.z)
+        lightRef.current.position.set(lead.x, 2.2, lead.z)
       } else {
         lightRef.current.intensity = 0
       }
@@ -242,6 +246,7 @@ export default function FireSmokeSystem() {
 
     // 2. Fire Particles (Core, Body, Tips)
     if (fireMeshRef.current) {
+      fireMeshRef.current.count = maxFire
       if (!isBurning || !hasPiles) {
         _particleDummy.scale.set(0, 0, 0)
         _particleDummy.updateMatrix()
@@ -257,13 +262,13 @@ export default function FireSmokeSystem() {
             p.pileIndex = i % activePilesList.length
             const pile = activePilesList[p.pileIndex]
             const angle = Math.random() * Math.PI * 2
-            const rad = Math.random() * 0.8
+            const rad = Math.random() * 0.75
             p.x = pile.x + Math.cos(angle) * rad
-            p.y = 0.2 + Math.random() * 0.3
+            p.y = 0.6 + Math.random() * 0.8
             p.z = pile.z + Math.sin(angle) * rad
-            p.vx = (Math.random() - 0.5) * 0.4 + windX * 0.2
+            p.vx = (Math.random() - 0.5) * 0.45 + windX * 0.2
             p.vy = 2.0 + Math.random() * 1.8
-            p.vz = (Math.random() - 0.5) * 0.4 + windZ * 0.2
+            p.vz = (Math.random() - 0.5) * 0.45 + windZ * 0.2
           }
 
           p.x += p.vx * delta
@@ -271,11 +276,11 @@ export default function FireSmokeSystem() {
           p.z += p.vz * delta
 
           const progress = p.life / p.maxLife
-          const size = Math.sin(progress * Math.PI) * 1.4 + 0.3
+          const size = Math.max(0.4, Math.sin(progress * Math.PI) * 1.6 + 0.45)
 
           _particleDummy.position.set(p.x, p.y, p.z)
+          _particleDummy.quaternion.copy(camera.quaternion)
           _particleDummy.scale.set(size, size, size)
-          _particleDummy.rotation.set(0, 0, progress * Math.PI)
           _particleDummy.updateMatrix()
           fireMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         })
@@ -285,6 +290,7 @@ export default function FireSmokeSystem() {
 
     // 3. Embers
     if (emberMeshRef.current) {
+      emberMeshRef.current.count = maxEmbers
       if (!isBurning || !hasPiles) {
         _particleDummy.scale.set(0, 0, 0)
         _particleDummy.updateMatrix()
@@ -300,10 +306,10 @@ export default function FireSmokeSystem() {
             p.pileIndex = i % activePilesList.length
             const pile = activePilesList[p.pileIndex]
             p.x = pile.x + (Math.random() - 0.5) * 1.2
-            p.y = 0.5 + Math.random() * 0.5
+            p.y = 0.9 + Math.random() * 0.6
             p.z = pile.z + (Math.random() - 0.5) * 1.2
             p.vx = (Math.random() - 0.5) * 0.8 + windX * 0.8
-            p.vy = 2.5 + Math.random() * 2.2
+            p.vy = 2.8 + Math.random() * 2.2
             p.vz = (Math.random() - 0.5) * 0.8 + windZ * 0.8
           }
 
@@ -312,9 +318,10 @@ export default function FireSmokeSystem() {
           p.z += p.vz * delta + Math.cos(elapsed * 8 + i) * 0.02
 
           const progress = p.life / p.maxLife
-          const size = (1.0 - progress) * 0.35 + 0.08
+          const size = Math.max(0.12, (1.0 - progress) * 0.38 + 0.1)
 
           _particleDummy.position.set(p.x, p.y, p.z)
+          _particleDummy.quaternion.copy(camera.quaternion)
           _particleDummy.scale.set(size, size, size)
           _particleDummy.updateMatrix()
           emberMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
@@ -323,8 +330,9 @@ export default function FireSmokeSystem() {
       }
     }
 
-    // 4. Smoke Plume Particles (expanding, fading, bending toward village)
+    // 4. Smoke Plume Particles (dark, expanding, billowing toward northern village)
     if (smokeMeshRef.current) {
+      smokeMeshRef.current.count = maxSmoke
       if (!isSmokeActive || !hasPiles) {
         _particleDummy.scale.set(0, 0, 0)
         _particleDummy.updateMatrix()
@@ -339,25 +347,25 @@ export default function FireSmokeSystem() {
             p.life = 0
             p.pileIndex = i % activePilesList.length
             const pile = activePilesList[p.pileIndex]
-            p.x = pile.x + (Math.random() - 0.5) * 1.6
-            p.y = 0.9 + Math.random() * 0.6
-            p.z = pile.z + (Math.random() - 0.5) * 1.6
+            p.x = pile.x + (Math.random() - 0.5) * 1.5
+            p.y = 1.3 + Math.random() * 0.7
+            p.z = pile.z + (Math.random() - 0.5) * 1.5
             p.vx = (Math.random() - 0.5) * 0.4
-            p.vy = 1.35 + Math.random() * 0.9
+            p.vy = 1.4 + Math.random() * 0.95
             p.vz = (Math.random() - 0.5) * 0.4
           }
 
           const progress = p.life / p.maxLife
-          p.x += (p.vx + smokeDriftX * progress * 1.8) * delta
-          p.y += (p.vy * 0.85 + Math.sin(progress * Math.PI) * 0.4) * delta
-          p.z += (p.vz + smokeDriftZ * progress * 2.5) * delta
+          p.x += (p.vx + smokeDriftX * progress * 2.0) * delta
+          p.y += (p.vy * 0.88 + Math.sin(progress * Math.PI) * 0.45) * delta
+          p.z += (p.vz + smokeDriftZ * progress * 2.8) * delta
 
           // Expands naturally into thick billowing clouds drifting towards the village
-          const size = 1.2 + progress * 5.6
+          const size = Math.max(1.4, 1.6 + progress * 6.5)
 
           _particleDummy.position.set(p.x, p.y, p.z)
+          _particleDummy.quaternion.copy(camera.quaternion)
           _particleDummy.scale.set(size, size, size)
-          _particleDummy.rotation.set(0, 0, p.life * 0.35)
           _particleDummy.updateMatrix()
           smokeMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         })
@@ -388,13 +396,14 @@ export default function FireSmokeSystem() {
         decay={2}
       />
 
-      {/* 2. Layered Fire Particles with Additive Blending */}
+      {/* 2. Layered Fire Particles with Additive Blending and Billboarding */}
       <instancedMesh
         ref={fireMeshRef}
-        args={[undefined, undefined, maxFire]}
+        args={[undefined, undefined, 320]}
+        frustumCulled={false}
         depthWrite={false}
       >
-        <planeGeometry args={[1.2, 1.2]} />
+        <planeGeometry args={[1.3, 1.3]} />
         <meshBasicMaterial
           map={fireTexture}
           transparent
@@ -404,10 +413,11 @@ export default function FireSmokeSystem() {
         />
       </instancedMesh>
 
-      {/* 3. High Embers */}
+      {/* 3. High Embers with Billboarding */}
       <instancedMesh
         ref={emberMeshRef}
-        args={[undefined, undefined, maxEmbers]}
+        args={[undefined, undefined, 120]}
+        frustumCulled={false}
         depthWrite={false}
       >
         <planeGeometry args={[0.5, 0.5]} />
@@ -420,17 +430,19 @@ export default function FireSmokeSystem() {
         />
       </instancedMesh>
 
-      {/* 4. Dense Smoky Plume */}
+      {/* 4. Dense Smoky Plume with Normal Blending and Billboarding */}
       <instancedMesh
         ref={smokeMeshRef}
-        args={[undefined, undefined, maxSmoke]}
+        args={[undefined, undefined, 320]}
+        frustumCulled={false}
         depthWrite={false}
       >
-        <planeGeometry args={[2.0, 2.0]} />
+        <planeGeometry args={[2.2, 2.2]} />
         <meshBasicMaterial
           map={smokeTexture}
           transparent
-          opacity={0.42}
+          blending={THREE.NormalBlending}
+          opacity={0.86}
           depthWrite={false}
           side={THREE.DoubleSide}
         />

@@ -593,18 +593,18 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       }
     }
 
-    // Camera Collision Avoidance against Straw Piles
+    // Camera Collision Avoidance against Straw Piles (radius 1.25m, minCamDist 2.45m ensures zero clipping)
     for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
       const pile = STRAW_PILES_DATA[i]
       const dx = targetCamX - pile.x
       const dz = targetCamZ - pile.z
       const distSq = dx * dx + dz * dz
-      const minCamDist = 1.85
+      const minCamDist = 2.45
       if (distSq < minCamDist * minCamDist) {
         const dist = Math.sqrt(distSq) || 1
         targetCamX = pile.x + (dx / dist) * minCamDist
         targetCamZ = pile.z + (dz / dist) * minCamDist
-        targetCamY = Math.max(targetCamY, 2.2)
+        targetCamY = Math.max(targetCamY, 2.3)
       }
     }
 

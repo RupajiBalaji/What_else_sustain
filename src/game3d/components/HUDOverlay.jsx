@@ -84,13 +84,13 @@ export default function HUDOverlay({ onSwitchToLite }) {
 
   // Auto-advance to OneSeasonLaterModal after letting in-world consequence callouts play
   useEffect(() => {
-    if (burnState === 'consequence' && !showOneSeasonModal) {
+    if (burnState === 'consequence' && !showOneSeasonModal && !showSeasonReport) {
       const timer = setTimeout(() => {
         setShowOneSeasonModal(true)
       }, 6500)
       return () => clearTimeout(timer)
     }
-  }, [burnState, showOneSeasonModal, setShowOneSeasonModal])
+  }, [burnState, showOneSeasonModal, showSeasonReport, setShowOneSeasonModal])
 
   // Touch handlers for virtual joystick
   const handleJoystickTouchStart = (e) => {
@@ -363,7 +363,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
         </div>
 
         {/* 2. ONE OBJECTIVE BANNER (Shown only when harvest is active or done without in-world choice panel open) */}
-        {harvestState === 'harvesting' && (
+        {seasonPhase === 'harvest' && harvestState === 'harvesting' && (
           <div
             style={{
               alignSelf: 'center',
@@ -387,6 +387,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
             </div>
             <button
               type="button"
+              key="skip-harvest-button"
+              data-testid="skip-harvest-button"
               onClick={skipHarvest}
               style={{
                 padding: '4px 12px',
@@ -405,7 +407,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
         )}
 
         {/* Objective Banner: Walk to straw pile (Hidden whenever in-world choice panel is open) */}
-        {!hasMadeChoice && burnState === 'idle' && harvestState === 'harvested' && !interactionTarget && (
+        {!hasMadeChoice && burnState === 'idle' && (seasonPhase === 'decision' || harvestState === 'harvested') && seasonPhase !== 'sowing' && seasonPhase !== 'growing' && !interactionTarget && (
           <div
             style={{
               alignSelf: 'center',

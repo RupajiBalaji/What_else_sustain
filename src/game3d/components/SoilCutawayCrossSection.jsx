@@ -238,60 +238,24 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
         />
       </instancedMesh>
 
-      {/* World-Space Depth Labels on the Cutaway Frame (Suppressed if any modal open) */}
+      {/* Ruler depth captions attached directly to slice frame */}
       {!isAnyModalOpen && (
         <>
-          <Html position={[-1.25, 0.02, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
-            <div
-              style={{
-                backgroundColor: 'rgba(22, 30, 24, 0.92)',
-                color: '#FFFFFF',
-                padding: '2px 6px',
-                borderRadius: '6px',
-                fontSize: '10px',
-                fontWeight: 800,
-                whiteSpace: 'nowrap',
-                border: '1.5px solid #81C784',
-                pointerEvents: 'none'
-              }}
-            >
-              <span>🌱 0cm: Topsoil</span>
+          <Html position={[-1.15, -0.05, 0.32]} center={false} distanceFactor={18} zIndexRange={[5, 0]}>
+            <div style={{ fontSize: '9px', fontWeight: 800, color: '#C8E6C9', textShadow: '0 1px 3px rgba(0,0,0,0.9)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+              0cm Topsoil
             </div>
           </Html>
 
-          <Html position={[-1.25, -0.45, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
-            <div
-              style={{
-                backgroundColor: 'rgba(33, 24, 18, 0.92)',
-                color: '#FFCC80',
-                padding: '2px 6px',
-                borderRadius: '6px',
-                fontSize: '10px',
-                fontWeight: 800,
-                whiteSpace: 'nowrap',
-                border: '1.5px solid #A1887F',
-                pointerEvents: 'none'
-              }}
-            >
-              <span>🪱 -25cm: Root Zone</span>
+          <Html position={[-1.15, -0.55, 0.32]} center={false} distanceFactor={18} zIndexRange={[5, 0]}>
+            <div style={{ fontSize: '9px', fontWeight: 800, color: '#FFE0B2', textShadow: '0 1px 3px rgba(0,0,0,0.9)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+              -25cm Root Zone
             </div>
           </Html>
 
-          <Html position={[-1.25, -1.05, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
-            <div
-              style={{
-                backgroundColor: 'rgba(33, 24, 18, 0.92)',
-                color: '#BCAAA4',
-                padding: '2px 6px',
-                borderRadius: '6px',
-                fontSize: '10px',
-                fontWeight: 800,
-                whiteSpace: 'nowrap',
-                border: '1.5px solid #8D6E63',
-                pointerEvents: 'none'
-              }}
-            >
-              <span>🪨 -50cm: Subsoil</span>
+          <Html position={[-1.15, -1.15, 0.32]} center={false} distanceFactor={18} zIndexRange={[5, 0]}>
+            <div style={{ fontSize: '9px', fontWeight: 800, color: '#D7CCC8', textShadow: '0 1px 3px rgba(0,0,0,0.9)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+              -50cm Subsoil
             </div>
           </Html>
         </>
@@ -301,7 +265,7 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
       <ManagedOverlay
         id="soil_cutaway_plaque"
         priority="status_prop"
-        position={[0, 0.22, 0.3]}
+        position={[0, -0.18, 0.3]}
         icon="🔬"
         center
         zIndexRange={[15, 0]}

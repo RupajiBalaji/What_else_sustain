@@ -25,12 +25,16 @@ export default function PerformanceGovernor() {
     dprScale,
     setDprScale,
     triggerToast,
-    reportFps
+    reportFps,
+    isFlyoverActive,
+    cinematicMode,
+    hasStarted
   } = useGame3D()
 
   // Frame timing refs
   const frameTimesRef = useRef([])
   const lastTimeRef = useRef(performance.now())
+  const mountTimeRef = useRef(performance.now())
   const belowTargetDurationRef = useRef(0)
   const aboveTargetDurationRef = useRef(0)
 
@@ -67,10 +71,20 @@ export default function PerformanceGovernor() {
       reportFps(currentFps, Math.round(avgFrameTime * 10) / 10)
     }
 
-    // If player explicitly locked the quality tier in settings, do not auto-adjust
+    // 1. If player explicitly locked the quality tier in settings, do not auto-adjust
     if (isTierLocked) {
       belowTargetDurationRef.current = 0
       aboveTargetDurationRef.current = 0
+      return
+    }
+
+    // 2. Strict Requirement: 10-second warm-up before any step-down (prevents desktop dropping to Low on start)
+    const isWarmedUp = (now - mountTimeRef.current) >= 10000
+
+    // 3. Strict Requirement: Never step down while loading screen or cinematics are running
+    const isCinematicRunning = !hasStarted || isFlyoverActive || (cinematicMode && cinematicMode !== 'normal')
+    if (isCinematicRunning || !isWarmedUp) {
+      belowTargetDurationRef.current = 0
       return
     }
 
@@ -80,19 +94,15 @@ export default function PerformanceGovernor() {
       belowTargetDurationRef.current += deltaSec
       aboveTargetDurationRef.current = 0
 
-      // Stays below target for 3 consecutive seconds: step down
-      if (belowTargetDurationRef.current >= 3.0) {
+      // Stays below target for 3.5 consecutive seconds: step down one tier at a time
+      if (belowTargetDurationRef.current >= 3.5) {
         belowTargetDurationRef.current = 0
 
-        // Step 1: Dynamic resolution scaling first
+        // Step down one tier at a time
         if (dprScale > 0.85) {
           setDprScale(0.85)
           triggerToast('Adjusted graphics for smooth play')
-        } else if (dprScale > 0.72) {
-          setDprScale(0.72)
-          triggerToast('Adjusted graphics for smooth play')
         } else if (quality === 'high') {
-          // Step 2: Step down quality tier
           setQuality('medium')
           setDprScale(1.0)
           triggerToast('Adjusted graphics for smooth play')

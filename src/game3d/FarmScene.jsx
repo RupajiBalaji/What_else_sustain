@@ -118,6 +118,7 @@ function FarmSceneInner({ onSwitchToLite }) {
         gl={{
           antialias: qualityConfig.tier !== 'low',
           powerPreference: 'high-performance',
+          preserveDrawingBuffer: true,
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 0.94
         }}
@@ -194,7 +195,6 @@ function FarmSceneInner({ onSwitchToLite }) {
         <LoadingScreen
           onStart={() => {
             setHasStarted(true)
-            startHarvestSequence()
           }}
           onSwitchToLite={onSwitchToLite}
         />

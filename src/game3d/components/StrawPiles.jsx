@@ -106,6 +106,68 @@ function BurningPileFlames({ isBurning }) {
 }
 
 /**
+ * Charring Burning Pile Cone with animated incandescent glowing cracks
+ * (Replaces flat solid orange cone with realistic dark char and glowing fissures)
+ */
+function CharringPileCone({ isBurning }) {
+  const materialRef = useRef(null)
+
+  const charShader = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uIsBurning: { value: isBurning ? 1.0 : 0.0 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPos;
+        void main() {
+          vUv = uv;
+          vPos = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uIsBurning;
+        varying vec2 vUv;
+        varying vec3 vPos;
+        void main() {
+          vec3 darkAsh = vec3(0.09, 0.08, 0.07);
+          vec3 charcoal = vec3(0.14, 0.12, 0.11);
+          vec3 baseCol = mix(darkAsh, charcoal, sin(vPos.y * 12.0) * 0.5 + 0.5);
+
+          if (uIsBurning > 0.5) {
+            float noise1 = sin(vPos.x * 14.0 + sin(vPos.y * 18.0));
+            float noise2 = cos(vPos.z * 14.0 + cos(vPos.y * 10.0));
+            float crack = smoothstep(0.65, 0.90, abs(noise1 * noise2));
+            float pulse = sin(uTime * 9.0 + vPos.y * 8.0) * 0.25 + 0.75;
+            vec3 crackColor = mix(vec3(1.0, 0.2, 0.0), vec3(1.0, 0.8, 0.2), crack) * pulse * 2.2;
+            baseCol = mix(baseCol, crackColor, crack);
+          }
+
+          gl_FragColor = vec4(baseCol, 1.0);
+        }
+      `
+    })
+  }, [])
+
+  useFrame(({ clock }) => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = clock.getElapsedTime()
+      materialRef.current.uniforms.uIsBurning.value = isBurning ? 1.0 : 0.0
+    }
+  })
+
+  return (
+    <mesh position={[0, 1.05, 0]}>
+      <coneGeometry args={[1.25, 1.9, 12]} />
+      <primitive object={charShader} ref={materialRef} attach="material" />
+    </mesh>
+  )
+}
+
+/**
  * Pulsing quest beacon ring rendered on the nearest straw pile
  */
 function PulsingTargetRing({ isSelected }) {
@@ -153,12 +215,18 @@ export default function StrawPiles() {
     burnState,
     activeAlternative,
     alternativeProgress,
-    harvestState
+    harvestState,
+    seasonPhase
   } = useGame3D()
   const isHigh = quality === 'high'
 
-  // Straw mounds are created by the harvest cutter
-  if (harvestState === 'standing') {
+  // Straw mounds are created only after the harvest sequence completes
+  if (
+    harvestState === 'standing' ||
+    harvestState === 'harvesting' ||
+    seasonPhase === 'sowing' ||
+    seasonPhase === 'growing'
+  ) {
     return null
   }
 
@@ -224,17 +292,21 @@ export default function StrawPiles() {
               document.body.style.cursor = 'default'
             }}
           >
-            {/* 1. Main straw mound (calibrated: 2.5 wide, ~2.16 tall) */}
-            <mesh position={[0, 1.05, 0]} castShadow={isHigh} receiveShadow={isHigh}>
-              <coneGeometry args={[1.25, 1.9, 10]} />
-              <meshStandardMaterial
-                color={topColor}
-                roughness={isBurnt || isComposting ? 1.0 : 0.88}
-                metalness={0.02}
-                emissive={isSelected && !isBurnt ? '#FF8F00' : isIgnited ? '#D84315' : '#000000'}
-                emissiveIntensity={isSelected && !isBurnt ? 0.35 : isIgnited ? 0.25 : 0}
-              />
-            </mesh>
+            {/* 1. Main straw mound: Charring with glowing cracks during burn, rich golden straw normally */}
+            {isBurnt ? (
+              <CharringPileCone isBurning={burnState === 'burning' && isIgnited} />
+            ) : (
+              <mesh position={[0, 1.05, 0]} castShadow={isHigh} receiveShadow={isHigh}>
+                <coneGeometry args={[1.25, 1.9, 10]} />
+                <meshStandardMaterial
+                  color={topColor}
+                  roughness={isComposting ? 1.0 : 0.88}
+                  metalness={0.02}
+                  emissive={isSelected ? '#FF8F00' : '#000000'}
+                  emissiveIntensity={isSelected ? 0.35 : 0}
+                />
+              </mesh>
+            )}
 
             {/* 2. Base straw skirt ring */}
             <mesh position={[0, 0.13, 0]} castShadow={isHigh} receiveShadow={isHigh}>

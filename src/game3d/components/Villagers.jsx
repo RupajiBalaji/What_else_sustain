@@ -203,12 +203,12 @@ export default function Villagers() {
 
   const villageHealth = persistentState?.villageHealth ?? 75
 
-  // Coughing triggers if actively burning/burnt, OR if persistent village health has deteriorated
+  // Coughing triggers strictly when the smoke plume reaches the village (burnProgress >= 0.22)
   const isCoughing =
     !activeAlternative &&
     (burnState === 'consequence' ||
-      (burnState === 'burning' && burnProgress >= 0.3) ||
-      (villageHealth < 50 && burnState !== 'lighting'))
+      (burnState === 'burning' && (burnProgress || 0) >= 0.22) ||
+      (villageHealth < 45 && burnState !== 'lighting' && burnState !== 'burning'))
 
   // Waving triggers on sustainable choices OR high village health
   const isWaving =

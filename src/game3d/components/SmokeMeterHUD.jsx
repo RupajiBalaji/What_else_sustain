@@ -9,14 +9,22 @@ export default function SmokeMeterHUD() {
   const isVisible = burnState === 'burning' || burnState === 'consequence'
   if (!isVisible) return null
 
-  // Growth over the 20s burn sequence
-  const currentRatio = burnState === 'consequence' ? 1.0 : Math.min(1.0, (burnProgress || 0) * 1.25)
+  // Player exposure rises immediately as farmer is near the field
+  const playerRatio = burnState === 'consequence' ? 1.0 : Math.min(1.0, (burnProgress || 0) * 1.35)
+
+  // Village exposure rises as the smoke plume travels and reaches the village (~3.5s in, prog >= 0.18)
+  const plumeArrivalProgress = 0.18
+  const villageRatio = burnState === 'consequence'
+    ? 1.0
+    : (burnProgress || 0) < plumeArrivalProgress
+    ? 0
+    : Math.min(1.0, ((burnProgress || 0) - plumeArrivalProgress) / (1.0 - plumeArrivalProgress))
 
   const playerTarget = Number(smokeData?.playerExposure) || 84
   const villageTarget = Number(smokeData?.villageExposure) || 62
 
-  const currentPlayerVal = Math.round(playerTarget * (Number.isFinite(currentRatio) ? currentRatio : 1.0))
-  const currentVillageVal = Math.round(villageTarget * (Number.isFinite(currentRatio) ? currentRatio : 1.0))
+  const currentPlayerVal = Math.round(playerTarget * playerRatio)
+  const currentVillageVal = Math.round(villageTarget * villageRatio)
 
   return (
     <div

@@ -2,7 +2,7 @@ import React, { useMemo, useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
-import { useModelAvailability } from '../assets/ModelLoader'
+import { useModelAvailability, applyKenneyTextures } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
 
 export const TREE_POSITIONS = [
@@ -180,6 +180,11 @@ function GLTFTrees({ activeTrees, isShadows, windState }) {
   const { scene } = useGLTF('/models/tree_1.glb', '/draco/')
   const groupRef = useRef(null)
 
+  const preparedScene = useMemo(() => {
+    if (!scene) return null
+    return applyKenneyTextures(scene.clone(true))
+  }, [scene])
+
   useFrame(({ clock }) => {
     if (!groupRef.current) return
     const time = clock.getElapsedTime()
@@ -190,14 +195,16 @@ function GLTFTrees({ activeTrees, isShadows, windState }) {
     })
   })
 
+  if (!preparedScene) return null
+
   return (
     <group ref={groupRef} name="GLTFTreesGroup">
       {activeTrees.map((t, idx) => (
         <primitive
           key={idx}
-          object={scene.clone(true)}
+          object={preparedScene.clone(true)}
           position={[t.x, 0, t.z]}
-          scale={[t.s, t.s, t.s]}
+          scale={[t.s * 1.35, t.s * 1.35, t.s * 1.35]}
           rotation={[0, idx * 0.8, 0]}
         />
       ))}

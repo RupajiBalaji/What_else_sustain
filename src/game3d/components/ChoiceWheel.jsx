@@ -6,6 +6,7 @@ import { sound } from '../../game/soundManager'
 export default function ChoiceWheel() {
   const { t } = useLanguage()
   const { showChoiceWheel, setShowChoiceWheel, startBurnSequence, startAlternative, activePile } = useGame3D()
+  const [comingSoonToast, setComingSoonToast] = useState(null)
 
   if (!showChoiceWheel) return null
 

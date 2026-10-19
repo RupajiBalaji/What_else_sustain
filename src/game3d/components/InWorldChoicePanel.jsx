@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Html } from '@react-three/drei'
 import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
 import { sound } from '../../game/soundManager'
+import { ManagedOverlay } from '../ui/OverlayManager'
 
 const CHOICE_OPTIONS = [
   {
@@ -97,7 +97,7 @@ export default function InWorldChoicePanel() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const selectedId = selectedChoiceId || 'happy_seeder'
+  const selectedId = selectedChoiceId
   const setSelectedId = setSelectedChoiceId || (() => {})
 
   // Only show when harvest is completed, player is at a straw pile, and no action in progress
@@ -109,7 +109,7 @@ export default function InWorldChoicePanel() {
     activeAlternative === null &&
     !hasMadeChoice
 
-  const activeOption = CHOICE_OPTIONS.find((o) => o.id === selectedId) || CHOICE_OPTIONS[1]
+  const activeOption = selectedId ? CHOICE_OPTIONS.find((o) => o.id === selectedId) : null
 
   const handleSelectOption = (opt) => {
     sound.initAudio()
@@ -118,6 +118,7 @@ export default function InWorldChoicePanel() {
   }
 
   const handleConfirm = (opt) => {
+    if (!opt) return
     sound.initAudio()
     sound.playPop()
     setShowChoiceWheel(false)
@@ -128,7 +129,7 @@ export default function InWorldChoicePanel() {
     }
   }
 
-  // Keyboard shortcut listener: 1-5 to select, Enter or E to confirm
+  // Keyboard shortcut listener: 1-5 to select, Enter to confirm (E opens panel only, never confirms)
   useEffect(() => {
     if (!isVisible) return
 
@@ -138,11 +139,14 @@ export default function InWorldChoicePanel() {
       if (e.key >= '1' && e.key <= '5') {
         const idx = parseInt(e.key, 10) - 1
         if (CHOICE_OPTIONS[idx]) {
+          sound.initAudio()
           sound.playTap()
           setSelectedId(CHOICE_OPTIONS[idx].id)
         }
-      } else if (e.key === 'Enter' || e.key === 'e' || e.key === 'E') {
-        if (activeOption) handleConfirm(activeOption)
+      } else if (e.key === 'Enter') {
+        if (activeOption) {
+          handleConfirm(activeOption)
+        }
       }
     }
 
@@ -157,25 +161,23 @@ export default function InWorldChoicePanel() {
   const panelAnchor = isMobile ? [0, 2.3, 0] : [0.75, 2.05, 0]
 
   return (
-    <group position={panelAnchor}>
-      <Html
-        center
-        zIndexRange={[100, 0]}
+    <ManagedOverlay
+      id="straw_decision_panel"
+      priority="choice_panel"
+      position={panelAnchor}
+      zIndexRange={[100, 0]}
+      center
+    >
+      <div
         style={{
-          pointerEvents: 'auto',
-          userSelect: 'none'
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          width: 'min(312px, 86vw)',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          animation: 'fadeInUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)'
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            width: 'min(312px, 86vw)',
-            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            animation: 'fadeInUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)'
-          }}
-        >
           {/* 1. In-World Choice Title Badge */}
           <div
             style={{
@@ -263,8 +265,32 @@ export default function InWorldChoicePanel() {
             })}
           </div>
 
-          {/* 3. Floating Preview Card for Selected Action */}
-          {activeOption && (
+          {/* 3. Floating Preview Card or Prompt */}
+          {!activeOption ? (
+            <div
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                borderRadius: '16px',
+                padding: '12px 14px',
+                border: '2px dashed #81C784',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.22)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                textAlign: 'center',
+                backdropFilter: 'blur(8px)',
+                animation: 'fadeIn 0.2s ease'
+              }}
+            >
+              <div style={{ fontSize: '0.86rem', fontWeight: 900, color: '#16382B' }}>
+                Select an option above (or press 1–5)
+              </div>
+              <div style={{ fontSize: '0.74rem', color: '#616161', fontWeight: 600 }}>
+                Tap an action to preview costs, effort, and environmental impact before confirming.
+              </div>
+            </div>
+          ) : (
             <div
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.98)',
@@ -333,6 +359,7 @@ export default function InWorldChoicePanel() {
               {/* Primary Action Button (Min Height 48px for WCAG Touch Targets) */}
               <button
                 type="button"
+                data-testid="confirm-choice-button"
                 onClick={() => handleConfirm(activeOption)}
                 style={{
                   width: '100%',
@@ -352,12 +379,11 @@ export default function InWorldChoicePanel() {
                   transition: 'transform 0.1s ease'
                 }}
               >
-                <span>{activeOption.isBurn ? '🔥 Confirm Burning' : `🌱 Choose ${activeOption.label}`}</span>
+                <span>{activeOption.isBurn ? '🔥 Confirm Burning' : `🌱 Confirm: ${activeOption.label}`}</span>
               </button>
             </div>
           )}
         </div>
-      </Html>
-    </group>
+    </ManagedOverlay>
   )
 }

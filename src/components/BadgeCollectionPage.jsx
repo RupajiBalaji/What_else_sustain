@@ -54,7 +54,7 @@ export default function BadgeCollectionPage({ onBack, onOpenScorecard }) {
   const unlockedCount = allBadges.filter((b) => badges.includes(b.id)).length
 
   return (
-    <div className="badge-collection-container" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div data-testid="badge-collection-screen" className="badge-collection-container" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button

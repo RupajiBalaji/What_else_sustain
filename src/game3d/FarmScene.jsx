@@ -33,12 +33,13 @@ import InWorldStatusProps from './components/InWorldStatusProps'
 import CinematicCamera from './components/CinematicCamera'
 import PerformanceGovernor from './perf/PerformanceGovernor'
 import MemoryStatsOverlay, { MemoryStatsSampler } from './perf/MemoryStatsOverlay'
+import { OverlayManagerProvider } from './ui/OverlayManager'
 
 function SceneContent() {
   const { activeAlternative } = useGame3D()
 
   return (
-    <>
+    <OverlayManagerProvider>
       <PerformanceGovernor />
       <MemoryStatsSampler />
       <CinematicCamera />
@@ -69,7 +70,7 @@ function SceneContent() {
       <FarmerPlayer initialPosition={[-1.2, 0, 10.0]} />
       <FireSmokeSystem />
       <FpsMonitor />
-    </>
+    </OverlayManagerProvider>
   )
 }
 
@@ -118,7 +119,7 @@ function FarmSceneInner({ onSwitchToLite }) {
           antialias: qualityConfig.tier !== 'low',
           powerPreference: 'high-performance',
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.08
+          toneMappingExposure: 0.94
         }}
         style={{ width: '100%', height: '100%', display: 'block' }}
       >
@@ -128,6 +129,7 @@ function FarmSceneInner({ onSwitchToLite }) {
       {/* Flyover Skip Banner */}
       {hasStarted && isFlyoverActive && (
         <div
+          data-testid="skip-flyover-button"
           onClick={skipFlyover}
           style={{
             position: 'absolute',
@@ -154,27 +156,15 @@ function FarmSceneInner({ onSwitchToLite }) {
         </div>
       )}
 
-      {/* Subtle Mobile-Friendly Golden Hour Color Grade & Vignette Overlay */}
+      {/* Clean Subtle Cinematic Vignette (Zero yellow wash) */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background: 'radial-gradient(circle at center, rgba(255, 236, 179, 0.03) 42%, rgba(62, 39, 35, 0.26) 100%)',
-          mixBlendMode: 'multiply',
+          background: 'radial-gradient(circle at center, transparent 58%, rgba(15, 25, 20, 0.16) 100%)',
           zIndex: 10
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          background: 'linear-gradient(180deg, rgba(230, 81, 0, 0.04) 0%, rgba(255, 179, 0, 0.02) 50%, rgba(0, 0, 0, 0.08) 100%)',
-          mixBlendMode: 'soft-light',
-          zIndex: 11
         }}
       />
 

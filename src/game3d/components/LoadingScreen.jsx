@@ -206,10 +206,8 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
 
         {/* Start Button (Unlocks audio & begins game) */}
         {isReady ? (
-          <motion.button
-            initial={{ scale: 0.95 }}
-            animate={{ scale: [1, 1.04, 1] }}
-            transition={{ repeat: Infinity, duration: 1.3 }}
+          <button
+            data-testid="start-3d-button"
             type="button"
             onClick={handleStart}
             style={{
@@ -231,7 +229,7 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
           >
             <span>🌾</span>
             <span>{t('game3d.startBtn')}</span>
-          </motion.button>
+          </button>
         ) : (
           <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#2E7D32' }}>
             <span>🌱 Loading {actualProgress}%</span>

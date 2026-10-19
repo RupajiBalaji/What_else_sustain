@@ -12,8 +12,8 @@ function GoldenHourSkyDome({ burnProgress = 0, sunPosition, isPaused = false }) 
   const skyShader = useMemo(() => {
     return {
       uniforms: {
-        topColor: { value: new THREE.Color('#D97724') }, // Deep warm evening sky
-        bottomColor: { value: new THREE.Color('#FCE5B5') }, // Soft golden haze at horizon
+        topColor: { value: new THREE.Color('#3572A5') }, // Crisp azure-blue evening sky (reduces yellow wash)
+        bottomColor: { value: new THREE.Color('#FFE8C5') }, // Soft warm golden horizon haze
         sunColor: { value: new THREE.Color('#FFF8E1') }, // Radiant sun disc
         sunHaloColor: { value: new THREE.Color('#FFB300') }, // Golden atmospheric halo
         sunDirection: { value: new THREE.Vector3(0.5, 0.4, 0.5).normalize() },
@@ -57,8 +57,8 @@ function GoldenHourSkyDome({ burnProgress = 0, sunPosition, isPaused = false }) 
 
   useFrame(() => {
     if (!skyShader.uniforms) return
-    const normalTop = new THREE.Color('#D97724')
-    const normalBottom = new THREE.Color('#FCE5B5')
+    const normalTop = new THREE.Color('#3572A5')
+    const normalBottom = new THREE.Color('#FFE8C5')
     const smogTop = new THREE.Color('#4E342E')
     const smogBottom = new THREE.Color('#796D61')
 
@@ -265,25 +265,25 @@ export default function WorldEnvironment() {
       {/* 4. Atmospheric Fog (dynamically colored & tuned) */}
       <fog attach="fog" args={[currentFogColor, fogNear, fogFar]} />
 
-      {/* 5. Hemisphere Fill Light (Cool blue/purple sky fill vs warm earthy ground bounce) */}
+      {/* 5. Hemisphere Fill Light (Cool blue sky fill for blue-ish shadows vs warm earth ground bounce) */}
       <hemisphereLight
-        skyColor={effectiveProgress > 0.4 ? '#8D6E63' : '#FFE0B2'}
+        skyColor={effectiveProgress > 0.4 ? '#8D6E63' : '#7CB9E8'}
         groundColor={effectiveProgress > 0.4 ? '#3E2723' : '#4E342E'}
-        intensity={THREE.MathUtils.lerp(0.68, 0.42, effectiveProgress)}
+        intensity={THREE.MathUtils.lerp(0.66, 0.42, effectiveProgress)}
       />
 
-      {/* 6. Subtle Ambient Fill Light */}
+      {/* 6. Subtle Ambient Fill Light (Soft cool fill, eliminating muddy yellow wash) */}
       <ambientLight
-        intensity={THREE.MathUtils.lerp(0.65, 0.4, effectiveProgress)}
-        color={effectiveProgress > 0.4 ? '#EFEBE9' : '#FFF3E0'}
+        intensity={THREE.MathUtils.lerp(0.48, 0.35, effectiveProgress)}
+        color={effectiveProgress > 0.4 ? '#EFEBE9' : '#E3F2FD'}
       />
 
       {/* 7. Golden-Hour Directional Sun with Soft PCF Shadows */}
       <directionalLight
         ref={sunLightRef}
         position={[42, 38, 28]}
-        intensity={1.35}
-        color="#FFF4CC"
+        intensity={1.25}
+        color="#FFF1D0"
         castShadow={qualityConfig.shadows}
         shadow-mapSize-width={shadowMapSize}
         shadow-mapSize-height={shadowMapSize}

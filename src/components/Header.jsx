@@ -2,7 +2,7 @@ import React from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { useGame } from '../context/GameContext'
 
-export default function Header({ onOpenBadges, onOpenScorecard, onOpenAdvisor }) {
+export default function Header({ onOpenStoryMode, onOpenBadges, onOpenScorecard, onOpenAdvisor }) {
   const { lang, toggleLanguage, t } = useLanguage()
   const { points, badges, currentLevelKey } = useGame()
 
@@ -43,6 +43,7 @@ export default function Header({ onOpenBadges, onOpenScorecard, onOpenAdvisor })
 
         {/* Badges Pill */}
         <div
+          data-testid="header-badges-btn"
           className="stat-pill badge-clickable-pill"
           style={{ cursor: 'pointer', background: 'rgba(183, 227, 106, 0.25)', padding: '4px 8px', borderRadius: 'var(--radius-full)' }}
           onClick={onOpenBadges}
@@ -59,9 +60,10 @@ export default function Header({ onOpenBadges, onOpenScorecard, onOpenAdvisor })
 
       {/* Quick Access Action Bar for Story Mode, AI Advisor and Scorecard */}
       <div style={{ display: 'flex', gap: '6px', paddingTop: '2px' }}>
-        {onOpenStoryMode && (
+        {typeof onOpenStoryMode === 'function' && (
           <button
             type="button"
+            data-testid="header-story-mode-btn"
             onClick={onOpenStoryMode}
             style={{
               flex: 1.2,
@@ -87,6 +89,7 @@ export default function Header({ onOpenBadges, onOpenScorecard, onOpenAdvisor })
 
         <button
           type="button"
+          data-testid="header-advisor-btn"
           onClick={onOpenAdvisor}
           style={{
             flex: 1,
@@ -110,6 +113,7 @@ export default function Header({ onOpenBadges, onOpenScorecard, onOpenAdvisor })
 
         <button
           type="button"
+          data-testid="header-scorecard-btn"
           onClick={onOpenScorecard}
           style={{
             flex: 1,

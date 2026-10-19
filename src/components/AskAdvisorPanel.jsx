@@ -143,6 +143,7 @@ export default function AskAdvisorPanel({ onClose }) {
       onClick={onClose}
     >
       <div
+        data-testid="ai-advisor-panel"
         style={{
           background: 'var(--color-card-bg)',
           width: '100%',

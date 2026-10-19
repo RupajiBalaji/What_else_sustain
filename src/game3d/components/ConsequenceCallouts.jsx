@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Html } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
+import { ManagedOverlay } from '../ui/OverlayManager'
 
 /**
  * Individual World-Space Callout Card with an SVG connecting pointer line
  * pointing directly to the 3D world feature it describes.
  */
 function SingleCallout({
+  id,
   position,
   title,
   detail,
@@ -15,91 +16,96 @@ function SingleCallout({
   color,
   bgColor,
   borderColor,
-  distanceFactor = 22,
   lineDirection = 'top-right'
 }) {
   const isRight = lineDirection === 'top-right'
 
   return (
-    <group position={position}>
-      <Html center={false} distanceFactor={distanceFactor} zIndexRange={[60, 0]}>
-        <div
+    <ManagedOverlay
+      id={id || `callout_${title}`}
+      priority="consequence_callout"
+      position={position}
+      icon={icon}
+      collapsedBadge={title}
+      center={false}
+      zIndexRange={[60, 0]}
+    >
+      <div
+        style={{
+          position: 'relative',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          userSelect: 'none',
+          pointerEvents: 'none',
+          animation: 'fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
+        }}
+      >
+        {/* Thin Vector Pointer Line from (0,0) anchor to Card */}
+        <svg
+          width="80"
+          height="60"
           style={{
-            position: 'relative',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            userSelect: 'none',
+            position: 'absolute',
+            top: '-45px',
+            left: isRight ? '0px' : '-80px',
             pointerEvents: 'none',
-            animation: 'fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
+            overflow: 'visible'
           }}
         >
-          {/* Thin Vector Pointer Line from (0,0) anchor to Card */}
-          <svg
-            width="80"
-            height="60"
-            style={{
-              position: 'absolute',
-              top: '-45px',
-              left: isRight ? '0px' : '-80px',
-              pointerEvents: 'none',
-              overflow: 'visible'
-            }}
-          >
-            {/* Target anchor beacon ring */}
-            <circle cx={isRight ? '0' : '80'} cy="45" r="4.5" fill={color} />
-            <circle cx={isRight ? '0' : '80'} cy="45" r="8" fill="none" stroke={color} strokeWidth="1.5" opacity="0.6" />
+          {/* Target anchor beacon ring */}
+          <circle cx={isRight ? '0' : '80'} cy="45" r="4.5" fill={color} />
+          <circle cx={isRight ? '0' : '80'} cy="45" r="8" fill="none" stroke={color} strokeWidth="1.5" opacity="0.6" />
 
-            {/* Connecting thin diagonal line */}
-            <line
-              x1={isRight ? '0' : '80'}
-              y1="45"
-              x2={isRight ? '45' : '35'}
-              y2="15"
-              stroke={color}
-              strokeWidth="2"
-              strokeDasharray="4,3"
-            />
-            <circle cx={isRight ? '45' : '35'} cy="15" r="3" fill={color} />
-          </svg>
+          {/* Connecting thin diagonal line */}
+          <line
+            x1={isRight ? '0' : '80'}
+            y1="45"
+            x2={isRight ? '45' : '35'}
+            y2="15"
+            stroke={color}
+            strokeWidth="2"
+            strokeDasharray="4,3"
+          />
+          <circle cx={isRight ? '45' : '35'} cy="15" r="3" fill={color} />
+        </svg>
 
-          {/* Callout Label Card */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '-70px',
-              left: isRight ? '45px' : '-225px',
-              width: '210px',
-              backgroundColor: bgColor,
-              border: `2px solid ${borderColor}`,
-              borderRadius: '14px',
-              padding: '8px 12px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-              backdropFilter: 'blur(6px)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '3px'
-            }}
-          >
-            {/* Header / Title */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', fontWeight: 900, color, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span>{icon}</span>
-                <span>{title}</span>
-              </span>
-            </div>
+        {/* Callout Label Card */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '-70px',
+            left: isRight ? '45px' : '-225px',
+            width: '210px',
+            backgroundColor: bgColor,
+            border: `2px solid ${borderColor}`,
+            borderRadius: '14px',
+            padding: '8px 12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '3px'
+          }}
+        >
+          {/* Header / Title */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '12px', fontWeight: 900, color, display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span>{icon}</span>
+              <span>{title}</span>
+            </span>
+          </div>
 
-            {/* Description */}
-            <div style={{ fontSize: '10px', color: '#37474F', lineHeight: 1.3, fontWeight: 600 }}>
-              {detail}
-            </div>
+          {/* Description */}
+          <div style={{ fontSize: '10px', color: '#37474F', lineHeight: 1.3, fontWeight: 600 }}>
+            {detail}
+          </div>
 
-            {/* Verified / Model Badge */}
-            <div style={{ fontSize: '9px', fontWeight: 800, color, opacity: 0.9 }}>
-              {tag}
-            </div>
+          {/* Verified / Model Badge */}
+          <div style={{ fontSize: '9px', fontWeight: 800, color, opacity: 0.9 }}>
+            {tag}
           </div>
         </div>
-      </Html>
-    </group>
+      </div>
+    </ManagedOverlay>
   )
 }
 
@@ -108,7 +114,7 @@ function SingleCallout({
  * Each callout fades in one at a time with a 1-second gap.
  */
 export default function ConsequenceCallouts({ onContinueToModal }) {
-  const { burnState, activeAlternative, smokeData, rupeeCount } = useGame3D()
+  const { burnState, activeAlternative, smokeData, isAnyModalOpen, showSeasonReport } = useGame3D()
 
   const isBurnt = burnState === 'consequence'
   const isAlternativeActive = Boolean(activeAlternative)
@@ -117,7 +123,7 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
-    if (!isBurnt && !isAlternativeActive) {
+    if (isAnyModalOpen || showSeasonReport || (!isBurnt && !isAlternativeActive)) {
       setActiveStep(0)
       return
     }
@@ -134,9 +140,9 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
       clearTimeout(timer2)
       clearTimeout(timer3)
     }
-  }, [isBurnt, isAlternativeActive])
+  }, [isBurnt, isAlternativeActive, isAnyModalOpen, showSeasonReport])
 
-  if (!isBurnt && !isAlternativeActive) return <group />
+  if (isAnyModalOpen || showSeasonReport || (!isBurnt && !isAlternativeActive)) return <group />
 
   // Positions of the 4 features in 3D world space
   const soilPos = [-4.0, 0.4, 8.2]
@@ -150,6 +156,7 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
       {/* 1. SOIL CALLOUT (Step >= 1) */}
       {activeStep >= 1 && (
         <SingleCallout
+          id="consequence_soil"
           position={soilPos}
           icon="🪱"
           title={isBurnt ? 'Soil: Life Destroyed' : 'Soil: Microbial Surge'}
@@ -163,13 +170,13 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
           bgColor={isBurnt ? 'rgba(255, 235, 238, 0.96)' : 'rgba(232, 245, 233, 0.96)'}
           borderColor={isBurnt ? '#EF5350' : '#66BB6A'}
           lineDirection="top-right"
-          distanceFactor={18}
         />
       )}
 
       {/* 2. AIR CALLOUT (Step >= 2, 1-second gap) */}
       {activeStep >= 2 && (
         <SingleCallout
+          id="consequence_air"
           position={airSensorPos}
           icon="💨"
           title={isBurnt ? `Air: Exposure ~${smokeData?.villageExposure || 62}` : 'Air: Zero Smoke'}
@@ -183,13 +190,13 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
           bgColor={isBurnt ? 'rgba(255, 243, 224, 0.96)' : 'rgba(225, 245, 254, 0.96)'}
           borderColor={isBurnt ? '#FFA726' : '#29B6F6'}
           lineDirection="top-left"
-          distanceFactor={28}
         />
       )}
 
       {/* 3. PEOPLE CALLOUT (Step >= 3, 2-second gap) */}
       {activeStep >= 3 && (
         <SingleCallout
+          id="consequence_people"
           position={peoplePos}
           icon={isBurnt ? '😷' : '👋'}
           title={isBurnt ? 'People: Severe Coughing' : 'People: Cheerful Village'}
@@ -203,13 +210,13 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
           bgColor={isBurnt ? 'rgba(252, 228, 236, 0.96)' : 'rgba(232, 245, 233, 0.96)'}
           borderColor={isBurnt ? '#EC407A' : '#81C784'}
           lineDirection="top-right"
-          distanceFactor={28}
         />
       )}
 
       {/* 4. MONEY CALLOUT (Step >= 4, 3-second gap) */}
       {activeStep >= 4 && (
         <SingleCallout
+          id="consequence_money"
           position={moneyPos}
           icon={isBurnt ? '💸' : '💰'}
           title={isBurnt ? 'Cost: ~₹3,500 / acre hidden loss' : 'Gain: Saved fertilizer & earnings'}
@@ -223,7 +230,6 @@ export default function ConsequenceCallouts({ onContinueToModal }) {
           bgColor={isBurnt ? 'rgba(255, 235, 238, 0.96)' : 'rgba(232, 245, 233, 0.96)'}
           borderColor={isBurnt ? '#D32F2F' : '#388E3C'}
           lineDirection="top-right"
-          distanceFactor={14}
         />
       )}
     </group>

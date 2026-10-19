@@ -1,8 +1,8 @@
 import React, { useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
+import { ManagedOverlay } from '../ui/OverlayManager'
 import ModelWithFallback from '../assets/ModelLoader'
 
 const VILLAGERS_DATA = [
@@ -135,7 +135,15 @@ function SingleVillager({ data, isCoughing, isWaving, qualityConfig }) {
 
       {/* World-space Cough speech bubble */}
       {isCoughing && (
-        <Html position={[0, 2.3, 0]} distanceFactor={22} center zIndexRange={[15, 0]}>
+        <ManagedOverlay
+          id={`villager_cough_${data.id}`}
+          priority="decorative_sign"
+          position={[0, 2.3, 0]}
+          icon="😷"
+          collapsedBadge="Cough"
+          center
+          zIndexRange={[15, 0]}
+        >
           <div
             style={{
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -153,12 +161,20 @@ function SingleVillager({ data, isCoughing, isWaving, qualityConfig }) {
           >
             😷 Cough! Smog...
           </div>
-        </Html>
+        </ManagedOverlay>
       )}
 
       {/* World-space Cheerful greeting bubble */}
       {isWaving && (
-        <Html position={[0, 2.3, 0]} distanceFactor={22} center zIndexRange={[15, 0]}>
+        <ManagedOverlay
+          id={`villager_wave_${data.id}`}
+          priority="decorative_sign"
+          position={[0, 2.3, 0]}
+          icon="👋"
+          collapsedBadge="Clean Air"
+          center
+          zIndexRange={[15, 0]}
+        >
           <div
             style={{
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -176,7 +192,7 @@ function SingleVillager({ data, isCoughing, isWaving, qualityConfig }) {
           >
             👋 Clean Air! 🌾
           </div>
-        </Html>
+        </ManagedOverlay>
       )}
     </group>
   )

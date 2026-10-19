@@ -4,69 +4,87 @@ import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 
 const _cropDummy = new THREE.Object3D()
+const _colorDummy = new THREE.Color()
 
 /**
- * Creates a slender paddy/wheat crop cluster with vertex color gradient
- * (Lush green stalk base -> vibrant green mid -> golden ripe grain ear tip)
+ * Creates an instanced crop blade cluster (3 curved vertical cards fanning out)
+ * with a natural vertical color gradient: deep root/stalk green -> rich vibrant leaf green -> golden wheat/paddy ear tips.
  */
-function createCropGeometry(soilHealth = 70) {
-  const g1 = new THREE.PlaneGeometry(0.55, 1.15, 1, 3)
-  g1.translate(0, 0.57, 0)
-  const g2 = new THREE.PlaneGeometry(0.55, 1.15, 1, 3)
-  g2.rotateY(Math.PI / 2)
-  g2.translate(0, 0.57, 0)
+function createCropClusterGeometry(soilHealth = 70) {
+  // 3 vertical blade cards angled at 0, 45, and -45 degrees
+  const g1 = new THREE.PlaneGeometry(0.28, 1.35, 1, 4)
+  g1.translate(0, 0.675, 0)
 
-  const merged = new THREE.BufferGeometry()
-  const pos1 = g1.attributes.position.array
-  const pos2 = g2.attributes.position.array
-  const norm1 = g1.attributes.normal.array
-  const norm2 = g2.attributes.normal.array
+  const g2 = new THREE.PlaneGeometry(0.26, 1.3, 1, 4)
+  g2.rotateY(Math.PI / 4)
+  g2.translate(0, 0.65, 0)
 
-  const positions = new Float32Array(pos1.length + pos2.length)
-  positions.set(pos1)
-  positions.set(pos2, pos1.length)
+  const g3 = new THREE.PlaneGeometry(0.26, 1.3, 1, 4)
+  g3.rotateY(-Math.PI / 4)
+  g3.translate(0, 0.65, 0)
 
-  const normals = new Float32Array(norm1.length + norm2.length)
-  normals.set(norm1)
-  normals.set(norm2, norm1.length)
+  const p1 = g1.attributes.position.array
+  const p2 = g2.attributes.position.array
+  const p3 = g3.attributes.position.array
+  const n1 = g1.attributes.normal.array
+  const n2 = g2.attributes.normal.array
+  const n3 = g3.attributes.normal.array
+
+  const totalVerts = (p1.length + p2.length + p3.length) / 3
+  const positions = new Float32Array(totalVerts * 3)
+  const normals = new Float32Array(totalVerts * 3)
+  const colors = new Float32Array(totalVerts * 3)
+
+  positions.set(p1)
+  positions.set(p2, p1.length)
+  positions.set(p3, p1.length + p2.length)
+
+  normals.set(n1)
+  normals.set(n2, n1.length)
+  normals.set(n3, n1.length + n2.length)
 
   const indices = []
   const idx1 = g1.index.array
   const idx2 = g2.index.array
+  const idx3 = g3.index.array
   for (let i = 0; i < idx1.length; i++) indices.push(idx1[i])
-  const offset = g1.attributes.position.count
-  for (let i = 0; i < idx2.length; i++) indices.push(idx2[i] + offset)
+  let off = g1.attributes.position.count
+  for (let i = 0; i < idx2.length; i++) indices.push(idx2[i] + off)
+  off += g2.attributes.position.count
+  for (let i = 0; i < idx3.length; i++) indices.push(idx3[i] + off)
 
-  // Vertex colors modulated by soilHealth:
-  // Low health -> pale/yellow chlorosis; High health -> rich deep emerald green
-  const healthT = Math.max(0, Math.min(1, soilHealth / 100))
-  const vertexCount = (pos1.length + pos2.length) / 3
-  const colors = new Float32Array(vertexCount * 3)
+  // Color modulation by soil health
+  const healthT = Math.max(0.2, Math.min(1.0, soilHealth / 100))
+  const cBase = new THREE.Color().lerpColors(new THREE.Color('#4E342E'), new THREE.Color('#1B5E20'), healthT)
+  const cMid = new THREE.Color().lerpColors(new THREE.Color('#558B2F'), new THREE.Color('#388E3C'), healthT)
+  const cTip = new THREE.Color().lerpColors(new THREE.Color('#FFF59D'), new THREE.Color('#FBC02D'), healthT)
+  const finalCol = new THREE.Color()
 
-  const cBase = new THREE.Color().lerpColors(new THREE.Color('#6D4C41'), new THREE.Color('#2E7D32'), Math.max(0.25, healthT))
-  const cMid = new THREE.Color().lerpColors(new THREE.Color('#C0CA33'), new THREE.Color('#43A047'), healthT)
-  const cTip = new THREE.Color().lerpColors(new THREE.Color('#FFF176'), new THREE.Color('#F9A825'), healthT)
-  const finalColor = new THREE.Color()
-
-  for (let i = 0; i < vertexCount; i++) {
+  for (let i = 0; i < totalVerts; i++) {
     const y = positions[i * 3 + 1]
-    const t = Math.max(0, Math.min(1, y / 1.15))
+    const t = Math.max(0, Math.min(1.0, y / 1.35))
 
-    if (t < 0.5) {
-      finalColor.lerpColors(cBase, cMid, t * 2)
+    if (t < 0.45) {
+      finalCol.lerpColors(cBase, cMid, t / 0.45)
     } else {
-      finalColor.lerpColors(cMid, cTip, (t - 0.5) * 2)
+      finalCol.lerpColors(cMid, cTip, (t - 0.45) / 0.55)
     }
 
-    colors[i * 3] = finalColor.r
-    colors[i * 3 + 1] = finalColor.g
-    colors[i * 3 + 2] = finalColor.b
+    colors[i * 3] = finalCol.r
+    colors[i * 3 + 1] = finalCol.g
+    colors[i * 3 + 2] = finalCol.b
   }
 
+  const merged = new THREE.BufferGeometry()
   merged.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   merged.setAttribute('normal', new THREE.BufferAttribute(normals, 3))
   merged.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   merged.setIndex(indices)
+
+  g1.dispose()
+  g2.dispose()
+  g3.dispose()
+
   return merged
 }
 
@@ -78,60 +96,73 @@ export default function StandingCropRows() {
 
   const soilHealth = persistentState?.soilHealth ?? 70
 
-  // Rows and cols covering the main field based on quality tier
-  const rows = qualityConfig.cropRows || 14
-  const cols = qualityConfig.cropCols || 14
+  // Distinct row & column counts with clearly visible row spacing
+  const rows = qualityConfig.tier === 'high' ? 22 : qualityConfig.tier === 'medium' ? 16 : 10
+  const cols = qualityConfig.tier === 'high' ? 26 : qualityConfig.tier === 'medium' ? 18 : 12
   const count = rows * cols
 
-  const geometry = useMemo(() => createCropGeometry(soilHealth), [soilHealth])
+  const geometry = useMemo(() => createCropClusterGeometry(soilHealth), [soilHealth])
 
-  // Crop instance position data modulated by soil health (sparser & stunted when low)
+  // Agricultural Furrows layout with visible 1.1m row spacing
   const cropData = useMemo(() => {
     const items = []
-    const xStart = -27
-    const zStart = 7
-    const xStep = 28 / rows
-    const zStep = 26 / cols
-    const heightMultiplier = 0.72 + (soilHealth / 100) * 0.42
+    const xStart = -28.0
+    const zStart = 6.0
+    const xRange = 26.0
+    const zRange = 28.0
+    const xStep = xRange / rows
+    const zStep = zRange / cols
+    const heightMult = 0.75 + (soilHealth / 100) * 0.35
+
+    // 3 distinct green shades for varied natural field canopy
+    const greenShades = [
+      new THREE.Color('#FFFFFF'), // Standard natural
+      new THREE.Color('#E8F5E9'), // Slightly softer/fresher
+      new THREE.Color('#FFFDE7')  // Golden-tinted mature
+    ]
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const x = xStart + r * xStep + (Math.sin(r + c * 2) * 0.18)
-        const z = zStart + c * zStep + (Math.cos(r * 2 + c) * 0.18)
-        const isDepleted = soilHealth < 48 && ((r * 3 + c * 7) % 5 === 0)
-        const baseScale = 0.9 + (Math.sin(r * 3 + c) * 0.15)
-        const scale = baseScale * heightMultiplier * (isDepleted ? 0.35 : 1.0)
-        const rotY = (r * 0.4 + c * 0.7)
+        // Furrow row line with small natural organic jitter along the furrow
+        const x = xStart + r * xStep + (Math.sin(r * 4 + c) * 0.08)
+        const z = zStart + c * zStep + (Math.cos(r + c * 3) * 0.12)
+        const rotY = (r * 0.35 + c * 0.6)
+        const baseScale = 0.95 + (Math.sin(r * 2 + c * 3) * 0.15)
+        const scale = baseScale * heightMult
         const cutOrder = (r / rows) * 0.6 + (c / cols) * 0.4
+        const shadeIndex = (r + c * 2) % 3
 
-        items.push({ x, z, scale, rotY, cutOrder })
+        items.push({ x, z, scale, rotY, cutOrder, shade: greenShades[shadeIndex] })
       }
     }
     return items
   }, [rows, cols, soilHealth])
 
-  // Initial layout for instanced mesh
+  // Instance transforms and tinting
   useLayoutEffect(() => {
     if (!meshRef.current) return
-    const dummy = new THREE.Object3D()
 
     cropData.forEach((item, i) => {
-      dummy.position.set(item.x, 0, item.z)
-      dummy.rotation.set(0, item.rotY, 0)
-      dummy.scale.set(item.scale, item.scale, item.scale)
-      dummy.updateMatrix()
-      meshRef.current.setMatrixAt(i, dummy.matrix)
+      _cropDummy.position.set(item.x, 0, item.z)
+      _cropDummy.rotation.set(0, item.rotY, 0)
+      _cropDummy.scale.set(item.scale, item.scale, item.scale)
+      _cropDummy.updateMatrix()
+      meshRef.current.setMatrixAt(i, _cropDummy.matrix)
+      meshRef.current.setColorAt(i, item.shade)
     })
 
     meshRef.current.instanceMatrix.needsUpdate = true
+    if (meshRef.current.instanceColor) {
+      meshRef.current.instanceColor.needsUpdate = true
+    }
   }, [cropData, count])
 
-  // Custom Wind-Driven Vertex Shader with real wind speed/direction
+  // Wind sway vertex shader
   const material = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.82,
-      metalness: 0.05,
+      roughness: 0.85,
+      metalness: 0.02,
       side: THREE.DoubleSide
     })
 
@@ -150,13 +181,13 @@ export default function StandingCropRows() {
         '#include <begin_vertex>',
         `
         #include <begin_vertex>
-        // GPU vertex wave driven by real wind direction & speed
+        // Natural wind sway flexing from base to tip
         vec4 wPos = modelMatrix * instanceMatrix * vec4(position, 1.0);
         float wavePhase = (wPos.x * uWindDir.x + wPos.z * uWindDir.y) * 0.45;
-        float wave = sin(wavePhase - uWindTime * (uWindSpeed * 0.8 + 1.2));
-        float hFactor = max(0.0, position.y);
-        transformed.x += uWindDir.x * wave * hFactor * 0.22;
-        transformed.z += uWindDir.y * wave * hFactor * 0.22;
+        float wave = sin(wavePhase - uWindTime * (uWindSpeed * 0.9 + 1.2));
+        float hFactor = pow(max(0.0, position.y / 1.35), 1.6);
+        transformed.x += uWindDir.x * wave * hFactor * 0.28;
+        transformed.z += uWindDir.y * wave * hFactor * 0.28;
         `
       )
       shaderRef.current = shader
@@ -165,11 +196,10 @@ export default function StandingCropRows() {
     return mat
   }, [])
 
-  // Animate wind shader uniforms and handle dynamic harvesting cut
+  // Animate wind shader and combine harvester cut
   useFrame(({ clock }) => {
     if (harvestState === 'harvested') return
 
-    // Update GPU wind shader uniforms
     if (shaderRef.current) {
       const t = clock.getElapsedTime()
       shaderRef.current.uniforms.uWindTime.value = t
@@ -178,7 +208,7 @@ export default function StandingCropRows() {
       shaderRef.current.uniforms.uWindSpeed.value = windState?.speedMs ?? 3.8
     }
 
-    // Harvester cut progression
+    // Dynamic cut progression during harvesting
     if (harvestState === 'harvesting' && meshRef.current) {
       const prog = harvestProgress || 0
 
@@ -202,7 +232,6 @@ export default function StandingCropRows() {
     }
   })
 
-  // Dispose buffer geometry and material when harvesting finishes or scene resets
   useEffect(() => {
     return () => {
       geometry.dispose()
@@ -210,7 +239,6 @@ export default function StandingCropRows() {
     }
   }, [geometry, material])
 
-  // Completely unmount once harvest is finalized to save 100% GPU
   if (harvestState === 'harvested') {
     return null
   }

@@ -10,13 +10,13 @@ export default function SmokeMeterHUD() {
   if (!isVisible) return null
 
   // Growth over the 20s burn sequence
-  const currentRatio = burnState === 'consequence' ? 1.0 : Math.min(1.0, burnProgress * 1.25)
+  const currentRatio = burnState === 'consequence' ? 1.0 : Math.min(1.0, (burnProgress || 0) * 1.25)
 
-  const playerTarget = smokeData?.playerExposure ?? 84
-  const villageTarget = smokeData?.villageExposure ?? 62
+  const playerTarget = Number(smokeData?.playerExposure) || 84
+  const villageTarget = Number(smokeData?.villageExposure) || 62
 
-  const currentPlayerVal = Math.round(playerTarget * currentRatio)
-  const currentVillageVal = Math.round(villageTarget * currentRatio)
+  const currentPlayerVal = Math.round(playerTarget * (Number.isFinite(currentRatio) ? currentRatio : 1.0))
+  const currentVillageVal = Math.round(villageTarget * (Number.isFinite(currentRatio) ? currentRatio : 1.0))
 
   return (
     <div

@@ -91,12 +91,12 @@ export default function CinematicCamera({ playerPosition, playerYaw = 0, isAtPil
     // 2. BURN TORCH PUSH-IN BEAT
     if (cinematicMode === 'burn_focus') {
       const targetPile = activePile || interactionTarget || { x: pPos.x, z: pPos.z + 2.5 }
-      const focusCamX = targetPile.x + 1.4
-      const focusCamY = 1.6
-      const focusCamZ = targetPile.z - 1.8
+      const focusCamX = targetPile.x + 2.4
+      const focusCamY = 2.4
+      const focusCamZ = targetPile.z - 4.2
 
-      camera.position.lerp(new THREE.Vector3(focusCamX, focusCamY, focusCamZ), 0.14)
-      camera.lookAt(targetPile.x, 0.6, targetPile.z)
+      camera.position.lerp(new THREE.Vector3(focusCamX, focusCamY, focusCamZ), 0.12)
+      camera.lookAt(targetPile.x, 1.2, targetPile.z + 1.2)
       return
     }
 

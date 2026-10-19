@@ -6,6 +6,7 @@ import { FARMHOUSE_COLLIDER } from './Farmhouse'
 import { TRACTOR_COLLIDER } from './Tractor'
 import { VILLAGE_COLLIDERS } from './VillageHousesInstanced'
 import { STRAW_PILES_DATA } from './StrawPiles'
+import { TREE_POSITIONS } from './TreesInstanced'
 import { useModelAvailability } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
 import InWorldChoicePanel from './InWorldChoicePanel'
@@ -208,6 +209,16 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         testPos.z >= v.minZ &&
         testPos.z <= v.maxZ
       ) {
+        return true
+      }
+    }
+
+    // 6. Straw pile physical base core (radius 1.25m, leaving 3m clear walking perimeter)
+    for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
+      const p = STRAW_PILES_DATA[i]
+      const dx = testPos.x - p.x
+      const dz = testPos.z - p.z
+      if (dx * dx + dz * dz < 1.35 * 1.35) {
         return true
       }
     }
@@ -522,29 +533,45 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     // 3. 3rd Person Camera Smooth Follow with Bob & Collision Avoidance
     if (cinematicMode && cinematicMode !== 'normal') return
 
-    const camDistance = isAtPile ? 3.4 : 5.8
-    const camHeight = isAtPile ? 2.15 : 3.2
-    const shoulderOffset = isAtPile ? 0.72 : 0
-
-    const behindX = -Math.sin(camYawRef.current) * camDistance
-    const behindZ = -Math.cos(camYawRef.current) * camDistance
-    const sideX = Math.cos(camYawRef.current) * shoulderOffset
-    const sideZ = -Math.sin(camYawRef.current) * shoulderOffset
-
     // Footstep camera bob (disabled under reduced motion)
     const camBob = (!reducedMotion && isMoving)
       ? Math.sin(walkTimeRef.current * 1.8) * 0.06 * (currentSpeed / 5.5)
       : 0
 
-    let targetCamX = posRef.current.x + behindX + sideX
-    let targetCamY = posRef.current.y + camHeight + camBob
-    let targetCamZ = posRef.current.z + behindZ + sideZ
+    let targetCamX = 0
+    let targetCamY = 0
+    let targetCamZ = 0
+    let targetLookX = 0
+    let targetLookY = 0
+    let targetLookZ = 0
 
-    const targetLookX = isAtPile ? posRef.current.x + sideX * 0.25 : posRef.current.x
-    const targetLookY = isAtPile ? posRef.current.y + 1.25 + camBob : posRef.current.y + 1.4 + camBob
-    const targetLookZ = isAtPile ? posRef.current.z + sideZ * 0.25 : posRef.current.z
+    if (isAtPile && nearestPile) {
+      // Decision Point Framing: Camera placed behind farmer's right shoulder, looking past
+      // the farmer and the straw mound towards the northern village in the background.
+      // Farmer is never inside or behind the pile.
+      targetCamX = posRef.current.x + 1.85
+      targetCamY = posRef.current.y + 2.2 + camBob
+      targetCamZ = posRef.current.z - 3.8
 
-    // Camera Collision Avoidance: prevent clipping inside Farmhouse, Tractor, or Village houses
+      targetLookX = posRef.current.x * 0.4 + nearestPile.x * 0.6
+      targetLookY = posRef.current.y + 1.35 + camBob
+      targetLookZ = Math.max(posRef.current.z + 4.2, nearestPile.z + 2.8)
+    } else {
+      const camDistance = 5.8
+      const camHeight = 3.2
+      const behindX = -Math.sin(camYawRef.current) * camDistance
+      const behindZ = -Math.cos(camYawRef.current) * camDistance
+
+      targetCamX = posRef.current.x + behindX
+      targetCamY = posRef.current.y + camHeight + camBob
+      targetCamZ = posRef.current.z + behindZ
+
+      targetLookX = posRef.current.x
+      targetLookY = posRef.current.y + 1.4 + camBob
+      targetLookZ = posRef.current.z
+    }
+
+    // Camera Collision Avoidance against Farmhouse, Tractor, and Village houses
     const colliders = [
       FARMHOUSE_COLLIDER,
       TRACTOR_COLLIDER,
@@ -559,11 +586,39 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         targetCamZ >= col.minZ - camMargin &&
         targetCamZ <= col.maxZ + camMargin
       ) {
-        // Pull camera 55% closer towards look target to clear exterior wall
         targetCamX = THREE.MathUtils.lerp(targetLookX, targetCamX, 0.45)
         targetCamZ = THREE.MathUtils.lerp(targetLookZ, targetCamZ, 0.45)
         targetCamY = THREE.MathUtils.lerp(targetLookY + 0.6, targetCamY, 0.45)
         break
+      }
+    }
+
+    // Camera Collision Avoidance against Straw Piles
+    for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
+      const pile = STRAW_PILES_DATA[i]
+      const dx = targetCamX - pile.x
+      const dz = targetCamZ - pile.z
+      const distSq = dx * dx + dz * dz
+      const minCamDist = 1.85
+      if (distSq < minCamDist * minCamDist) {
+        const dist = Math.sqrt(distSq) || 1
+        targetCamX = pile.x + (dx / dist) * minCamDist
+        targetCamZ = pile.z + (dz / dist) * minCamDist
+        targetCamY = Math.max(targetCamY, 2.2)
+      }
+    }
+
+    // Camera Collision Avoidance against Trees
+    for (let i = 0; i < TREE_POSITIONS.length; i++) {
+      const tree = TREE_POSITIONS[i]
+      const dx = targetCamX - tree.x
+      const dz = targetCamZ - tree.z
+      const distSq = dx * dx + dz * dz
+      const minCamDist = 1.5
+      if (distSq < minCamDist * minCamDist) {
+        const dist = Math.sqrt(distSq) || 1
+        targetCamX = tree.x + (dx / dist) * minCamDist
+        targetCamZ = tree.z + (dz / dist) * minCamDist
       }
     }
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import * as THREE from 'three'
-import { Html } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
+import { ManagedOverlay } from '../ui/OverlayManager'
 
 /**
  * InWorldStatusProps.jsx
@@ -57,8 +57,15 @@ export default function InWorldStatusProps() {
           <meshStandardMaterial color={bannerColor} roughness={0.7} />
         </mesh>
 
-        {/* 3D In-World Text Label on Arch (Billboards toward camera) */}
-        <Html position={[0, 3.4, 0.08]} center distanceFactor={14}>
+        {/* 3D In-World Text Label on Arch */}
+        <ManagedOverlay
+          id="village_sign"
+          priority="decorative_sign"
+          position={[0, 3.4, 0.08]}
+          icon="🏡"
+          collapsedBadge="Village"
+          center
+        >
           <div
             style={{
               backgroundColor: bannerColor,
@@ -80,7 +87,7 @@ export default function InWorldStatusProps() {
               Village Health: {Math.round(villageHealth)}/100
             </div>
           </div>
-        </Html>
+        </ManagedOverlay>
       </group>
 
       {/* 2. FARM GATE REPUTATION FLAG (Entry to main farm at X=2.5, Z=5.0) */}
@@ -102,7 +109,14 @@ export default function InWorldStatusProps() {
         </mesh>
 
         {/* World Label for Reputation */}
-        <Html position={[0, 4.8, 0]} center distanceFactor={12}>
+        <ManagedOverlay
+          id="reputation_flag"
+          priority="decorative_sign"
+          position={[0, 4.8, 0]}
+          icon="👑"
+          collapsedBadge="Reputation"
+          center
+        >
           <div
             style={{
               backgroundColor: 'rgba(22, 56, 43, 0.9)',
@@ -124,7 +138,7 @@ export default function InWorldStatusProps() {
             <span>👑</span>
             <span>Reputation: {Math.round(reputation)} ({flagTitle})</span>
           </div>
-        </Html>
+        </ManagedOverlay>
       </group>
 
       {/* 3. FARMER'S LEDGER & COIN CHEST (Beside Farmhouse at X=11.5, Z=-8.0) */}
@@ -146,7 +160,14 @@ export default function InWorldStatusProps() {
         </mesh>
 
         {/* World Tag for Farm Capital */}
-        <Html position={[0, 1.45, 0]} center distanceFactor={10}>
+        <ManagedOverlay
+          id="farm_balance_tag"
+          priority="status_prop"
+          position={[0, 1.45, 0]}
+          icon="💰"
+          collapsedBadge={`₹${money.toLocaleString('en-IN')}`}
+          center
+        >
           <div
             style={{
               backgroundColor: 'rgba(27, 94, 32, 0.92)',
@@ -168,7 +189,7 @@ export default function InWorldStatusProps() {
             <span>💰</span>
             <span>Farm Balance: ₹{money.toLocaleString('en-IN')}</span>
           </div>
-        </Html>
+        </ManagedOverlay>
       </group>
     </group>
   )

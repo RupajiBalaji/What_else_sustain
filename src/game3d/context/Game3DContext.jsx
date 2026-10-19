@@ -243,9 +243,19 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     audioManager.updateWind(windState.speedMs)
   }, [windState.speedMs])
 
+  const isNoFpsFallback = useMemo(() => {
+    try {
+      return typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('noFpsFallback')
+    } catch {
+      return false
+    }
+  }, [])
+
   const reportFps = useCallback((currentFps, frameTime) => {
     setFps(currentFps)
     setFrameTimeMs(frameTime)
+
+    if (isNoFpsFallback) return
 
     if (currentFps < 15 && currentFps > 0) {
       if (!lowFpsStartTimeRef.current) {
@@ -259,7 +269,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     } else {
       lowFpsStartTimeRef.current = null
     }
-  }, [onFallbackToLite])
+  }, [onFallbackToLite, isNoFpsFallback])
 
   const toggleQuality = useCallback(() => {
     sound.initAudio()
@@ -284,7 +294,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [showChoiceWheel, setShowChoiceWheel] = useState(false)
   const [hasMadeChoice, setHasMadeChoice] = useState(false)
   const [useInWorldChoices, setUseInWorldChoices] = useState(true)
-  const [selectedChoiceId, setSelectedChoiceId] = useState('happy_seeder')
+  const [selectedChoiceId, setSelectedChoiceId] = useState(null)
   const [nearestPileInfo, setNearestPileInfo] = useState(null)
   const [showOneSeasonModal, setShowOneSeasonModal] = useState(false)
 
@@ -518,6 +528,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setAlternativeProgress(0)
     setRupeeCount(0)
     setHasMadeChoice(false)
+    setSelectedChoiceId(null)
     setHarvestState('standing')
     setHarvestProgress(0)
     setPlayerResetTrigger((p) => p + 1)
@@ -566,6 +577,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       setRupeeCount(0)
       setPlayerResetTrigger((p) => p + 1)
       setHasMadeChoice(false)
+      setSelectedChoiceId(null)
       setHarvestState('harvested')
       setHarvestProgress(1.0)
       setSeasonPhase('decision')
@@ -593,6 +605,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setAlternativeProgress(0)
     setRupeeCount(0)
     setHasMadeChoice(false)
+    setSelectedChoiceId(null)
     setHarvestState('standing')
     setHarvestProgress(0)
     setSeasonPhase('sowing')
@@ -640,11 +653,13 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         burnMinutes: 60.0
       })
         .then((data) => {
+          const pVal = Number(data?.player_smoke_index ?? data?.playerExposure ?? data?.exposure_index ?? 84)
+          const vVal = Number(data?.village_smoke_index ?? data?.villageExposure ?? data?.exposure_index ?? 62)
           setSmokeData({
-            playerExposure: Math.round(data.player_smoke_index),
-            villageExposure: Math.round(data.village_smoke_index),
-            disclaimer: data.disclaimer || 'Modelled game estimate, not a measured air-quality reading.',
-            allParamsVerified: Boolean(data.all_params_verified)
+            playerExposure: Number.isFinite(pVal) ? Math.round(pVal) : 84,
+            villageExposure: Number.isFinite(vVal) ? Math.round(vVal) : 62,
+            disclaimer: data?.disclaimer || 'Modelled game estimate, not a measured air-quality reading.',
+            allParamsVerified: Boolean(data?.all_params_verified)
           })
         })
         .catch((err) => {
@@ -812,9 +827,21 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     }
   }, [])
 
+  const isAnyModalOpen = Boolean(
+    showSeasonReport ||
+    showPledgeModal ||
+    showAchievements ||
+    showSettings ||
+    showComparison ||
+    showOneSeasonModal ||
+    activeSeasonalEvent
+  )
+
   return (
     <Game3DContext.Provider
       value={{
+        isAnyModalOpen,
+        isNoFpsFallback,
         persistentState,
         setPersistentState,
         seasonPhase,

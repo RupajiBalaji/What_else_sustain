@@ -233,6 +233,7 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
             <button
               type="button"
+              data-testid="next-season-button"
               onClick={onNextSeason}
               style={{
                 width: '100%',

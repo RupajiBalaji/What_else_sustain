@@ -170,7 +170,7 @@ export default function FireSmokeSystem() {
   }, [])
 
   const smokeParticles = useMemo(() => {
-    return Array.from({ length: 260 }, () => ({
+    return Array.from({ length: 320 }, () => ({
       pileIndex: 0,
       x: 0,
       y: 0,
@@ -178,9 +178,9 @@ export default function FireSmokeSystem() {
       vx: 0,
       vy: 1.2,
       vz: 0,
-      scale: 0.8,
+      scale: 1.0,
       life: Math.random(),
-      maxLife: 3.5 + Math.random() * 2.5
+      maxLife: 5.2 + Math.random() * 4.2
     }))
   }, [])
 
@@ -221,6 +221,9 @@ export default function FireSmokeSystem() {
     const windSpeed = windState?.speedMs ?? 3.8
     const windX = Math.sin(windRad) * windSpeed * 0.35
     const windZ = Math.cos(windRad) * windSpeed * 0.35
+    // Smoke drift explicitly oriented toward the northern village (+Z) with wind deflection
+    const smokeDriftZ = Math.max(0.65, Math.cos(windRad)) * windSpeed * 0.45 + 0.4
+    const smokeDriftX = Math.sin(windRad) * windSpeed * 0.35
 
     const activePilesList = STRAW_PILES_DATA.filter((p) => ignitedPiles.includes(p.id))
     const hasPiles = activePilesList.length > 0
@@ -336,25 +339,25 @@ export default function FireSmokeSystem() {
             p.life = 0
             p.pileIndex = i % activePilesList.length
             const pile = activePilesList[p.pileIndex]
-            p.x = pile.x + (Math.random() - 0.5) * 1.4
-            p.y = 1.0 + Math.random() * 0.6
-            p.z = pile.z + (Math.random() - 0.5) * 1.4
-            p.vx = windX * 0.5 + (Math.random() - 0.5) * 0.3
-            p.vy = 1.2 + Math.random() * 1.0
-            p.vz = windZ * 0.5 + (Math.random() - 0.5) * 0.3
+            p.x = pile.x + (Math.random() - 0.5) * 1.6
+            p.y = 0.9 + Math.random() * 0.6
+            p.z = pile.z + (Math.random() - 0.5) * 1.6
+            p.vx = (Math.random() - 0.5) * 0.4
+            p.vy = 1.35 + Math.random() * 0.9
+            p.vz = (Math.random() - 0.5) * 0.4
           }
 
           const progress = p.life / p.maxLife
-          p.x += (p.vx + windX * progress * 1.5) * delta
-          p.y += p.vy * delta
-          p.z += (p.vz + windZ * progress * 1.5) * delta
+          p.x += (p.vx + smokeDriftX * progress * 1.8) * delta
+          p.y += (p.vy * 0.85 + Math.sin(progress * Math.PI) * 0.4) * delta
+          p.z += (p.vz + smokeDriftZ * progress * 2.5) * delta
 
-          // Expands as it rises
-          const size = 0.8 + progress * 4.2
+          // Expands naturally into thick billowing clouds drifting towards the village
+          const size = 1.2 + progress * 5.6
 
           _particleDummy.position.set(p.x, p.y, p.z)
           _particleDummy.scale.set(size, size, size)
-          _particleDummy.rotation.set(0, 0, p.life * 0.4)
+          _particleDummy.rotation.set(0, 0, p.life * 0.35)
           _particleDummy.updateMatrix()
           smokeMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
         })

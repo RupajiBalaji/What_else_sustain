@@ -102,6 +102,7 @@ export default function VillageMapHome({
           {/* AI Advisor Mascot Buddy */}
           <button
             type="button"
+            data-testid="village-advisor-btn"
             className="kid-btn kid-btn-green"
             style={{ padding: '6px 14px', fontSize: '0.92rem' }}
             onClick={() => {
@@ -449,6 +450,7 @@ export default function VillageMapHome({
           {/* Stickers & Badges Showcase Button */}
           <button
             type="button"
+            data-testid="village-badges-btn"
             className="kid-btn"
             style={{ backgroundColor: '#FFF', flex: '1 1 140px', minHeight: '56px' }}
             onClick={() => {
@@ -463,6 +465,7 @@ export default function VillageMapHome({
           {/* Final Scorecard Button */}
           <button
             type="button"
+            data-testid="village-scorecard-btn"
             className="kid-btn kid-btn-green"
             style={{ flex: '1 1 140px', minHeight: '56px' }}
             onClick={() => {

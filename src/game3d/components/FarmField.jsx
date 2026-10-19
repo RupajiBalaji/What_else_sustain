@@ -178,33 +178,33 @@ export default function FarmField() {
       if (isFieldBurnt) {
         if (isInsideField) {
           // Burnt field: deep soot, charred earth, and ash-grey patches
-          c1.set('#1A1817') // Deep soot
-          c2.set('#3D3734') // Ash grey
+          c1.set('#181615') // Deep soot
+          c2.set('#383230') // Ash grey
           finalColor.lerpColors(c1, c2, t)
         } else {
           // Surrounding grass verges remain earthy olive-green
-          c1.set('#4E6B2A')
-          c2.set('#5D7E32')
+          c1.set('#33691E')
+          c2.set('#4E7D2B')
           finalColor.lerpColors(c1, c2, t)
         }
       } else {
         if (isInsideField) {
-          // Warm golden harvest loam: rich agricultural soil & sunlit straw tones
-          c1.set('#B58434') // Warm rich loam
-          c2.set('#DBA952') // Golden sun-baked earth
+          // Rich dark tilled agricultural loam with warm earthy contrast
+          c1.set('#422B1D') // Deep fertile topsoil
+          c2.set('#6B462B') // Sun-warmed tilled earth
           finalColor.lerpColors(c1, c2, t)
         } else {
-          // Lush green grass borders along field edges, road, and canal
-          c1.set('#4E8C2B') // Fresh green grass
-          c2.set('#689F38') // Vibrant meadow grass
+          // Lush vibrant green grass borders along field edges, road, and canal
+          c1.set('#2E7D32') // Deep meadow green
+          c2.set('#43A047') // Vibrant pasture green
           finalColor.lerpColors(c1, c2, t)
 
           // Smooth blend along field boundary edge
           if (distToBorder < 2.5) {
             const blend = distToBorder / 2.5
             const soilColor = new THREE.Color().lerpColors(
-              new THREE.Color('#B58434'),
-              new THREE.Color('#DBA952'),
+              new THREE.Color('#422B1D'),
+              new THREE.Color('#6B462B'),
               t
             )
             finalColor.lerpColors(soilColor, finalColor, blend)
@@ -216,7 +216,7 @@ export default function FarmField() {
       finalColor.multiplyScalar(houseAO)
 
       // Micro-grain tactile ground jitter
-      const jitter = ((i % 7) - 3) * 0.012
+      const jitter = ((i % 7) - 3) * 0.01
       colors[i * 3] = THREE.MathUtils.clamp(finalColor.r + jitter, 0, 1)
       colors[i * 3 + 1] = THREE.MathUtils.clamp(finalColor.g + jitter, 0, 1)
       colors[i * 3 + 2] = THREE.MathUtils.clamp(finalColor.b + jitter, 0, 1)
@@ -226,15 +226,15 @@ export default function FarmField() {
     return geo
   }, [isFieldBurnt])
 
-  // Far surrounding plains
+  // Far surrounding green plains
   const plainsGeometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(260, 260, 18, 18)
     const count = geo.attributes.position.count
     const colors = new Float32Array(count * 3)
     const pos = geo.attributes.position
 
-    const c1 = new THREE.Color('#7E9848')
-    const c2 = new THREE.Color('#94B056')
+    const c1 = new THREE.Color('#33691E')
+    const c2 = new THREE.Color('#558B2F')
     const finalColor = new THREE.Color()
 
     for (let i = 0; i < count; i++) {

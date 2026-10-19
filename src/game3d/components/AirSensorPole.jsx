@@ -1,8 +1,8 @@
 import React, { useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
+import { ManagedOverlay } from '../ui/OverlayManager'
 
 /**
  * Tall Air Quality Sensor Station Pole installed beside the village.
@@ -130,7 +130,15 @@ export default function AirSensorPole({ position = [-2.5, 0, 40.5] }) {
       </group>
 
       {/* 6. World-Space Digital Meter Display attached to pole */}
-      <Html position={[0.45, 4.2, 0]} distanceFactor={18} zIndexRange={[12, 0]}>
+      <ManagedOverlay
+        id="village_air_station"
+        priority="smoke_meter"
+        position={[0.45, 4.2, 0]}
+        icon="📡"
+        collapsedBadge={isHazardous ? '⚠️ SMOKE' : '🌱 CLEAN'}
+        center={false}
+        zIndexRange={[12, 0]}
+      >
         <div
           style={{
             backgroundColor: 'rgba(24, 32, 38, 0.96)',
@@ -190,7 +198,7 @@ export default function AirSensorPole({ position = [-2.5, 0, 40.5] }) {
             Simulated, game model
           </div>
         </div>
-      </Html>
+      </ManagedOverlay>
     </group>
   )
 }

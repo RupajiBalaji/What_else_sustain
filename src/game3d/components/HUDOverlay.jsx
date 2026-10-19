@@ -201,424 +201,466 @@ export default function HUDOverlay({ onSwitchToLite }) {
         userSelect: 'none'
       }}
     >
-      {/* HARVEST SEQUENCE BANNER & SKIP BUTTON */}
-      {harvestState === 'harvesting' && (
+      {/* TOP HEADER CLUSTER (Respects safe-area insets) */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          width: '100%',
+          pointerEvents: 'none'
+        }}
+      >
+        {/* 1. TOP HUD BAR: Single non-wrapping row (menu, wind, settings, quality, [fps if enabled]) */}
         <div
           style={{
-            position: 'absolute',
-            top: 'calc(70px + env(safe-area-inset-top, 0px))',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 65,
-            pointerEvents: 'auto',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            backgroundColor: 'rgba(27, 94, 32, 0.95)',
-            color: '#FFFFFF',
-            border: '2.5px solid #81C784',
-            borderRadius: '9999px',
-            padding: '6px 16px',
-            boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '0.92rem' }}>
-            <span>🚜</span>
-            <span>{t('game3d.harvestingBanner')}</span>
-            <span style={{ fontSize: '0.8rem', color: '#C8E6C9' }}>
-              {Math.round((harvestProgress || 0) * 100)}%
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={skipHarvest}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              backgroundColor: '#FFD54F',
-              color: '#16382B',
-              border: 'none',
-              fontWeight: 900,
-              fontSize: '0.84rem',
-              cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-            }}
-          >
-            {t('game3d.skipHarvestBtn')}
-          </button>
-        </div>
-      )}
-
-      {/* TOP-CENTRE OBJECTIVE BANNER & GUIDANCE ARROW (After harvest completes) */}
-      {!hasMadeChoice && burnState === 'idle' && harvestState === 'harvested' && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(70px + env(safe-area-inset-top, 0px))',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 60,
-            pointerEvents: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            justifyContent: 'space-between',
             gap: '6px',
-            width: 'max-content',
-            maxWidth: '92vw'
+            flexWrap: 'nowrap',
+            width: '100%',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            pointerEvents: 'auto'
           }}
         >
-          <div
-            style={{
-              backgroundColor: interactionTarget ? '#FFD54F' : 'rgba(22, 56, 43, 0.92)',
-              color: interactionTarget ? '#16382B' : '#FFFFFF',
-              border: interactionTarget ? '2.5px solid #E65100' : '2px solid rgba(255, 255, 255, 0.45)',
-              borderRadius: '9999px',
-              padding: '8px 20px',
-              fontWeight: 800,
-              fontSize: '0.92rem',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.25s ease'
-            }}
-          >
-            <span>🌾</span>
-            <span>
-              {interactionTarget
-                ? (isTouchDevice ? t('game3d.objectiveInteractTouch') : t('game3d.objectiveInteractDesktop'))
-                : t('game3d.objectiveWalkToPile')}
-            </span>
-          </div>
+          {/* Left: Lite Mode & Wind */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <button
+              type="button"
+              data-testid="switch-to-lite-button"
+              onClick={onSwitchToLite}
+              style={{
+                minHeight: '40px',
+                padding: '4px 10px',
+                borderRadius: '9999px',
+                backgroundColor: '#FFFFFF',
+                color: '#16382B',
+                border: '2px solid #2E7D32',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                whiteSpace: 'nowrap'
+              }}
+              aria-label="Switch to Lite 2D Mode"
+            >
+              <span>📱</span>
+              <span>{t('game3d.switchToLite')}</span>
+            </button>
 
-          {/* Small guidance arrow pointing towards nearest straw pile when far away */}
-          {!interactionTarget && nearestPileInfo && (
+            {/* Wind Indicator Pill */}
             <div
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.94)',
-                color: '#16382B',
-                border: '2px solid #FFB300',
+                minHeight: '40px',
+                padding: '4px 10px',
                 borderRadius: '9999px',
-                padding: '4px 14px',
-                fontSize: '0.8rem',
+                backgroundColor: 'rgba(255, 255, 255, 0.92)',
+                border: '2px solid #0288D1',
+                color: '#01579B',
                 fontWeight: 800,
+                fontSize: '0.8rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.18)'
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                whiteSpace: 'nowrap'
               }}
+              title="Current Wind Direction & Speed (affects smoke dispersion)"
             >
-              <span>{Math.round(nearestPileInfo.distance)}m</span>
+              <span>🧭</span>
               <span
                 style={{
                   display: 'inline-block',
-                  transform: `rotate(${nearestPileInfo.angleDeg}deg)`,
+                  transform: `rotate(${windState?.directionDeg || 75}deg)`,
                   fontSize: '1.05rem',
-                  transition: 'transform 0.1s linear'
+                  transition: 'transform 0.4s ease'
                 }}
               >
                 ⬆️
               </span>
+              <span>{windState?.speedMs || 3.8} m/s</span>
             </div>
-          )}
-        </div>
-      )}
+          </div>
 
-      {/* TOP HUD BAR */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '8px',
-          flexWrap: 'wrap'
-        }}
-      >
-        {/* Left: Lite Mode Return & Wind Compass */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto' }}>
-          <button
-            type="button"
-            onClick={onSwitchToLite}
-            style={{
-              minHeight: '44px',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              backgroundColor: '#FFFFFF',
-              color: '#16382B',
-              border: '2.5px solid #2E7D32',
-              fontWeight: 800,
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
-            }}
-            aria-label="Switch to Lite 2D Mode"
-          >
-            <span>📱</span>
-            <span>{t('game3d.switchToLite')}</span>
-          </button>
+          {/* Right: Settings, Quality, and FPS toggle (hidden unless showFps is enabled) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            {/* FPS Button: Hidden unless showFps is active */}
+            {showFps && (
+              <button
+                type="button"
+                onClick={toggleFps}
+                style={{
+                  minHeight: '40px',
+                  padding: '4px 10px',
+                  borderRadius: '9999px',
+                  backgroundColor: '#E8F5E9',
+                  border: '2px solid #37474F',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  color: '#263238',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+                title="FPS display active (press F or click to hide)"
+              >
+                ⚡ {fps} FPS
+              </button>
+            )}
 
-          {/* Wind Indicator Pill */}
-          <div
-            style={{
-              minHeight: '44px',
-              padding: '6px 12px',
-              borderRadius: '9999px',
-              backgroundColor: 'rgba(255, 255, 255, 0.92)',
-              border: '2px solid #0288D1',
-              color: '#01579B',
-              fontWeight: 800,
-              fontSize: '0.85rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-            }}
-            title="Current Wind Direction & Speed (affects smoke dispersion)"
-          >
-            <span>🧭</span>
-            {/* Rotating Arrow based on wind direction */}
-            <span
+            {/* Quality Toggle */}
+            <button
+              type="button"
+              onClick={toggleQuality}
               style={{
-                display: 'inline-block',
-                transform: `rotate(${windState?.directionDeg || 75}deg)`,
-                fontSize: '1.2rem',
-                transition: 'transform 0.4s ease'
+                minHeight: '40px',
+                padding: '4px 10px',
+                borderRadius: '9999px',
+                backgroundColor: quality === 'high' ? '#FFF9C4' : quality === 'medium' ? '#E1F5FE' : '#ECEFF1',
+                border: '2px solid #E65100',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                color: '#BF360C',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
               }}
+              title="Toggle graphics quality"
             >
-              ⬆️
-            </span>
-            <span>
-              {windState?.speedMs || 3.8} m/s
-            </span>
+              {quality === 'high' ? '💎 High' : quality === 'medium' ? '⚖️ Med' : '⚡ Low'}
+            </button>
+
+            {/* Settings Drawer Button */}
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              style={{
+                minHeight: '40px',
+                padding: '4px 10px',
+                borderRadius: '9999px',
+                backgroundColor: '#FFFFFF',
+                border: '2px solid #2E7D32',
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                color: '#16382B',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                whiteSpace: 'nowrap'
+              }}
+              title="Open Settings"
+              aria-label="Open Game Settings"
+            >
+              <span>⚙️</span>
+              <span>Settings</span>
+            </button>
           </div>
         </div>
 
-        {/* Right: Controls & Options */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto' }}>
-          {/* FPS Toggle Button */}
-          <button
-            type="button"
-            onClick={toggleFps}
+        {/* 2. ONE OBJECTIVE BANNER (Shown only when harvest is active or done without in-world choice panel open) */}
+        {harvestState === 'harvesting' && (
+          <div
             style={{
-              minHeight: '44px',
-              padding: '6px 12px',
-              borderRadius: '9999px',
-              backgroundColor: showFps ? '#E8F5E9' : '#FFFFFF',
-              border: '2px solid #37474F',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              color: '#263238',
-              cursor: 'pointer'
-            }}
-            title="Press 'F' key to toggle FPS display"
-          >
-            {showFps ? `⚡ ${fps} FPS (${frameTimeMs}ms)` : 'FPS (F)'}
-          </button>
-
-          {/* Quality Toggle */}
-          <button
-            type="button"
-            onClick={toggleQuality}
-            style={{
-              minHeight: '44px',
-              padding: '6px 12px',
-              borderRadius: '9999px',
-              backgroundColor: quality === 'high' ? '#FFF9C4' : quality === 'medium' ? '#E1F5FE' : '#ECEFF1',
-              border: '2px solid #E65100',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              color: '#BF360C',
-              cursor: 'pointer'
-            }}
-          >
-            {quality === 'high' ? '💎 High' : quality === 'medium' ? '⚖️ Med' : '⚡ Low'}
-          </button>
-
-          {/* Settings Drawer Button */}
-          <button
-            type="button"
-            onClick={() => setShowSettings(true)}
-            style={{
-              minHeight: '44px',
-              padding: '6px 12px',
-              borderRadius: '9999px',
-              backgroundColor: '#FFFFFF',
-              border: '2px solid #2E7D32',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              color: '#16382B',
-              cursor: 'pointer',
+              alignSelf: 'center',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '10px',
+              backgroundColor: 'rgba(27, 94, 32, 0.95)',
+              color: '#FFFFFF',
+              border: '2.5px solid #81C784',
+              borderRadius: '9999px',
+              padding: '6px 16px',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+              pointerEvents: 'auto',
+              maxWidth: '92vw'
             }}
-            title="Open Graphics & Audio Settings"
-            aria-label="Open Game Settings"
           >
-            <span>⚙️</span>
-            <span>Settings</span>
-          </button>
-        </div>
-      </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 800, fontSize: '0.86rem' }}>
+              <span>🚜</span>
+              <span>{t('game3d.harvestingBanner')}</span>
+              <span style={{ fontSize: '0.78rem', color: '#C8E6C9' }}>{Math.round((harvestProgress || 0) * 100)}%</span>
+            </div>
+            <button
+              type="button"
+              onClick={skipHarvest}
+              style={{
+                padding: '4px 12px',
+                borderRadius: '9999px',
+                backgroundColor: '#FFD54F',
+                color: '#16382B',
+                border: 'none',
+                fontWeight: 900,
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}
+            >
+              {t('game3d.skipHarvestBtn')}
+            </button>
+          </div>
+        )}
 
-      {/* SEASON & FARM STATUS BANNER */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '8px',
-          marginTop: '6px',
-          pointerEvents: 'auto'
-        }}
-      >
-        {/* Season & Year Badge */}
+        {/* Objective Banner: Walk to straw pile (Hidden whenever in-world choice panel is open) */}
+        {!hasMadeChoice && burnState === 'idle' && harvestState === 'harvested' && !interactionTarget && (
+          <div
+            style={{
+              alignSelf: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              maxWidth: '92vw',
+              pointerEvents: 'none'
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: 'rgba(22, 56, 43, 0.92)',
+                color: '#FFFFFF',
+                border: '2px solid rgba(255, 255, 255, 0.45)',
+                borderRadius: '9999px',
+                padding: '6px 16px',
+                fontWeight: 800,
+                fontSize: '0.86rem',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>🌾</span>
+              <span>{t('game3d.objectiveWalkToPile')}</span>
+            </div>
+            {nearestPileInfo && (
+              <div
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                  color: '#16382B',
+                  border: '1.5px solid #FFB300',
+                  borderRadius: '9999px',
+                  padding: '2px 10px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <span>{Math.round(nearestPileInfo.distance)}m</span>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    transform: `rotate(${nearestPileInfo.angleDeg}deg)`,
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  ⬆️
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* If in Lite/Wheel mode (not in-world choices) and at interaction target: show one prompt banner */}
+        {!hasMadeChoice && burnState === 'idle' && harvestState === 'harvested' && interactionTarget && !useInWorldChoices && (
+          <div
+            style={{
+              alignSelf: 'center',
+              backgroundColor: '#FFD54F',
+              color: '#16382B',
+              border: '2.5px solid #E65100',
+              borderRadius: '9999px',
+              padding: '6px 16px',
+              fontWeight: 800,
+              fontSize: '0.86rem',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span>🌾</span>
+            <span>{isTouchDevice ? t('game3d.objectiveInteractTouch') : t('game3d.objectiveInteractDesktop')}</span>
+          </div>
+        )}
+
+        {/* 3. STATUS CHIPS STRIP: Horizontally scrollable single row below objective banner */}
         <div
           style={{
-            backgroundColor: 'rgba(27, 94, 32, 0.92)',
-            color: '#FFFFFF',
-            padding: '6px 14px',
-            borderRadius: '9999px',
-            fontWeight: 900,
-            fontSize: '0.86rem',
-            border: '2px solid #81C784',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '6px',
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            width: '100%',
+            boxSizing: 'border-box',
+            pointerEvents: 'auto',
+            paddingBottom: '2px'
           }}
         >
-          <span>🌾</span>
-          <span>
-            Season {persistentState?.seasonIndex || 1} • Year {persistentState?.yearIndex || 1} ({((persistentState?.seasonIndex || 1) % 2 === 1) ? 'Kharif' : 'Rabi'})
-          </span>
-          <span style={{ fontSize: '0.74rem', backgroundColor: '#388E3C', padding: '2px 8px', borderRadius: '12px' }}>
-            {seasonPhase.toUpperCase()}
-          </span>
-        </div>
-
-        {/* Compact In-World Status Overview Strip */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          {/* Season & Year Badge */}
           <div
-            title="Soil Health (Microbes, organic carbon & earthworms)"
+            style={{
+              backgroundColor: 'rgba(27, 94, 32, 0.92)',
+              color: '#FFFFFF',
+              padding: '4px 10px',
+              borderRadius: '9999px',
+              fontWeight: 900,
+              fontSize: '0.78rem',
+              border: '1.5px solid #81C784',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span>🌾</span>
+            <span>S{persistentState?.seasonIndex || 1} • Y{persistentState?.yearIndex || 1}</span>
+            <span style={{ fontSize: '0.7rem', backgroundColor: '#388E3C', padding: '1px 6px', borderRadius: '8px' }}>
+              {seasonPhase.toUpperCase()}
+            </span>
+          </div>
+
+          {/* Soil Health */}
+          <div
+            title="Soil Health"
             style={{
               backgroundColor: '#FFFFFF',
               color: '#3E2723',
-              border: '2px solid #8D6E63',
+              border: '1.5px solid #8D6E63',
               borderRadius: '9999px',
-              padding: '4px 10px',
+              padding: '3px 8px',
               fontWeight: 800,
-              fontSize: '0.8rem',
+              fontSize: '0.76rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap'
             }}
           >
             <span>🪱</span>
             <span>{Math.round(persistentState?.soilHealth ?? 70)}%</span>
           </div>
 
+          {/* Village Health */}
           <div
-            title="Village Community Air & Respiratory Health"
+            title="Village Community Air Health"
             style={{
               backgroundColor: '#FFFFFF',
               color: '#1B5E20',
-              border: '2px solid #81C784',
+              border: '1.5px solid #81C784',
               borderRadius: '9999px',
-              padding: '4px 10px',
+              padding: '3px 8px',
               fontWeight: 800,
-              fontSize: '0.8rem',
+              fontSize: '0.76rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap'
             }}
           >
             <span>🏡</span>
             <span>{Math.round(persistentState?.villageHealth ?? 75)}%</span>
           </div>
 
+          {/* Money */}
           <div
-            title="Farmer Funds & Capital"
+            title="Farmer Capital"
             style={{
               backgroundColor: '#FFFFFF',
               color: '#BF360C',
-              border: '2px solid #FFB74D',
+              border: '1.5px solid #FFB74D',
               borderRadius: '9999px',
-              padding: '4px 10px',
+              padding: '3px 8px',
               fontWeight: 800,
-              fontSize: '0.8rem',
+              fontSize: '0.76rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap'
             }}
           >
             <span>💰</span>
             <span>₹{(persistentState?.money ?? 12000).toLocaleString('en-IN')}</span>
           </div>
 
+          {/* Reputation */}
           <div
-            title="Farmer Community Reputation"
+            title="Reputation"
             style={{
               backgroundColor: '#FFFFFF',
               color: '#4A148C',
-              border: '2px solid #BA68C8',
+              border: '1.5px solid #BA68C8',
               borderRadius: '9999px',
-              padding: '4px 10px',
+              padding: '3px 8px',
               fontWeight: 800,
-              fontSize: '0.8rem',
+              fontSize: '0.76rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap'
             }}
           >
             <span>👑</span>
             <span>{Math.round(persistentState?.reputation ?? 50)}</span>
           </div>
 
+          {/* Streak */}
           <div
-            title="Consecutive Sustainable Seasons Streak"
+            title="Sustainable Streak"
             style={{
               backgroundColor: (persistentState?.streak || 0) > 0 ? '#FFF3E0' : '#ECEFF1',
               color: (persistentState?.streak || 0) > 0 ? '#E65100' : '#78909C',
-              border: '2px solid #FF9800',
+              border: '1.5px solid #FF9800',
               borderRadius: '9999px',
-              padding: '4px 10px',
+              padding: '3px 8px',
               fontWeight: 900,
-              fontSize: '0.8rem',
+              fontSize: '0.76rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap'
             }}
           >
             <span>🔥</span>
             <span>{persistentState?.streak ?? 0}</span>
           </div>
 
-          {/* Achievements Panel Trigger */}
+          {/* Badges Panel Trigger */}
           <button
             type="button"
             onClick={() => setShowAchievements(true)}
             style={{
               backgroundColor: '#FFF8E1',
               color: '#F57F17',
-              border: '2px solid #FBC02D',
+              border: '1.5px solid #FBC02D',
               borderRadius: '9999px',
-              padding: '4px 10px',
+              padding: '3px 8px',
               fontWeight: 900,
-              fontSize: '0.8rem',
+              fontSize: '0.76rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap'
             }}
-            title="View 12 Farmer Achievements"
+            title="View Achievements"
           >
             <span>🏆</span>
             <span>Badges</span>
@@ -629,12 +671,12 @@ export default function HUDOverlay({ onSwitchToLite }) {
       {/* LIVE SMOKE EXPOSURE METERS (During fire & consequence) */}
       <SmokeMeterHUD />
 
-      {/* CENTER INTERACTION PROMPT (Only during idle exploration) */}
-      {interactionTarget && burnState === 'idle' && (
+      {/* CENTER INTERACTION PROMPT: Only shown when in wheel/Lite fallback mode */}
+      {!useInWorldChoices && interactionTarget && burnState === 'idle' && (
         <div
           style={{
             position: 'absolute',
-            bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+            bottom: isTouchDevice ? 'calc(140px + env(safe-area-inset-bottom, 0px))' : 'calc(80px + env(safe-area-inset-bottom, 0px))',
             left: '50%',
             transform: 'translateX(-50%)',
             pointerEvents: 'auto',
@@ -646,20 +688,19 @@ export default function HUDOverlay({ onSwitchToLite }) {
             type="button"
             onClick={handleInteract}
             style={{
-              minHeight: '56px',
-              padding: '12px 26px',
+              minHeight: '52px',
+              padding: '10px 24px',
               borderRadius: '9999px',
               backgroundColor: '#FFD54F',
               color: '#16382B',
-              border: '3.5px solid #E65100',
+              border: '3px solid #E65100',
               fontWeight: 900,
-              fontSize: '1.05rem',
+              fontSize: '1rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
+              gap: '8px',
               boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-              transform: 'scale(1.05)',
               whiteSpace: 'nowrap'
             }}
           >
@@ -835,14 +876,14 @@ export default function HUDOverlay({ onSwitchToLite }) {
         <div
           style={{
             position: 'absolute',
-            bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+            bottom: isTouchDevice ? 'calc(140px + env(safe-area-inset-bottom, 0px))' : 'calc(80px + env(safe-area-inset-bottom, 0px))',
             left: '50%',
             transform: 'translateX(-50%)',
             backgroundColor: 'rgba(22, 56, 43, 0.94)',
             color: '#FFFFFF',
             border: '2px solid #81C784',
-            borderRadius: '9999px',
-            padding: '8px 20px',
+            borderRadius: '16px',
+            padding: '8px 18px',
             fontSize: '0.86rem',
             fontWeight: 800,
             boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
@@ -851,7 +892,11 @@ export default function HUDOverlay({ onSwitchToLite }) {
             alignItems: 'center',
             gap: '8px',
             pointerEvents: 'none',
-            whiteSpace: 'nowrap'
+            maxWidth: 'min(90vw, 420px)',
+            width: 'max-content',
+            whiteSpace: 'normal',
+            wordBreak: 'break-word',
+            textAlign: 'center'
           }}
         >
           <span>⚡</span>

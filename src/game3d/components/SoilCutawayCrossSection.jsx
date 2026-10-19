@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
+import { ManagedOverlay } from '../ui/OverlayManager'
 
 const _soilDummy = new THREE.Object3D()
 
@@ -11,7 +12,7 @@ const _soilDummy = new THREE.Object3D()
  * instanced worms, microbes, and downward heat glow during fires.
  */
 export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rotation = [0, 0.25, 0] }) {
-  const { quality, burnState, burnProgress, activeAlternative, persistentState } = useGame3D()
+  const { quality, burnState, burnProgress, activeAlternative, persistentState, isAnyModalOpen } = useGame3D()
   const isHigh = quality === 'high'
   const soilHealth = persistentState?.soilHealth ?? 70
 
@@ -237,63 +238,74 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
         />
       </instancedMesh>
 
-      {/* World-Space Depth Labels on the Cutaway Frame */}
-      <Html position={[-1.25, 0.02, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
-        <div
-          style={{
-            backgroundColor: 'rgba(22, 30, 24, 0.92)',
-            color: '#FFFFFF',
-            padding: '2px 6px',
-            borderRadius: '6px',
-            fontSize: '10px',
-            fontWeight: 800,
-            whiteSpace: 'nowrap',
-            border: '1.5px solid #81C784',
-            pointerEvents: 'none'
-          }}
-        >
-          <span>🌱 0cm: Topsoil</span>
-        </div>
-      </Html>
+      {/* World-Space Depth Labels on the Cutaway Frame (Suppressed if any modal open) */}
+      {!isAnyModalOpen && (
+        <>
+          <Html position={[-1.25, 0.02, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
+            <div
+              style={{
+                backgroundColor: 'rgba(22, 30, 24, 0.92)',
+                color: '#FFFFFF',
+                padding: '2px 6px',
+                borderRadius: '6px',
+                fontSize: '10px',
+                fontWeight: 800,
+                whiteSpace: 'nowrap',
+                border: '1.5px solid #81C784',
+                pointerEvents: 'none'
+              }}
+            >
+              <span>🌱 0cm: Topsoil</span>
+            </div>
+          </Html>
 
-      <Html position={[-1.25, -0.45, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
-        <div
-          style={{
-            backgroundColor: 'rgba(33, 24, 18, 0.92)',
-            color: '#FFCC80',
-            padding: '2px 6px',
-            borderRadius: '6px',
-            fontSize: '10px',
-            fontWeight: 800,
-            whiteSpace: 'nowrap',
-            border: '1.5px solid #A1887F',
-            pointerEvents: 'none'
-          }}
-        >
-          <span>🪱 -25cm: Root Zone</span>
-        </div>
-      </Html>
+          <Html position={[-1.25, -0.45, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
+            <div
+              style={{
+                backgroundColor: 'rgba(33, 24, 18, 0.92)',
+                color: '#FFCC80',
+                padding: '2px 6px',
+                borderRadius: '6px',
+                fontSize: '10px',
+                fontWeight: 800,
+                whiteSpace: 'nowrap',
+                border: '1.5px solid #A1887F',
+                pointerEvents: 'none'
+              }}
+            >
+              <span>🪱 -25cm: Root Zone</span>
+            </div>
+          </Html>
 
-      <Html position={[-1.25, -1.05, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
-        <div
-          style={{
-            backgroundColor: 'rgba(33, 24, 18, 0.92)',
-            color: '#BCAAA4',
-            padding: '2px 6px',
-            borderRadius: '6px',
-            fontSize: '10px',
-            fontWeight: 800,
-            whiteSpace: 'nowrap',
-            border: '1.5px solid #8D6E63',
-            pointerEvents: 'none'
-          }}
-        >
-          <span>🪨 -50cm: Subsoil</span>
-        </div>
-      </Html>
+          <Html position={[-1.25, -1.05, 0.3]} distanceFactor={14} zIndexRange={[10, 0]}>
+            <div
+              style={{
+                backgroundColor: 'rgba(33, 24, 18, 0.92)',
+                color: '#BCAAA4',
+                padding: '2px 6px',
+                borderRadius: '6px',
+                fontSize: '10px',
+                fontWeight: 800,
+                whiteSpace: 'nowrap',
+                border: '1.5px solid #8D6E63',
+                pointerEvents: 'none'
+              }}
+            >
+              <span>🪨 -50cm: Subsoil</span>
+            </div>
+          </Html>
+        </>
+      )}
 
-      {/* Cutaway Title Plaque */}
-      <Html position={[0, 0.22, 0.3]} distanceFactor={15} center zIndexRange={[10, 0]}>
+      {/* Cutaway Title Plaque: Clean 2-line title, clamped and managed by OverlayManager */}
+      <ManagedOverlay
+        id="soil_cutaway_plaque"
+        priority="status_prop"
+        position={[0, 0.22, 0.3]}
+        icon="🔬"
+        center
+        zIndexRange={[15, 0]}
+      >
         <div
           style={{
             backgroundColor: isBurnt
@@ -302,25 +314,26 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
               ? 'rgba(46, 125, 50, 0.94)'
               : 'rgba(46, 56, 48, 0.92)',
             color: '#FFFFFF',
-            padding: '3px 10px',
-            borderRadius: '9999px',
-            fontSize: '11px',
-            fontWeight: 900,
-            whiteSpace: 'nowrap',
-            border: '2px solid rgba(255,255,255,0.7)',
+            padding: '4px 10px',
+            borderRadius: '12px',
+            border: '1.5px solid rgba(255,255,255,0.7)',
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             pointerEvents: 'none',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            gap: '6px'
+            maxWidth: '190px',
+            textAlign: 'center'
           }}
         >
-          <span>{isBurnt ? '🔥 Burnt Soil Slice' : isEnriched ? '🌿 Regenerated Soil' : '🔬 Soil Cross-Section'}</span>
-          <span style={{ fontSize: '9px', opacity: 0.85 }}>
+          <span style={{ fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+            {isBurnt ? '🔥 Burnt Soil Slice' : isEnriched ? '🌿 Regenerated Soil' : '🔬 Soil Cross-Section'}
+          </span>
+          <span style={{ fontSize: '9px', opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
             {isBurnt ? '(Worms Lost)' : isEnriched ? '(Microbes Multiplying)' : '(Living Microbes)'}
           </span>
         </div>
-      </Html>
+      </ManagedOverlay>
     </group>
   )
 }

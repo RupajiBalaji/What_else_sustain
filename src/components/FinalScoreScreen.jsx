@@ -106,7 +106,7 @@ export default function FinalScoreScreen({ onBackToScenarios, onOpenBadges }) {
   }
 
   return (
-    <div className="final-score-container" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div data-testid="final-scorecard-screen" className="final-score-container" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       {/* Top Nav */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button

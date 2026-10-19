@@ -13,16 +13,114 @@ if (useGLTF && useGLTF.setDecoderPath) {
 }
 
 // Statically discover any .glb files physically present in public/models/ at build/dev time.
-// This completely avoids runtime HTTP network requests that trigger 405/404 errors in DevTools.
 const AVAILABLE_MODELS_GLOB = import.meta.glob('/public/models/*.glb', { query: '?url', import: 'default' })
 
 /**
+ * Singleton Texture Loader for Kenney Assets Color Palette.
+ * Configured with sRGB color space, nearest filter (crisp pixel palette),
+ * flipY = false, and no mipmap blur as per specification.
+ */
+let sharedColormapTexture = null
+const textureLoader = new THREE.TextureLoader()
+
+export function getSharedColormapTexture() {
+  if (!sharedColormapTexture) {
+    sharedColormapTexture = textureLoader.load('/Textures/colormap.png', (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace
+      tex.flipY = false
+      tex.magFilter = THREE.NearestFilter
+      tex.minFilter = THREE.NearestFilter
+      tex.generateMipmaps = false
+      tex.needsUpdate = true
+    })
+    sharedColormapTexture.colorSpace = THREE.SRGBColorSpace
+    sharedColormapTexture.flipY = false
+    sharedColormapTexture.magFilter = THREE.NearestFilter
+    sharedColormapTexture.minFilter = THREE.NearestFilter
+    sharedColormapTexture.generateMipmaps = false
+  }
+  return sharedColormapTexture
+}
+
+/**
+ * Shared PBR material for all untextured Kenney meshes.
+ * Caches a single MeshStandardMaterial across all instances to minimize draw calls.
+ */
+let sharedKenneyMaterial = null
+export function getSharedKenneyMaterial() {
+  if (!sharedKenneyMaterial) {
+    const colormap = getSharedColormapTexture()
+    sharedKenneyMaterial = new THREE.MeshStandardMaterial({
+      map: colormap,
+      roughness: 0.9,
+      metalness: 0.0,
+      side: THREE.FrontSide,
+      shadowSide: THREE.BackSide
+    })
+  }
+  return sharedKenneyMaterial
+}
+
+/**
+ * Traverses any Object3D/Scene and binds the shared colormap texture & material
+ * to any mesh that has no texture map, and configures shadows.
+ */
+export function applyKenneyTextures(root, manifest = null) {
+  if (!root) return root
+  const sharedMat = getSharedKenneyMaterial()
+  const colormap = getSharedColormapTexture()
+
+  root.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = manifest ? manifest.castShadow : true
+      child.receiveShadow = manifest ? manifest.receiveShadow : true
+
+      if (!child.material) {
+        child.material = sharedMat
+      } else if (Array.isArray(child.material)) {
+        child.material = child.material.map((mat) => {
+          if (!mat || !mat.map) return sharedMat
+          mat.roughness = 0.9
+          mat.metalness = 0.0
+          mat.side = THREE.FrontSide
+          mat.shadowSide = THREE.BackSide
+          return mat
+        })
+      } else if (!child.material.map) {
+        child.material = sharedMat
+      } else {
+        child.material.side = THREE.FrontSide
+        child.material.shadowSide = THREE.BackSide
+        child.material.roughness = 0.9
+        child.material.metalness = 0.0
+        if (child.material.map) {
+          child.material.map.anisotropy = 4
+        }
+      }
+    }
+  })
+  return root
+}
+
+// Statically known physical Kenney GLTF models in public/models/
+export const KNOWN_STATIC_MODELS = new Set([
+  '/models/barn.glb',
+  '/models/house_1.glb',
+  '/models/house_2.glb',
+  '/models/house_3.glb',
+  '/models/tree_1.glb',
+  '/models/truck.glb',
+  '/models/villager_1.glb'
+])
+
+/**
  * Instant check to verify if a model file exists in public/models/.
- * Returns false immediately if absent, eliminating network 405/404 errors.
  */
 export function useModelAvailability(url) {
   return useMemo(() => {
     if (!url) return false
+    const cleanUrl = url.replace(/^\/public/, '')
+    if (KNOWN_STATIC_MODELS.has(cleanUrl)) return true
     const normKey = url.startsWith('/public') ? url : `/public${url}`
     return Boolean(AVAILABLE_MODELS_GLOB[normKey] || AVAILABLE_MODELS_GLOB[url])
   }, [url])
@@ -32,11 +130,14 @@ export function useModelAvailability(url) {
  * Preload a model if available
  */
 export function preloadModel(url) {
-  if (url && (AVAILABLE_MODELS_GLOB[`/public${url}`] || AVAILABLE_MODELS_GLOB[url])) {
-    try {
-      useGLTF.preload(url, '/draco/')
-    } catch {
-      // Ignore
+  if (url) {
+    const cleanUrl = url.replace(/^\/public/, '')
+    if (KNOWN_STATIC_MODELS.has(cleanUrl) || AVAILABLE_MODELS_GLOB[`/public${cleanUrl}`]) {
+      try {
+        useGLTF.preload(cleanUrl, '/draco/')
+      } catch {
+        // Ignore
+      }
     }
   }
 }
@@ -58,27 +159,11 @@ function GLTFModelInner({
   const gltf = useGLTF(url, '/draco/')
   const manifest = assetId ? getManifestEntry(assetId) : null
 
-  // Clone scene so multiple instances don't share identical scene graph nodes
+  // Clone scene and apply colormap texture & material setup
   const clonedScene = useMemo(() => {
     if (!gltf.scene) return null
     const cloned = gltf.scene.clone(true)
-
-    // Traverse and configure shadows and PBR materials
-    cloned.traverse((child) => {
-      if (child.isMesh) {
-        child.castShadow = manifest ? manifest.castShadow : true
-        child.receiveShadow = manifest ? manifest.receiveShadow : true
-
-        if (child.material) {
-          child.material.side = THREE.FrontSide
-          child.material.shadowSide = THREE.BackSide
-          if (child.material.map) {
-            child.material.map.anisotropy = 4
-          }
-        }
-      }
-    })
-
+    applyKenneyTextures(cloned, manifest)
     return cloned
   }, [gltf.scene, manifest])
 
@@ -88,7 +173,6 @@ function GLTFModelInner({
   useEffect(() => {
     if (!actions || names.length === 0) return
 
-    // Play requested animation clip if it exists in the model
     const animName = currentAnimation || names[0]
     const targetAction = actions[animName] || actions[names[0]]
 
@@ -127,8 +211,6 @@ function GLTFModelInner({
 
 /**
  * ModelWithFallback
- * Loads a .glb model if available via Suspense and local Draco;
- * otherwise gracefully renders the provided procedural component without error.
  */
 export default function ModelWithFallback({
   assetId,

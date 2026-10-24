@@ -8,6 +8,7 @@ export default function SowingMiniGame() {
   const {
     seasonPhase,
     completeSowing,
+    jumpToDecisionPhase,
     addFarmerXP,
     triggerToast,
     incrementPerfectSowing
@@ -147,14 +148,15 @@ export default function SowingMiniGame() {
             background: 'none',
             border: 'none',
             color: '#FFD54F',
-            fontSize: '0.78rem',
+            fontSize: '0.8rem',
             fontWeight: 800,
             textDecoration: 'underline',
             cursor: 'pointer',
             marginLeft: '4px'
           }}
+          title="Skip to next growing phase"
         >
-          Skip
+          Skip ⏩
         </button>
       </div>
 
@@ -252,6 +254,35 @@ export default function SowingMiniGame() {
         >
           <span>🌱</span>
           <span>{isHolding ? 'RELEASE TO SOW!' : 'HOLD TO SOW SEED (Spacebar / Tap)'}</span>
+        </button>
+
+        {/* Fast-Forward Direct Jump to Crop Residue & Burn Choices */}
+        <button
+          type="button"
+          data-testid="jump-to-decisions-sowing-btn"
+          onClick={jumpToDecisionPhase}
+          style={{
+            marginTop: '10px',
+            width: '100%',
+            minHeight: '44px',
+            padding: '8px 14px',
+            borderRadius: '12px',
+            backgroundColor: '#D84315',
+            color: '#FFFFFF',
+            border: '2px solid #FFAB91',
+            fontWeight: 900,
+            fontSize: '0.88rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 12px rgba(216,67,21,0.3)',
+            transition: 'transform 0.1s ease'
+          }}
+        >
+          <span>🔥</span>
+          <span>Skip Sowing ➔ Jump to Burn & Stubble Options</span>
         </button>
       </div>
     </div>

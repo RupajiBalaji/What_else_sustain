@@ -75,7 +75,7 @@ function SceneContent() {
 }
 
 function FarmSceneInner({ onSwitchToLite }) {
-  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover, dprScale } = useGame3D()
+  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover, dprScale, jumpToDecisionPhase } = useGame3D()
   const [hasStarted, setHasStarted] = useState(false)
 
   // Dynamic pixel ratio based on quality tier cap * dynamic resolution scale
@@ -193,8 +193,11 @@ function FarmSceneInner({ onSwitchToLite }) {
       {/* Initial Loading Screen */}
       {!hasStarted && (
         <LoadingScreen
-          onStart={() => {
+          onStart={(mode) => {
             setHasStarted(true)
+            if (mode === 'decision') {
+              jumpToDecisionPhase()
+            }
           }}
           onSwitchToLite={onSwitchToLite}
         />

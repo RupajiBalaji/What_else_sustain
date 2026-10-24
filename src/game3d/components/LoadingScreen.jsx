@@ -43,7 +43,7 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
   const actualProgress = Math.max(minProgress, Math.round(dreiProgress || 0))
   const isReady = actualProgress >= 100 || (!active && actualProgress >= 75)
 
-  const handleStart = async () => {
+  const handleStart = async (mode = 'sowing') => {
     try {
       await audioManager.unlock()
     } catch {
@@ -51,7 +51,7 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
     }
     sound.initAudio()
     sound.playTap()
-    onStart()
+    onStart(mode)
   }
 
   return (
@@ -206,30 +206,57 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
 
         {/* Start Button (Unlocks audio & begins game) */}
         {isReady ? (
-          <button
-            data-testid="start-3d-button"
-            type="button"
-            onClick={handleStart}
-            style={{
-              width: '100%',
-              minHeight: '58px',
-              borderRadius: '9999px',
-              backgroundColor: '#FFD54F',
-              color: '#16382B',
-              border: '3.5px solid #16382B',
-              fontWeight: 900,
-              fontSize: '1.15rem',
-              cursor: 'pointer',
-              boxShadow: '0 6px 0 rgba(0,0,0,0.18)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
-          >
-            <span>🌾</span>
-            <span>{t('game3d.startBtn')}</span>
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <button
+              data-testid="start-3d-button"
+              type="button"
+              onClick={() => handleStart('sowing')}
+              style={{
+                width: '100%',
+                minHeight: '50px',
+                borderRadius: '9999px',
+                backgroundColor: '#FFD54F',
+                color: '#16382B',
+                border: '3px solid #16382B',
+                fontWeight: 900,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 0 rgba(0,0,0,0.18)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>🌾</span>
+              <span>{t('game3d.startBtn')} (Full Season Cycle)</span>
+            </button>
+
+            <button
+              data-testid="start-decision-button"
+              type="button"
+              onClick={() => handleStart('decision')}
+              style={{
+                width: '100%',
+                minHeight: '44px',
+                borderRadius: '9999px',
+                backgroundColor: '#D84315',
+                color: '#FFFFFF',
+                border: '2px solid #FFAB91',
+                fontWeight: 900,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(216,67,21,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>🔥</span>
+              <span>Direct Stubble Burning & Residue Choices</span>
+            </button>
+          </div>
         ) : (
           <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#2E7D32' }}>
             <span>🌱 Loading {actualProgress}%</span>

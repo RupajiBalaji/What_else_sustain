@@ -403,6 +403,20 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     triggerToast('🌾 Harvest complete! Choose how to manage the stubble.')
   }, [triggerToast])
 
+  // Fast-forward directly to Decision phase with straw piles and choice panel ready
+  const jumpToDecisionPhase = useCallback(() => {
+    if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
+    if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
+    sound.stopTractorEngine()
+    sound.playSuccessChime()
+    setHarvestProgress(1.0)
+    setHarvestState('harvested')
+    setSeasonPhase('decision')
+    setActiveSeasonalEvent(null)
+    setInteractionTarget({ id: 'straw_1', x: -3.2, z: 12.5, scale: 1.0, label: 'Nearby Golden Straw Mound' })
+    triggerToast('🌾 Paddy harvested! Straw residue ready for decision.')
+  }, [triggerToast])
+
   // Step D: Finish Season & Calculate Carry-Over Consequences
   const finishSeason = useCallback((choiceKey) => {
     const decisionConfig = GAME_BALANCE.DECISIONS[choiceKey] || GAME_BALANCE.DECISIONS.burn
@@ -913,6 +927,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         harvestProgress,
         startHarvestSequence,
         skipHarvest,
+        jumpToDecisionPhase,
         burnState,
         burnProgress,
         ignitedPiles,

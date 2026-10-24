@@ -38,6 +38,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
     harvestState,
     harvestProgress,
     skipHarvest,
+    jumpToDecisionPhase,
+    setInteractionTarget,
     handleInteract,
     burnState,
     useInWorldChoices,
@@ -286,6 +288,35 @@ export default function HUDOverlay({ onSwitchToLite }) {
               </span>
               <span>{windState?.speedMs || 3.8} m/s</span>
             </div>
+
+            {/* Quick-Jump to Stubble Decisions & Burn Options */}
+            {seasonPhase !== 'decision' && burnState === 'idle' && (
+              <button
+                type="button"
+                data-testid="topbar-jump-to-decisions"
+                onClick={jumpToDecisionPhase}
+                style={{
+                  minHeight: '40px',
+                  padding: '4px 12px',
+                  borderRadius: '9999px',
+                  backgroundColor: '#D84315',
+                  color: '#FFFFFF',
+                  border: '2px solid #FFAB91',
+                  fontWeight: 900,
+                  fontSize: '0.82rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(216,67,21,0.3)',
+                  whiteSpace: 'nowrap'
+                }}
+                title="Jump directly to Crop Residue Management & Burn choices"
+              >
+                <span>🔥</span>
+                <span>Burn & Stubble Options</span>
+              </button>
+            )}
           </div>
 
           {/* Right: Settings, Quality, and FPS toggle (hidden unless showFps is enabled) */}
@@ -431,12 +462,30 @@ export default function HUDOverlay({ onSwitchToLite }) {
                 boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                whiteSpace: 'nowrap'
+                gap: '8px',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'auto'
               }}
             >
               <span>🌾</span>
               <span>{t('game3d.objectiveWalkToPile')}</span>
+              <button
+                type="button"
+                data-testid="open-choices-banner-btn"
+                onClick={() => setInteractionTarget({ id: 'straw_1', x: -3.2, z: 12.5, scale: 1.0, label: 'Nearby Golden Straw Mound' })}
+                style={{
+                  padding: '3px 10px',
+                  borderRadius: '9999px',
+                  backgroundColor: '#FFD54F',
+                  color: '#16382B',
+                  border: 'none',
+                  fontWeight: 900,
+                  fontSize: '0.78rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Open Choices ➔
+              </button>
             </div>
             {nearestPileInfo && (
               <div

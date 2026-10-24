@@ -9,7 +9,6 @@ import { STRAW_PILES_DATA } from './StrawPiles'
 import { TREE_POSITIONS } from './TreesInstanced'
 import { useModelAvailability } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
-import InWorldChoicePanel from './InWorldChoicePanel'
 import MoneyFloatingTag from './MoneyFloatingTag'
 import { audioManager } from '../audio/AudioManager'
 
@@ -44,7 +43,8 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     playerResetTrigger,
     activeAlternative,
     cinematicMode,
-    reducedMotion
+    reducedMotion,
+    playerPositionRef
   } = useGame3D()
   const { camera } = useThree()
 
@@ -342,12 +342,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       !activeAlternative &&
       !hasMadeChoice
 
-    if (isAtPile && !isMoving) {
-      const dx = nearestPile.x - posRef.current.x
-      const dz = nearestPile.z - posRef.current.z
-      const pileAngle = Math.atan2(dx, dz)
-      yawRef.current = THREE.MathUtils.lerp(yawRef.current, pileAngle, 0.08)
-    }
+    // Note: Do NOT auto-snap or turn the farmer during decision (Item 1 requirement)
 
     // Report nearest pile navigation coordinates for HUD guidance arrow (throttled to ~12 Hz)
     if (_.clock.getElapsedTime() - lastNavUpdateRef.current > 0.08) {
@@ -530,101 +525,10 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       if (torsoRef.current) torsoRef.current.position.y = 1.05 + breath
     }
 
-    // 3. 3rd Person Camera Smooth Follow with Bob & Collision Avoidance
-    if (cinematicMode && cinematicMode !== 'normal') return
-
-    // Footstep camera bob (disabled under reduced motion)
-    const camBob = (!reducedMotion && isMoving)
-      ? Math.sin(walkTimeRef.current * 1.8) * 0.06 * (currentSpeed / 5.5)
-      : 0
-
-    let targetCamX = 0
-    let targetCamY = 0
-    let targetCamZ = 0
-    let targetLookX = 0
-    let targetLookY = 0
-    let targetLookZ = 0
-
-    if (isAtPile && nearestPile) {
-      // Decision Point Framing: Camera placed behind farmer's right shoulder, looking past
-      // the farmer and the straw mound towards the northern village in the background.
-      // Farmer is never inside or behind the pile.
-      targetCamX = posRef.current.x + 1.85
-      targetCamY = posRef.current.y + 2.2 + camBob
-      targetCamZ = posRef.current.z - 3.8
-
-      targetLookX = posRef.current.x * 0.4 + nearestPile.x * 0.6
-      targetLookY = posRef.current.y + 1.35 + camBob
-      targetLookZ = Math.max(posRef.current.z + 4.2, nearestPile.z + 2.8)
-    } else {
-      const camDistance = 5.8
-      const camHeight = 3.2
-      const behindX = -Math.sin(camYawRef.current) * camDistance
-      const behindZ = -Math.cos(camYawRef.current) * camDistance
-
-      targetCamX = posRef.current.x + behindX
-      targetCamY = posRef.current.y + camHeight + camBob
-      targetCamZ = posRef.current.z + behindZ
-
-      targetLookX = posRef.current.x
-      targetLookY = posRef.current.y + 1.4 + camBob
-      targetLookZ = posRef.current.z
+    // Update player position ref for centralized OrbitCameraController
+    if (playerPositionRef && playerPositionRef.current) {
+      playerPositionRef.current.copy(posRef.current)
     }
-
-    // Camera Collision Avoidance against Farmhouse, Tractor, and Village houses
-    const colliders = [
-      FARMHOUSE_COLLIDER,
-      TRACTOR_COLLIDER,
-      ...VILLAGE_COLLIDERS
-    ]
-    const camMargin = 0.85
-    for (let c = 0; c < colliders.length; c++) {
-      const col = colliders[c]
-      if (
-        targetCamX >= col.minX - camMargin &&
-        targetCamX <= col.maxX + camMargin &&
-        targetCamZ >= col.minZ - camMargin &&
-        targetCamZ <= col.maxZ + camMargin
-      ) {
-        targetCamX = THREE.MathUtils.lerp(targetLookX, targetCamX, 0.45)
-        targetCamZ = THREE.MathUtils.lerp(targetLookZ, targetCamZ, 0.45)
-        targetCamY = THREE.MathUtils.lerp(targetLookY + 0.6, targetCamY, 0.45)
-        break
-      }
-    }
-
-    // Camera Collision Avoidance against Straw Piles (radius 1.25m, minCamDist 2.45m ensures zero clipping)
-    for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
-      const pile = STRAW_PILES_DATA[i]
-      const dx = targetCamX - pile.x
-      const dz = targetCamZ - pile.z
-      const distSq = dx * dx + dz * dz
-      const minCamDist = 2.45
-      if (distSq < minCamDist * minCamDist) {
-        const dist = Math.sqrt(distSq) || 1
-        targetCamX = pile.x + (dx / dist) * minCamDist
-        targetCamZ = pile.z + (dz / dist) * minCamDist
-        targetCamY = Math.max(targetCamY, 2.3)
-      }
-    }
-
-    // Camera Collision Avoidance against Trees
-    for (let i = 0; i < TREE_POSITIONS.length; i++) {
-      const tree = TREE_POSITIONS[i]
-      const dx = targetCamX - tree.x
-      const dz = targetCamZ - tree.z
-      const distSq = dx * dx + dz * dz
-      const minCamDist = 1.5
-      if (distSq < minCamDist * minCamDist) {
-        const dist = Math.sqrt(distSq) || 1
-        targetCamX = tree.x + (dx / dist) * minCamDist
-        targetCamZ = tree.z + (dz / dist) * minCamDist
-      }
-    }
-
-    _scratchCamTarget.set(targetCamX, targetCamY, targetCamZ)
-    camera.position.lerp(_scratchCamTarget, isAtPile ? 0.08 : 0.12)
-    camera.lookAt(targetLookX, targetLookY, targetLookZ)
   })
 
   return (
@@ -779,9 +683,6 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
           </group>
         </>
       )}
-
-      {/* Floating In-World Choice Panel anchored to the farmer */}
-      <InWorldChoicePanel />
 
       {/* Floating Money Outcome Badge above the farmer */}
       <MoneyFloatingTag position={[0, 2.35, 0]} />

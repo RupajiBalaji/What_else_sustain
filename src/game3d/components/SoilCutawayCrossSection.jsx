@@ -278,7 +278,7 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
               ? 'rgba(46, 125, 50, 0.94)'
               : 'rgba(46, 56, 48, 0.92)',
             color: '#FFFFFF',
-            padding: '4px 10px',
+            padding: '4px 8px',
             borderRadius: '12px',
             border: '1.5px solid rgba(255,255,255,0.7)',
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -286,14 +286,15 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            maxWidth: '190px',
+            maxWidth: '155px',
+            boxSizing: 'border-box',
             textAlign: 'center'
           }}
         >
-          <span style={{ fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '145px' }}>
             {isBurnt ? '🔥 Burnt Soil Slice' : isEnriched ? '🌿 Regenerated Soil' : '🔬 Soil Cross-Section'}
           </span>
-          <span style={{ fontSize: '9px', opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+          <span style={{ fontSize: '9px', opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '145px' }}>
             {isBurnt ? '(Worms Lost)' : isEnriched ? '(Microbes Multiplying)' : '(Living Microbes)'}
           </span>
         </div>

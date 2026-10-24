@@ -3,6 +3,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
 import { playerInput } from './FarmerPlayer'
 import ChoiceWheel from './ChoiceWheel'
+import InWorldChoicePanel from './InWorldChoicePanel'
 import SmokeMeterHUD from './SmokeMeterHUD'
 import OneSeasonLaterModal from './OneSeasonLaterModal'
 import RewindGlitchOverlay from './RewindGlitchOverlay'
@@ -34,6 +35,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
     toggleQuality,
     interactionTarget,
     nearestPileInfo,
+    activeAlternative,
     hasMadeChoice,
     harvestState,
     harvestProgress,
@@ -41,6 +43,11 @@ export default function HUDOverlay({ onSwitchToLite }) {
     jumpToDecisionPhase,
     setInteractionTarget,
     handleInteract,
+    rotateCamera,
+    zoomCamera,
+    resetCamera,
+    watchVillage,
+    proceedToSeasonReport,
     burnState,
     useInWorldChoices,
     showOneSeasonModal,
@@ -68,6 +75,13 @@ export default function HUDOverlay({ onSwitchToLite }) {
   const lookTouchIdRef = useRef(null)
   const lastLookXRef = useRef(0)
 
+  const isChoicePanelOpen =
+    Boolean(useInWorldChoices) &&
+    (harvestState === 'harvested' || seasonPhase === 'decision') &&
+    burnState === 'idle' &&
+    activeAlternative === null &&
+    !hasMadeChoice
+
   useEffect(() => {
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
@@ -83,16 +97,6 @@ export default function HUDOverlay({ onSwitchToLite }) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [interactionTarget, handleInteract])
-
-  // Auto-advance to OneSeasonLaterModal after letting in-world consequence callouts play
-  useEffect(() => {
-    if (burnState === 'consequence' && !showOneSeasonModal && !showSeasonReport) {
-      const timer = setTimeout(() => {
-        setShowOneSeasonModal(true)
-      }, 6500)
-      return () => clearTimeout(timer)
-    }
-  }, [burnState, showOneSeasonModal, showSeasonReport, setShowOneSeasonModal])
 
   // Touch handlers for virtual joystick
   const handleJoystickTouchStart = (e) => {
@@ -289,32 +293,33 @@ export default function HUDOverlay({ onSwitchToLite }) {
               <span>{windState?.speedMs || 3.8} m/s</span>
             </div>
 
-            {/* Quick-Jump to Stubble Decisions & Burn Options */}
+            {/* Always-Visible HUD Button: Choose what to do with the straw */}
             {seasonPhase !== 'decision' && burnState === 'idle' && (
               <button
                 type="button"
-                data-testid="topbar-jump-to-decisions"
+                data-testid="choose-straw-action-btn"
+                id="choose-straw-action-btn"
                 onClick={jumpToDecisionPhase}
                 style={{
                   minHeight: '40px',
-                  padding: '4px 12px',
+                  padding: '4px 14px',
                   borderRadius: '9999px',
                   backgroundColor: '#D84315',
                   color: '#FFFFFF',
                   border: '2px solid #FFAB91',
                   fontWeight: 900,
-                  fontSize: '0.82rem',
+                  fontSize: '0.84rem',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
                   cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(216,67,21,0.3)',
+                  boxShadow: '0 3px 10px rgba(216,67,21,0.35)',
                   whiteSpace: 'nowrap'
                 }}
-                title="Jump directly to Crop Residue Management & Burn choices"
+                title="Choose what to do with the straw"
               >
-                <span>🔥</span>
-                <span>Burn & Stubble Options</span>
+                <span>🌾</span>
+                <span>Choose what to do with the straw</span>
               </button>
             )}
           </div>
@@ -768,8 +773,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
       {/* 5-OPTION RADIAL CHOICE WHEEL (Legacy fallback behind flag) */}
       {!useInWorldChoices && <ChoiceWheel />}
 
-      {/* IN-WORLD CONSEQUENCES: CONTINUATION BUTTON TO ONE SEASON LATER */}
-      {burnState === 'consequence' && !showOneSeasonModal && (
+      {/* BURN CONSEQUENCE ACTIONS: WATCH THE VILLAGE & CONTINUE TO REPORT */}
+      {burnState === 'consequence' && !showSeasonReport && (
         <div
           style={{
             position: 'absolute',
@@ -778,31 +783,57 @@ export default function HUDOverlay({ onSwitchToLite }) {
             transform: 'translateX(-50%)',
             pointerEvents: 'auto',
             zIndex: 80,
-            animation: 'fadeInUp 0.5s ease'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            animation: 'fadeInUp 0.4s ease'
           }}
         >
           <button
             type="button"
-            onClick={() => setShowOneSeasonModal(true)}
+            data-testid="watch-village-button"
+            onClick={watchVillage}
             style={{
-              minHeight: '52px',
-              padding: '12px 28px',
+              minHeight: '48px',
+              padding: '10px 20px',
               borderRadius: '9999px',
-              backgroundColor: '#D84315',
+              backgroundColor: '#1B5E20',
               color: '#FFFFFF',
-              border: '3px solid #FFAB91',
+              border: '2px solid #81C784',
               fontWeight: 900,
-              fontSize: '1rem',
+              fontSize: '0.92rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-              whiteSpace: 'nowrap'
+              gap: '8px',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.3)'
             }}
           >
-            <span>📜</span>
-            <span>One Season Later ➡️</span>
+            <span>🏘️</span>
+            <span>Watch the village</span>
+          </button>
+
+          <button
+            type="button"
+            data-testid="continue-to-report-button"
+            onClick={proceedToSeasonReport}
+            style={{
+              minHeight: '48px',
+              padding: '10px 24px',
+              borderRadius: '9999px',
+              backgroundColor: '#D84315',
+              color: '#FFFFFF',
+              border: '2px solid #FFAB91',
+              fontWeight: 900,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.35)'
+            }}
+          >
+            <span>Continue ➔</span>
           </button>
         </div>
       )}
@@ -954,6 +985,133 @@ export default function HUDOverlay({ onSwitchToLite }) {
           <span>{toastNotice}</span>
         </div>
       )}
+
+      {/* ON-SCREEN ORBIT CAMERA CONTROLS (for people without a mouse or on touch devices) */}
+      <div
+        data-testid="camera-controls-cluster"
+        style={{
+          position: 'absolute',
+          right: '16px',
+          bottom: isTouchDevice
+            ? (isChoicePanelOpen ? 'calc(58vh + 20px)' : 'calc(140px + env(safe-area-inset-bottom, 0px))')
+            : 'calc(24px + env(safe-area-inset-bottom, 0px))',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '6px',
+          backgroundColor: 'rgba(22, 56, 43, 0.90)',
+          padding: '8px',
+          borderRadius: '16px',
+          border: '1.5px solid rgba(129, 199, 132, 0.6)',
+          boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
+          pointerEvents: 'auto',
+          zIndex: 70
+        }}
+      >
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            type="button"
+            data-testid="cam-rotate-left"
+            onClick={() => rotateCamera(0.35)}
+            style={{
+              padding: '6px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              fontWeight: 800,
+              fontSize: '0.76rem',
+              cursor: 'pointer'
+            }}
+            title="Rotate camera left (turn view)"
+            aria-label="Rotate camera left"
+          >
+            🔄 Left
+          </button>
+          <button
+            type="button"
+            data-testid="cam-rotate-right"
+            onClick={() => rotateCamera(-0.35)}
+            style={{
+              padding: '6px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              fontWeight: 800,
+              fontSize: '0.76rem',
+              cursor: 'pointer'
+            }}
+            title="Rotate camera right (turn view)"
+            aria-label="Rotate camera right"
+          >
+            Right 🔄
+          </button>
+        </div>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            type="button"
+            data-testid="cam-zoom-in"
+            onClick={() => zoomCamera(-1.0)}
+            style={{
+              padding: '6px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              fontWeight: 800,
+              fontSize: '0.76rem',
+              cursor: 'pointer'
+            }}
+            title="Zoom in (closer to farmer)"
+            aria-label="Zoom in"
+          >
+            ➕ Zoom
+          </button>
+          <button
+            type="button"
+            data-testid="cam-zoom-out"
+            onClick={() => zoomCamera(1.0)}
+            style={{
+              padding: '6px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              fontWeight: 800,
+              fontSize: '0.76rem',
+              cursor: 'pointer'
+            }}
+            title="Zoom out (wider view)"
+            aria-label="Zoom out"
+          >
+            ➖ Out
+          </button>
+        </div>
+        <button
+          type="button"
+          data-testid="cam-reset"
+          onClick={resetCamera}
+          style={{
+            width: '100%',
+            padding: '5px 8px',
+            borderRadius: '8px',
+            backgroundColor: '#FFD54F',
+            color: '#16382B',
+            border: 'none',
+            fontWeight: 900,
+            fontSize: '0.76rem',
+            cursor: 'pointer'
+          }}
+          title="Reset camera view (Key: R)"
+          aria-label="Reset view"
+        >
+          🎯 Reset View (R)
+        </button>
+      </div>
+
+      {/* FIXED 2D CROP RESIDUE CHOICE PANEL (Screen-space right card / bottom sheet) */}
+      <InWorldChoicePanel />
 
       {/* SOWING MINI-GAME (Hold-to-plant timing meter) */}
       {seasonPhase === 'sowing' && <SowingMiniGame />}

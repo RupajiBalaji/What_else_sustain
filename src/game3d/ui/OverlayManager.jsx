@@ -38,8 +38,8 @@ export function OverlayManagerProvider({ children }) {
 
     const safeTop = isMobile ? 82 : 72
     const safeBottom = isTouch ? 96 : 42
-    const safeLeft = 14
-    const safeRight = 14
+    const safeLeft = 16
+    const safeRight = isMobile ? 20 : 36
 
     // Convert to array and sort descending by priority
     const entries = Array.from(registryRef.current.values())

@@ -182,7 +182,8 @@ function GLTFTrees({ activeTrees, isShadows, windState }) {
 
   const preparedScene = useMemo(() => {
     if (!scene) return null
-    return applyKenneyTextures(scene.clone(true))
+    const cloned = scene.clone(true)
+    return applyKenneyTextures(cloned)
   }, [scene])
 
   useFrame(({ clock }) => {
@@ -204,7 +205,7 @@ function GLTFTrees({ activeTrees, isShadows, windState }) {
           key={idx}
           object={preparedScene.clone(true)}
           position={[t.x, 0, t.z]}
-          scale={[t.s * 1.35, t.s * 1.35, t.s * 1.35]}
+          scale={[t.s * 2.5, t.s * 2.5, t.s * 2.5]}
           rotation={[0, idx * 0.8, 0]}
         />
       ))}

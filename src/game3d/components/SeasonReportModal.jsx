@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { useGame3D } from '../context/Game3DContext'
 import { GAME_BALANCE } from '../config/gameBalance'
@@ -24,7 +25,7 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
     return () => clearInterval(timer)
   }, [])
 
-  if (!seasonReportData) return null
+  if (!seasonReportData || typeof document === 'undefined') return null
 
   const {
     rank,
@@ -55,7 +56,7 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
     }
   }
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
@@ -68,7 +69,8 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
         padding: '16px',
         backdropFilter: 'blur(6px)',
         fontFamily: 'system-ui, -apple-system, sans-serif',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        pointerEvents: 'auto'
       }}
     >
       <motion.div
@@ -308,6 +310,7 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
           </div>
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   )
 }

@@ -48,7 +48,7 @@ function GLTFVillageHouses({ isHigh }) {
             key={h.id}
             object={scene.clone(true)}
             position={[h.x, 0, h.z]}
-            scale={[h.s, h.s, h.s]}
+            scale={[h.s * 4.2, h.s * 4.2, h.s * 4.2]}
             rotation={[0, h.rot, 0]}
           />
         )

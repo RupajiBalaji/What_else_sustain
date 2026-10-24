@@ -94,7 +94,7 @@ export const ASSET_MANIFEST = {
     id: 'house_1',
     modelUrl: '/models/house_1.glb',
     name: 'Village House (Terracotta Pitched)',
-    scale: 1.65, // 6-8 units wide
+    scale: 6.8, // 6-8 units wide
     positionOffset: [0, 0, 0],
     rotationOffset: [0, 0, 0],
     triangleBudget: 3500,
@@ -105,7 +105,7 @@ export const ASSET_MANIFEST = {
     id: 'house_2',
     modelUrl: '/models/house_2.glb',
     name: 'Village House (Flat Roof Terrace)',
-    scale: 1.65, // 6-8 units wide
+    scale: 6.8, // 6-8 units wide
     positionOffset: [0, 0, 0],
     rotationOffset: [0, 0, 0],
     triangleBudget: 3200,
@@ -116,7 +116,7 @@ export const ASSET_MANIFEST = {
     id: 'house_3',
     modelUrl: '/models/house_3.glb',
     name: 'Village House (Thatched/Veranda)',
-    scale: 1.55, // 6-8 units wide
+    scale: 6.5, // 6-8 units wide
     positionOffset: [0, 0, 0],
     rotationOffset: [0, 0, 0],
     triangleBudget: 3800,
@@ -127,7 +127,7 @@ export const ASSET_MANIFEST = {
     id: 'tree_1',
     modelUrl: '/models/tree_1.glb',
     name: 'Neem Tree (Spreading Crown)',
-    scale: 1.4, // 4-6 units tall (~4.9 units)
+    scale: 2.5, // 4-6 units tall (~4.8 units)
     positionOffset: [0, 0, 0],
     rotationOffset: [0, 0, 0],
     triangleBudget: 4200,
@@ -138,7 +138,7 @@ export const ASSET_MANIFEST = {
     id: 'tree_2',
     modelUrl: '/models/tree_2.glb',
     name: 'Acacia Tree (Slender Foliage)',
-    scale: 1.35, // 4-6 units tall (~4.8 units)
+    scale: 2.5, // 4-6 units tall (~4.8 units)
     positionOffset: [0, 0, 0],
     rotationOffset: [0, 0, 0],
     triangleBudget: 3800,

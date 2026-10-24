@@ -27,14 +27,14 @@ export function getSharedColormapTexture() {
   if (!sharedColormapTexture) {
     sharedColormapTexture = textureLoader.load('/Textures/colormap.png', (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace
-      tex.flipY = false
+      tex.flipY = true // Must be true for correct Kenney palette UV mapping
       tex.magFilter = THREE.NearestFilter
       tex.minFilter = THREE.NearestFilter
       tex.generateMipmaps = false
       tex.needsUpdate = true
     })
     sharedColormapTexture.colorSpace = THREE.SRGBColorSpace
-    sharedColormapTexture.flipY = false
+    sharedColormapTexture.flipY = true
     sharedColormapTexture.magFilter = THREE.NearestFilter
     sharedColormapTexture.minFilter = THREE.NearestFilter
     sharedColormapTexture.generateMipmaps = false

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import * as THREE from 'three'
 import { sound } from '../../game/soundManager'
 import { audioManager } from '../audio/AudioManager'
 import { useGame } from '../../context/GameContext'
@@ -296,6 +297,34 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [useInWorldChoices, setUseInWorldChoices] = useState(true)
   const [selectedChoiceId, setSelectedChoiceId] = useState(null)
   const [nearestPileInfo, setNearestPileInfo] = useState(null)
+
+  // Player position ref for camera tracking without re-rendering
+  const playerPositionRef = useRef(new THREE.Vector3(-1.2, 0, 10.0))
+  const cameraControlsRef = useRef(null)
+
+  const registerCameraControls = useCallback((controls) => {
+    cameraControlsRef.current = controls
+  }, [])
+
+  const rotateCamera = useCallback((deltaYaw) => {
+    cameraControlsRef.current?.rotate(deltaYaw)
+  }, [])
+
+  const pitchCamera = useCallback((deltaPitch) => {
+    cameraControlsRef.current?.pitch(deltaPitch)
+  }, [])
+
+  const zoomCamera = useCallback((deltaDist) => {
+    cameraControlsRef.current?.zoom(deltaDist)
+  }, [])
+
+  const resetCamera = useCallback(() => {
+    cameraControlsRef.current?.reset()
+  }, [])
+
+  const watchVillage = useCallback(() => {
+    cameraControlsRef.current?.watchVillage()
+  }, [])
   const [showOneSeasonModal, setShowOneSeasonModal] = useState(false)
 
   // Harvest cycle state: 'standing' | 'harvesting' | 'harvested'
@@ -342,9 +371,9 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const completeSowing = useCallback((isPerfect) => {
     lastSowingWasPerfectRef.current = isPerfect
     setSeasonPhase('growing')
-    const currentEvent = getSeasonEvent(persistentState.seasonIndex || 1)
-    setActiveSeasonalEvent(currentEvent)
-  }, [persistentState.seasonIndex])
+    // Seasonal events must never open before the decision
+    setActiveSeasonalEvent(null)
+  }, [])
 
   // Step B: Resolve Seasonal Random Event
   const resolveSeasonalEvent = useCallback((option) => {
@@ -409,6 +438,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
     sound.stopTractorEngine()
     sound.playSuccessChime()
+    setIsFlyoverActive(false)
     setHarvestProgress(1.0)
     setHarvestState('harvested')
     setSeasonPhase('decision')
@@ -715,11 +745,16 @@ export function Game3DProvider({ children, onFallbackToLite }) {
           language: 'en'
         })
 
-        // Conclude season
-        finishSeason('burn')
+        // Conclude 20s burn sequence: Stay in consequence mode so player can freely look around in 360,
+        // watch the smoke plume drift into the village, and click "Continue" to open the report.
+        triggerToast('🔥 Burn complete. Watch the smoke plume reach the village, then tap Continue.')
       }, totalDurationMs)
     }, 1800)
-  }, [activePile, interactionTarget, windState, reducedMotion, triggerHaptic, game, finishSeason])
+  }, [activePile, interactionTarget, windState, reducedMotion, triggerHaptic, game, triggerToast])
+
+  const proceedToSeasonReport = useCallback(() => {
+    finishSeason('burn')
+  }, [finishSeason])
 
   // Trigger VHS-style Rewind
   const triggerRewind = useCallback(() => {
@@ -928,6 +963,14 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         startHarvestSequence,
         skipHarvest,
         jumpToDecisionPhase,
+        proceedToSeasonReport,
+        playerPositionRef,
+        registerCameraControls,
+        rotateCamera,
+        pitchCamera,
+        zoomCamera,
+        resetCamera,
+        watchVillage,
         burnState,
         burnProgress,
         ignitedPiles,

@@ -204,57 +204,60 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
           />
         </div>
 
-        {/* Start Button (Unlocks audio & begins game) */}
+        {/* Start Button Options: Quick play (default) vs Full season */}
         {isReady ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+            {/* Primary Default: Quick Play */}
             <button
-              data-testid="start-3d-button"
-              type="button"
-              onClick={() => handleStart('sowing')}
-              style={{
-                width: '100%',
-                minHeight: '50px',
-                borderRadius: '9999px',
-                backgroundColor: '#FFD54F',
-                color: '#16382B',
-                border: '3px solid #16382B',
-                fontWeight: 900,
-                fontSize: '1rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 0 rgba(0,0,0,0.18)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-            >
-              <span>🌾</span>
-              <span>{t('game3d.startBtn')} (Full Season Cycle)</span>
-            </button>
-
-            <button
-              data-testid="start-decision-button"
+              data-testid="start-quick-play-button"
+              data-legacy-id="start-3d-button"
+              id="start-quick-play-btn"
               type="button"
               onClick={() => handleStart('decision')}
               style={{
                 width: '100%',
-                minHeight: '44px',
+                minHeight: '54px',
                 borderRadius: '9999px',
-                backgroundColor: '#D84315',
+                backgroundColor: '#2E7D32',
                 color: '#FFFFFF',
-                border: '2px solid #FFAB91',
+                border: '3px solid #1B5E20',
                 fontWeight: 900,
-                fontSize: '0.9rem',
+                fontSize: '1.05rem',
                 cursor: 'pointer',
-                boxShadow: '0 4px 10px rgba(216,67,21,0.25)',
+                boxShadow: '0 5px 0 rgba(0,0,0,0.2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px'
               }}
             >
-              <span>🔥</span>
-              <span>Direct Stubble Burning & Residue Choices</span>
+              <span>⚡</span>
+              <span>Quick Play (Go straight to the straw decision)</span>
+            </button>
+
+            {/* Secondary: Full Season */}
+            <button
+              data-testid="start-full-season-button"
+              type="button"
+              onClick={() => handleStart('sowing')}
+              style={{
+                width: '100%',
+                minHeight: '44px',
+                borderRadius: '9999px',
+                backgroundColor: '#FFF8E1',
+                color: '#E65100',
+                border: '2px solid #FFB74D',
+                fontWeight: 800,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>🌱</span>
+              <span>Full Season (Sowing ➔ Harvest ➔ Decision)</span>
             </button>
           </div>
         ) : (

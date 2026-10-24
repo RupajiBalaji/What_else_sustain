@@ -69,6 +69,7 @@ export default function GrowingTimeLapse({ onComplete }) {
         <span>GROWING CYCLE • Time-Lapse ({Math.round(progress)}%)</span>
         <button
           type="button"
+          data-testid="skip-growing-button"
           onClick={() => onComplete?.()}
           style={{
             backgroundColor: '#FFD54F',

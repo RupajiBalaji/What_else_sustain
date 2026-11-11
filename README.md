@@ -5,7 +5,7 @@ An experiential, bilingual (English & Telugu) web game that teaches students, ev
 > *"Make the mistake. Understand it. Choose what else."*
 > *"తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి."*
 
-🔗 **Live Prototype**: [LIVE_URL_HERE](LIVE_URL_HERE)
+🔗 **Live Prototype**: [LIVE_URL_HERE]((https://what-else-sustain.onrender.com/))
 
 ---
 

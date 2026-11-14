@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import * as THREE from 'three'
 import { sound } from '../../game/soundManager'
 import { audioManager } from '../audio/AudioManager'
+import { createSeasonMachine, SEASON_STATES } from '../state/seasonMachine'
 import { useGame } from '../../context/GameContext'
 import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 import { getQualityConfig, autoDetectQualityTier } from '../config/qualityConfig'
@@ -37,10 +38,22 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   }, [])
 
   // ==========================================
-  // 2. SEASON STATE MACHINE
+  // 2. SEASON STATE MACHINE (Backed by explicit SeasonMachine)
   // 'sowing' -> 'growing' -> 'harvest' -> 'decision' -> 'consequence' -> 'season_report'
   // ==========================================
-  const [seasonPhase, setSeasonPhase] = useState('sowing')
+  const seasonMachineRef = useRef(createSeasonMachine(SEASON_STATES.SOWING))
+  const [seasonPhase, setSeasonPhaseState] = useState(SEASON_STATES.SOWING)
+
+  const setSeasonPhase = useCallback((targetPhase, payload = {}) => {
+    try {
+      if (seasonMachineRef.current.canTransitionTo(targetPhase)) {
+        seasonMachineRef.current.transition(targetPhase, payload)
+      }
+    } catch (e) {
+      console.warn('[SeasonMachine] Transition warning:', e.message)
+    }
+    setSeasonPhaseState(targetPhase)
+  }, [])
   const [activeSeasonalEvent, setActiveSeasonalEvent] = useState(null)
   const [seasonReportData, setSeasonReportData] = useState(null)
   const [showSeasonReport, setShowSeasonReport] = useState(false)

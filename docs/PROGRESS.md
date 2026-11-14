@@ -82,12 +82,26 @@
 
 ---
 
-## Phase P4: Quality, Accessibility and Graphics (started 2026-11-14)
+## Phase P4: Quality, Accessibility and Graphics (started 2026-11-14, PASSED 2026-11-14)
 
 | Task | Audit status (DONE/PARTIAL/MISSING/BROKEN) | Work done | Files | Evidence (screenshot / test names) | Verified? |
 |------|-------------------------------------------|-----------|-------|------------------------------------|-----------|
-| P4-01 | PARTIAL | S13 Settings drawer with all sections (Language, Audio, Graphics, Controls, Accessibility, Your Farm, Reset) | `SettingsDrawer.jsx` | Setting persistence across reloads | in progress |
-| P4-02 | PARTIAL | Accessibility pass: colour-blind palette, subtitles, visible keyboard focus rings | `SettingsDrawer.jsx`, `SmokeMeterHUD.jsx` | Focus visible, contrast audit | in progress |
-| P4-03 | DONE | Asset optimization: models verified <1 MB each, network first load under budget | `public/assets/` | Asset size report < 1 MB each | yes |
+| P4-01 | DONE | S13 Settings drawer with all sections (Language, Audio, Graphics, Controls, Accessibility, Your Farm, Reset) | `SettingsDrawer.jsx`, `Game3DContext.jsx` | Setting persistence across reloads tested | yes |
+| P4-02 | DONE | Accessibility pass: colour-blind palette, subtitles, large text toggle, contrast-safe meters | `SettingsDrawer.jsx`, `SmokeMeterHUD.jsx` | Unit tests for storage flags and high-contrast color palette | yes |
+| P4-03 | DONE | Asset optimization: all 3D models verified <1 MB each (all <110 KB), network first load under budget | `public/models/`, `tests/unit/settings.test.js` | Automated asset size unit test verifying all models < 1 MB | yes |
+
+### Gate result: PASSED (2026-11-14)
+### Open issues and decisions
+- All P4 tasks verified and passing unit tests. Proceeding to Phase P5 (Localisation).
+
+---
+
+## Phase P5: Localisation (Telugu and Hindi) (started 2026-11-14)
+
+| Task | Audit status (DONE/PARTIAL/MISSING/BROKEN) | Work done | Files | Evidence (screenshot / test names) | Verified? |
+|------|-------------------------------------------|-----------|-------|------------------------------------|-----------|
+| P5-01 | MISSING | Translation extraction: audit parity across `en`, `te`, `hi` in `translations.json` | `src/data/translations.json`, `scripts/audit_translations.js` | Zero missing translation keys report | no |
+| P5-02 | MISSING | Review workflow: `TRANSLATION_REVIEW_NOTES.md` explains reviewed flags; honest unreviewed notice | `TRANSLATION_REVIEW_NOTES.md` | Language toggle in 3D and Lite | no |
+| P5-03 | MISSING | Font check: Telugu and Hindi Unicode render cleanly without tofu boxes | `src/index.css` | Noto Sans fonts and fallback font stacks | no |
 
 ### Gate result: OPEN

@@ -17,6 +17,8 @@ const rootDir = path.resolve(__dirname, '..')
 
 const scenariosPath = path.join(rootDir, 'src', 'data', 'scenarios.json')
 const scenariosRaw = fs.readFileSync(scenariosPath, 'utf8')
+const quizPath = path.join(rootDir, 'src', 'data', 'quiz.json')
+const quizRaw = fs.existsSync(quizPath) ? fs.readFileSync(quizPath, 'utf8') : null
 
 // 1. Prohibited claims check
 if (scenariosRaw.includes('100% Nitrogen Lost') || scenariosRaw.includes('100% Nitrogen &')) {
@@ -75,7 +77,38 @@ for (const scenario of scenarios) {
   }
 }
 
-console.log(`Audited ${auditedCount} statistics and metric objects across scenarios.`)
+// Audit quiz questions (Task P2-01)
+if (quizRaw) {
+  const quiz = JSON.parse(quizRaw)
+  if (!Array.isArray(quiz) || quiz.length < 5) {
+    errors.push(`quiz.json must contain at least 5 questions, found ${quiz?.length || 0}`)
+  }
+  for (let i = 0; i < (quiz || []).length; i++) {
+    const q = quiz[i]
+    auditedCount++
+    if (!q.source || typeof q.source !== 'string' || q.source.trim().length === 0) {
+      errors.push(`Missing 'source' in quiz question ${i + 1} (${q.id})`)
+    }
+    if (typeof q.verified !== 'boolean') {
+      errors.push(`Missing 'verified' boolean in quiz question ${i + 1} (${q.id})`)
+    }
+    if (!q.explanation || typeof q.explanation !== 'string' || q.explanation.trim().length === 0) {
+      errors.push(`Missing 'explanation' in quiz question ${i + 1} (${q.id})`)
+    }
+    if (q.verified === false && !q.explanation.toLowerCase().includes('game estimate')) {
+      errors.push(`Quiz question ${i + 1} (${q.id}) has verified: false but lacks '(game estimate)' in explanation!`)
+    }
+    if (!Array.isArray(q.options) || q.options.length < 3) {
+      errors.push(`Quiz question ${i + 1} (${q.id}) must have at least 3 options`)
+    }
+    const correctCount = (q.options || []).filter((opt) => opt.isCorrect).length
+    if (correctCount !== 1) {
+      errors.push(`Quiz question ${i + 1} (${q.id}) must have exactly 1 correct option, found ${correctCount}`)
+    }
+  }
+}
+
+console.log(`Audited ${auditedCount} statistics and metric objects across scenarios and quiz.`)
 
 if (errors.length > 0) {
   console.error(`❌ Data Audit Failed with ${errors.length} errors:`)

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "quiz_q1_soil_microbes",
+    "concept": "soil_biology",
+    "question": "What happens to the top layer of farm soil when paddy straw is burned open in the field?",
+    "options": [
+      {
+        "id": "opt_a",
+        "text": "High surface temperatures destroy beneficial soil microbes, nitrogen-fixing bacteria, and earthworms.",
+        "isCorrect": true
+      },
+      {
+        "id": "opt_b",
+        "text": "It permanently enriches natural nitrogen and potassium with zero nutrient loss.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_c",
+        "text": "It has no measurable physical or biological effect on the topsoil.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_d",
+        "text": "It cools the soil and attracts earthworms to the surface.",
+        "isCorrect": false
+      }
+    ],
+    "explanation": "Field measurements show that surface fire temperatures (50°C to 70°C) bake topsoil organic carbon and kill biological life. (game estimate)",
+    "source": "icar_iari_soil_study",
+    "verified": false
+  },
+  {
+    "id": "quiz_q2_happy_seeder",
+    "concept": "happy_seeder_mechanism",
+    "question": "How does a Happy Seeder direct-drill machine manage paddy straw residue?",
+    "options": [
+      {
+        "id": "opt_a",
+        "text": "It incinerates the straw inside an enclosed tractor chamber.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_b",
+        "text": "It cuts through surface residue, deposits it as an insulating mulch, and sows wheat seed directly beneath.",
+        "isCorrect": true
+      },
+      {
+        "id": "opt_c",
+        "text": "It packs the straw into plastic sacks and buries them deep underground.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_d",
+        "text": "It blows the straw into neighboring fields using giant fans.",
+        "isCorrect": false
+      }
+    ],
+    "explanation": "Happy Seeder enables direct zero-till sowing through standing stubble without burning or prior residue clearing. (game estimate)",
+    "source": "punjab_agri_univ_happy_seeder",
+    "verified": false
+  },
+  {
+    "id": "quiz_q3_bio_decomposer",
+    "concept": "bio_decomposer_science",
+    "question": "What active agents are contained in microbial bio-decomposer sprays used on paddy stubble?",
+    "options": [
+      {
+        "id": "opt_a",
+        "text": "Concentrated synthetic acid that dissolves straw within 10 minutes.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_b",
+        "text": "Flammable chemical fuel that prepares the field for burning.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_c",
+        "text": "A consortium of beneficial fungal and bacterial enzymes that accelerate natural decomposition of cellulose.",
+        "isCorrect": true
+      },
+      {
+        "id": "opt_d",
+        "text": "Chemical weedkiller that turns straw into plastic pellets.",
+        "isCorrect": false
+      }
+    ],
+    "explanation": "Bio-decomposers (such as Pusa Decomposer) utilize cellulolytic fungi to convert tough paddy straw into organic compost over 20-25 days. (game estimate)",
+    "source": "icar_iari_pusa_decomposer",
+    "verified": false
+  },
+  {
+    "id": "quiz_q4_pm25_health",
+    "concept": "respiratory_health_pm25",
+    "question": "Why does stubble burning smoke pose an acute health risk to nearby village settlements?",
+    "options": [
+      {
+        "id": "opt_a",
+        "text": "Fine particulate matter (PM2.5) penetrates deep into the lungs and bloodstream, triggering respiratory distress.",
+        "isCorrect": true
+      },
+      {
+        "id": "opt_b",
+        "text": "It only creates visual haze with no chemical or particulate pollutants.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_c",
+        "text": "The smoke is fully filtered and neutralized by village trees before reaching homes.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_d",
+        "text": "It only affects people standing directly in the fire perimeter.",
+        "isCorrect": false
+      }
+    ],
+    "explanation": "Dense agricultural smoke plumes carry elevated concentrations of PM2.5 and carbon monoxide directly into downwind habitations. (game estimate)",
+    "source": "cpcb_field_models",
+    "verified": false
+  },
+  {
+    "id": "quiz_q5_biomass_economy",
+    "concept": "biomass_circular_economy",
+    "question": "When a farmer chooses to bale and sell paddy straw to bio-energy or paper plants, what is the economic outcome?",
+    "options": [
+      {
+        "id": "opt_a",
+        "text": "The farmer incurs a legal penalty for removing organic crop waste.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_b",
+        "text": "The straw is turned from a disposal liability into a cash commodity, earning revenue while preventing smoke.",
+        "isCorrect": true
+      },
+      {
+        "id": "opt_c",
+        "text": "The field becomes completely unusable for subsequent crop seasons.",
+        "isCorrect": false
+      },
+      {
+        "id": "opt_d",
+        "text": "It costs more than buying a new tractor with zero revenue possible.",
+        "isCorrect": false
+      }
+    ],
+    "explanation": "Biomass aggregators and compressed biogas plants purchase bundled bales, providing direct farm revenue. (game estimate)",
+    "source": "mnre_biomass_benchmarks",
+    "verified": false
+  }
+]

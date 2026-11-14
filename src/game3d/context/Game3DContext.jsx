@@ -322,8 +322,25 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     cameraControlsRef.current?.reset()
   }, [])
 
+  const [isWatchingVillage, setIsWatchingVillage] = useState(false)
+  const [watchVillageProgress, setWatchVillageProgress] = useState(0)
+  const watchVillageTimerRef = useRef(null)
+
   const watchVillage = useCallback(() => {
+    setIsWatchingVillage(true)
+    setWatchVillageProgress(0)
     cameraControlsRef.current?.watchVillage()
+    const startT = Date.now()
+    const dur = 4500
+    if (watchVillageTimerRef.current) clearInterval(watchVillageTimerRef.current)
+    watchVillageTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startT
+      const prog = Math.min(1.0, elapsed / dur)
+      setWatchVillageProgress(prog)
+      if (prog >= 1.0) {
+        clearInterval(watchVillageTimerRef.current)
+      }
+    }, 100)
   }, [])
   const [showOneSeasonModal, setShowOneSeasonModal] = useState(false)
 
@@ -462,7 +479,17 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     const cropRevenue = Math.max(minRevenue, Math.round(baseRevenue * healthMult * sowBonus))
 
     // Decision specific costs / gains
-    const decisionRevenue = (decisionConfig.baleSaleGrossIncome || 0) + (decisionConfig.moneyCost || 0)
+    const decisionRevenue =
+      choiceKey === 'burn'
+        ? -3500
+        : choiceKey === 'bale_sell'
+        ? 15000
+        : choiceKey === 'happy_seeder'
+        ? -2500
+        : choiceKey === 'mulch'
+        ? -1200
+        : -800
+
     const netSeasonBalance = cropRevenue + decisionRevenue
 
     const soilDelta = decisionConfig.soilHealthDelta
@@ -500,7 +527,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         ? 'Residue was baled and transported to the bio-energy refinery, generating ₹15,000 extra income.'
         : choiceKey === 'mulch'
         ? 'Mulching shielded topsoil moisture, nurtured earthworms, and boosted next season root vitality.'
-        : 'Bio-decomposer converted straw into fertile organic humus, reviving soil biodiversity.'
+        : 'Compost (bio-decomposer) converted straw into fertile organic humus, reviving soil biodiversity.'
 
     const report = {
       rank,
@@ -518,11 +545,13 @@ export function Game3DProvider({ children, onFallbackToLite }) {
 
     setSeasonReportData(report)
 
-    // Apply carry-over to persistent state
+    // Harvest revenue added to persistent state (decision cost was already deducted in world)
+    const harvestAddition = cropRevenue + (choiceKey === 'bale_sell' ? 15000 : 0)
+
     setPersistentState((prev) => {
       const nextSoil = Math.max(0, Math.min(100, (prev.soilHealth || 70) + soilDelta))
       const nextVillage = Math.max(0, Math.min(100, (prev.villageHealth || 75) + villageDelta))
-      const nextMoney = Math.max(0, (prev.money || 12000) + netSeasonBalance)
+      const nextMoney = Math.max(0, (prev.money || 12000) + harvestAddition)
       const nextRep = Math.max(0, Math.min(100, (prev.reputation || 50) + repDelta))
       const nextXP = (prev.farmerXP || 0) + xpGained
 
@@ -565,6 +594,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setShowSeasonReport(false)
     setShowComparison(false)
     setShowOneSeasonModal(false)
+    setIsWatchingVillage(false)
+    setWatchVillageProgress(0)
     setBurnState('idle')
     setBurnProgress(0)
     setIgnitedPiles([])
@@ -642,6 +673,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setShowSeasonReport(false)
     setShowComparison(false)
     setShowOneSeasonModal(false)
+    setIsWatchingVillage(false)
+    setWatchVillageProgress(0)
     setBurnState('idle')
     setBurnProgress(0)
     setIgnitedPiles([])
@@ -664,8 +697,10 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setShowOneSeasonModal(false)
     setHasMadeChoice(true)
     setSeasonPhase('consequence')
-    const targetPile = pile || activePile || interactionTarget
+    const targetPile = pile || activePile || interactionTarget || STRAW_PILES_DATA[0]
     setActivePile(targetPile)
+    const targetPileId = targetPile?.id || 'straw_1'
+    setIgnitedPiles([targetPileId])
     setBurnState('lighting')
     setCinematicMode('burn_focus')
     if (!reducedMotion) {
@@ -676,6 +711,16 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     triggerHaptic([40, 30, 40])
     audioManager.setMusicState('tense')
 
+    // Immediately update farm capital in the world to reflect estimated nutrient replenishment drain
+    setPersistentState((prev) => {
+      const updated = {
+        ...prev,
+        money: Math.max(0, (prev.money || 12000) - 3500)
+      }
+      savePersistentState(updated)
+      return updated
+    })
+
     setTimeout(() => {
       setTimeScale(1.0)
       setCinematicMode('normal')
@@ -684,10 +729,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setTimeout(() => {
       setBurnState('burning')
       sound.startFireCrackle()
-
-      if (targetPile?.id) {
-        setIgnitedPiles([targetPile.id])
-      }
+      setIgnitedPiles((prev) => (prev.length > 0 ? prev : [targetPileId]))
 
       simulateSmokeApi({
         acres: 5.0,
@@ -772,6 +814,22 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setActiveAlternative(altKey)
     setAlternativeProgress(0)
     setRupeeCount(0)
+
+    // Immediately update farm capital for alternative upfront input costs
+    const upfrontCost =
+      altKey === 'happy_seeder' ? 2500 :
+      altKey === 'mulch' ? 1200 :
+      altKey === 'compost' ? 800 : 0
+    if (upfrontCost > 0) {
+      setPersistentState((prev) => {
+        const updated = {
+          ...prev,
+          money: Math.max(0, (prev.money || 12000) - upfrontCost)
+        }
+        savePersistentState(updated)
+        return updated
+      })
+    }
 
     setCinematicMode('alt_showcase')
     setTimeout(() => {
@@ -971,6 +1029,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         zoomCamera,
         resetCamera,
         watchVillage,
+        isWatchingVillage,
+        watchVillageProgress,
         burnState,
         burnProgress,
         ignitedPiles,

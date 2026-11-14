@@ -1,6 +1,6 @@
-import React, { useMemo, useRef } from 'react'
+import React, { useMemo, useRef, useEffect } from 'react'
 import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 
 /**
@@ -24,16 +24,17 @@ export const STRAW_PILES_DATA = [
  * Guarantees dynamic leaping tongues of fire on every quality tier,
  * not just a flat static orange cone.
  */
-function BurningPileFlames({ isBurning }) {
+function BurningPileFlames({ isBurning, burnProgress = 0 }) {
   const meshRef = useRef(null)
 
   const flameMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uCoreColor: { value: new THREE.Color('#FFFDE7') }, // White-hot core
-        uFlameColor: { value: new THREE.Color('#FF9100') }, // Vivid flame orange
-        uTipColor: { value: new THREE.Color('#D50000') } // Deep crimson tip
+        uProgress: { value: burnProgress },
+        uCoreColor: { value: new THREE.Color('#FFFDE7') }, // Incandescent white-yellow core
+        uFlameColor: { value: new THREE.Color('#FF6D00') }, // Vivid fiery orange
+        uTipColor: { value: new THREE.Color('#D50000') } // Crimson tips
       },
       vertexShader: `
         uniform float uTime;
@@ -42,8 +43,8 @@ function BurningPileFlames({ isBurning }) {
           vUv = uv;
           vec3 pos = position;
           // Turbulent vertical wave flutter
-          float wave = sin(pos.y * 5.0 - uTime * 14.0) * 0.12 * vUv.y;
-          float sway = cos(pos.y * 3.5 - uTime * 9.0) * 0.08 * vUv.y;
+          float wave = sin(pos.y * 6.0 - uTime * 16.0) * 0.16 * vUv.y;
+          float sway = cos(pos.y * 4.0 - uTime * 11.0) * 0.12 * vUv.y;
           pos.x += wave;
           pos.z += sway;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -51,25 +52,28 @@ function BurningPileFlames({ isBurning }) {
       `,
       fragmentShader: `
         uniform float uTime;
+        uniform float uProgress;
         uniform vec3 uCoreColor;
         uniform vec3 uFlameColor;
         uniform vec3 uTipColor;
         varying vec2 vUv;
 
         void main() {
-          // Flame shape teardrop mask
-          float distFromCenter = abs(vUv.x - 0.5) * 2.2;
-          float flicker = sin(uTime * 18.0 + vUv.y * 10.0) * 0.1;
-          float heightFactor = pow(1.0 - vUv.y, 1.4);
-          float alpha = smoothstep(1.0 + flicker, 0.2, distFromCenter / (heightFactor + 0.05));
+          // Flame tongue shape mask
+          float distFromCenter = abs(vUv.x - 0.5) * 2.3;
+          float flicker = sin(uTime * 20.0 + vUv.y * 12.0) * 0.14;
+          float heightFactor = pow(max(0.0, 1.0 - vUv.y), 1.3);
+          float alpha = smoothstep(1.0 + flicker, 0.15, distFromCenter / (heightFactor + 0.05));
 
-          if (alpha <= 0.02) discard;
+          if (alpha <= 0.03) discard;
 
           // Color gradient from white core to red tips
-          vec3 col = mix(uCoreColor, uFlameColor, smoothstep(0.0, 0.45, vUv.y));
-          col = mix(col, uTipColor, smoothstep(0.45, 1.0, vUv.y));
+          vec3 col = mix(uCoreColor, uFlameColor, smoothstep(0.0, 0.4, vUv.y));
+          col = mix(col, uTipColor, smoothstep(0.4, 0.95, vUv.y));
 
-          gl_FragColor = vec4(col, alpha * 0.92);
+          // Gradually subsides in the very last quarter as pile turns to ash
+          float intensity = smoothstep(1.0, 0.78, uProgress) * 0.85 + 0.15;
+          gl_FragColor = vec4(col * 1.3, alpha * 0.95 * intensity);
         }
       `,
       transparent: true,
@@ -83,40 +87,51 @@ function BurningPileFlames({ isBurning }) {
     if (!meshRef.current || !isBurning) return
     const t = clock.getElapsedTime()
     flameMaterial.uniforms.uTime.value = t
-    const pulse = 1.0 + Math.sin(t * 12.0) * 0.08
-    meshRef.current.scale.set(pulse, pulse * 1.1, pulse)
+    flameMaterial.uniforms.uProgress.value = burnProgress
+    const pulse = 1.0 + Math.sin(t * 14.0) * 0.09
+    const endFade = burnProgress > 0.8 ? Math.max(0.2, (1.0 - burnProgress) / 0.2) : 1.0
+    meshRef.current.scale.set(pulse * endFade, pulse * 1.15 * endFade, pulse * endFade)
   })
 
   if (!isBurning) return null
 
   return (
-    <group ref={meshRef} position={[0, 0.8, 0]}>
-      {/* 3 Crossed Vertical Flame Cards */}
+    <group ref={meshRef} position={[0, 0.7, 0]}>
+      {/* 3 Crossed Vertical Flame Cards (6-directional coverage) */}
       <mesh material={flameMaterial}>
-        <planeGeometry args={[2.0, 2.6, 6, 8]} />
+        <planeGeometry args={[2.2, 2.8, 8, 10]} />
       </mesh>
       <mesh material={flameMaterial} rotation={[0, Math.PI / 3, 0]}>
-        <planeGeometry args={[1.9, 2.5, 6, 8]} />
+        <planeGeometry args={[2.0, 2.7, 8, 10]} />
       </mesh>
       <mesh material={flameMaterial} rotation={[0, (Math.PI * 2) / 3, 0]}>
-        <planeGeometry args={[1.9, 2.4, 6, 8]} />
+        <planeGeometry args={[2.1, 2.6, 8, 10]} />
       </mesh>
+      {/* Bright flickering ground fire light */}
+      <pointLight
+        color="#FF6D00"
+        intensity={3.2 * Math.max(0.3, 1.0 - burnProgress * 0.4)}
+        distance={10}
+        decay={2}
+        position={[0, 0.5, 0]}
+      />
     </group>
   )
 }
 
 /**
- * Charring Burning Pile Cone with animated incandescent glowing cracks
- * (Replaces flat solid orange cone with realistic dark char and glowing fissures)
+ * Charring Burning Pile Cone with animated incandescent glowing cracks and ash progression
+ * Driven directly by burnProgress over 20s (straw -> black char -> glowing cracks -> powdery grey ash)
  */
-function CharringPileCone({ isBurning }) {
+function CharringPileCone({ isBurning, burnProgress = 0 }) {
   const materialRef = useRef(null)
 
   const charShader = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uIsBurning: { value: isBurning ? 1.0 : 0.0 }
+        uIsBurning: { value: isBurning ? 1.0 : 0.0 },
+        uBurnProgress: { value: burnProgress }
       },
       vertexShader: `
         varying vec2 vUv;
@@ -130,20 +145,33 @@ function CharringPileCone({ isBurning }) {
       fragmentShader: `
         uniform float uTime;
         uniform float uIsBurning;
+        uniform float uBurnProgress;
         varying vec2 vUv;
         varying vec3 vPos;
+
         void main() {
-          vec3 darkAsh = vec3(0.09, 0.08, 0.07);
-          vec3 charcoal = vec3(0.14, 0.12, 0.11);
-          vec3 baseCol = mix(darkAsh, charcoal, sin(vPos.y * 12.0) * 0.5 + 0.5);
+          // Color stages driven by uBurnProgress:
+          // 0.0: golden straw/char transition
+          // 0.2 - 0.6: deep charred black with hot glowing fissures
+          // 0.7 - 1.0: cooling into grey ash
+          vec3 strawStart = vec3(0.55, 0.38, 0.16);
+          vec3 deepChar = vec3(0.08, 0.07, 0.06);
+          vec3 greyAsh = vec3(0.38, 0.36, 0.35);
+
+          // Char transition early, then ash transition late
+          vec3 baseCol = mix(strawStart, deepChar, clamp(uBurnProgress * 3.5, 0.0, 1.0));
+          baseCol = mix(baseCol, greyAsh, smoothstep(0.55, 0.95, uBurnProgress));
 
           if (uIsBurning > 0.5) {
             float noise1 = sin(vPos.x * 14.0 + sin(vPos.y * 18.0));
             float noise2 = cos(vPos.z * 14.0 + cos(vPos.y * 10.0));
-            float crack = smoothstep(0.65, 0.90, abs(noise1 * noise2));
-            float pulse = sin(uTime * 9.0 + vPos.y * 8.0) * 0.25 + 0.75;
-            vec3 crackColor = mix(vec3(1.0, 0.2, 0.0), vec3(1.0, 0.8, 0.2), crack) * pulse * 2.2;
-            baseCol = mix(baseCol, crackColor, crack);
+            float crack = smoothstep(0.60, 0.88, abs(noise1 * noise2));
+            float pulse = sin(uTime * 11.0 + vPos.y * 9.0) * 0.25 + 0.75;
+
+            // Glowing cracks early and mid-burn, fading as pile cools to ash
+            float crackVisibility = smoothstep(0.0, 0.2, uBurnProgress) * (1.0 - smoothstep(0.65, 0.95, uBurnProgress));
+            vec3 crackColor = mix(vec3(1.0, 0.25, 0.0), vec3(1.0, 0.85, 0.2), crack) * pulse * 2.5;
+            baseCol = mix(baseCol, crackColor, crack * crackVisibility);
           }
 
           gl_FragColor = vec4(baseCol, 1.0);
@@ -156,12 +184,17 @@ function CharringPileCone({ isBurning }) {
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = clock.getElapsedTime()
       materialRef.current.uniforms.uIsBurning.value = isBurning ? 1.0 : 0.0
+      materialRef.current.uniforms.uBurnProgress.value = burnProgress
     }
   })
 
+  // Mound visibly shrinks vertically and spreads slightly as it burns down to ash
+  const shrinkHeight = Math.max(0.32, 1.0 - burnProgress * 0.68)
+  const spreadWidth = 1.0 + burnProgress * 0.15
+
   return (
-    <mesh position={[0, 1.05, 0]}>
-      <coneGeometry args={[1.25, 1.9, 12]} />
+    <mesh position={[0, 1.05 * shrinkHeight, 0]} scale={[spreadWidth, shrinkHeight, spreadWidth]}>
+      <coneGeometry args={[1.25, 1.9, 14]} />
       <primitive object={charShader} ref={materialRef} attach="material" />
     </mesh>
   )
@@ -213,12 +246,46 @@ export default function StrawPiles() {
     isFieldBurnt,
     ignitedPiles,
     burnState,
+    burnProgress = 0,
     activeAlternative,
     alternativeProgress,
     harvestState,
     seasonPhase
   } = useGame3D()
+  const { camera } = useThree()
   const isHigh = quality === 'high'
+
+  // Expose debug hook for E2E tests to sample screen position of the ignited pile
+  useFrame(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      const leadPile = STRAW_PILES_DATA.find((p) => ignitedPiles?.includes(p.id)) || STRAW_PILES_DATA[0]
+      window.__wes_debug.getIgnitedPileScreenPos = () => {
+        const v = new THREE.Vector3(leadPile.x, 0.9, leadPile.z)
+        v.project(camera)
+        const x = Math.round(((v.x + 1) * window.innerWidth) / 2)
+        const y = Math.round(((-v.y + 1) * window.innerHeight) / 2)
+        const inFrustum = v.z < 1.0 && v.x >= -1.05 && v.x <= 1.05 && v.y >= -1.05 && v.y <= 1.05
+        return {
+          x,
+          y,
+          inFrustum,
+          pileId: leadPile.id,
+          burnState,
+          burnProgress,
+          worldPos: { x: leadPile.x, y: 0.9, z: leadPile.z }
+        }
+      }
+    }
+  })
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.__wes_debug) {
+        delete window.__wes_debug.getIgnitedPileScreenPos
+      }
+    }
+  }, [])
 
   // Straw mounds are created only after the harvest sequence completes
   if (
@@ -235,8 +302,10 @@ export default function StrawPiles() {
       {STRAW_PILES_DATA.map((pile) => {
         const isSelected = interactionTarget?.id === pile.id
         const isNearest = nearestPileInfo?.id === pile.id
-        const isIgnited = ignitedPiles?.includes(pile.id)
-        const isBurnt = isFieldBurnt || (burnState === 'burning' && isIgnited)
+        const isIgnited = ignitedPiles?.length
+          ? ignitedPiles.includes(pile.id)
+          : (burnState === 'burning' || burnState === 'lighting') && pile.id === 'straw_1'
+        const isBurnt = isFieldBurnt || ((burnState === 'burning' || burnState === 'consequence') && isIgnited)
 
         // Compost darkening
         const isComposting = activeAlternative === 'compost' && pile.id === 'straw_1'
@@ -252,7 +321,7 @@ export default function StrawPiles() {
 
         // Palette: Rich golden straw normally, charred ash when burnt (no neon orange cone)
         const topColor = isBurnt
-          ? '#24201E'
+          ? (burnProgress > 0.6 ? '#424242' : '#24201E')
           : isComposting
           ? '#2E1E11'
           : isSelected
@@ -260,7 +329,7 @@ export default function StrawPiles() {
           : '#F5B041'
 
         const baseColor = isBurnt
-          ? '#181514'
+          ? (burnProgress > 0.6 ? '#303030' : '#181514')
           : isComposting
           ? '#23160D'
           : isSelected
@@ -292,9 +361,12 @@ export default function StrawPiles() {
               document.body.style.cursor = 'default'
             }}
           >
-            {/* 1. Main straw mound: Charring with glowing cracks during burn, rich golden straw normally */}
+            {/* 1. Main straw mound: Charring with glowing cracks and ash progression during burn */}
             {isBurnt ? (
-              <CharringPileCone isBurning={burnState === 'burning' && isIgnited} />
+              <CharringPileCone
+                isBurning={(burnState === 'burning' || burnState === 'lighting') && isIgnited}
+                burnProgress={burnProgress}
+              />
             ) : (
               <mesh position={[0, 1.05, 0]} castShadow={isHigh} receiveShadow={isHigh}>
                 <coneGeometry args={[1.25, 1.9, 10]} />
@@ -308,8 +380,17 @@ export default function StrawPiles() {
               </mesh>
             )}
 
-            {/* 2. Base straw skirt ring */}
-            <mesh position={[0, 0.13, 0]} castShadow={isHigh} receiveShadow={isHigh}>
+            {/* 2. Base straw skirt ring: shrinks with ash */}
+            <mesh
+              position={[0, 0.13 * (isBurnt ? Math.max(0.35, 1.0 - burnProgress * 0.65) : 1.0), 0]}
+              scale={[
+                isBurnt ? 1.0 + burnProgress * 0.1 : 1.0,
+                isBurnt ? Math.max(0.35, 1.0 - burnProgress * 0.65) : 1.0,
+                isBurnt ? 1.0 + burnProgress * 0.1 : 1.0
+              ]}
+              castShadow={isHigh}
+              receiveShadow={isHigh}
+            >
               <cylinderGeometry args={[1.25, 1.35, 0.26, 10]} />
               <meshStandardMaterial
                 color={baseColor}
@@ -318,7 +399,10 @@ export default function StrawPiles() {
             </mesh>
 
             {/* 3. Layered Leaping Flames on Ignited Pile (On Every Tier) */}
-            <BurningPileFlames isBurning={isIgnited && burnState === 'burning'} />
+            <BurningPileFlames
+              isBurning={isIgnited && (burnState === 'burning' || burnState === 'lighting')}
+              burnProgress={burnProgress}
+            />
 
             {/* 4. Pulsing Target Beacon on Nearest Straw Pile */}
             {isNearest && burnState === 'idle' && !isBurnt && (
@@ -329,7 +413,7 @@ export default function StrawPiles() {
             {isBurnt && (
               <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
                 <ringGeometry args={[1.2, 1.6, 16]} />
-                <meshBasicMaterial color="#3E2723" transparent opacity={0.8} />
+                <meshBasicMaterial color={burnProgress > 0.6 ? '#424242' : '#3E2723'} transparent opacity={0.8} />
               </mesh>
             )}
           </group>

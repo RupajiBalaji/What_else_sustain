@@ -10,7 +10,7 @@ import OneSeasonLaterModal from './OneSeasonLaterModal'
 import RewindGlitchOverlay from './RewindGlitchOverlay'
 import RupeeCounterHUD from './RupeeCounterHUD'
 import ComparisonSliderModal from './ComparisonSliderModal'
-import KidPledgeScreen from '../../game/KidPledgeScreen'
+import PledgeCardModal from './PledgeCardModal'
 import SettingsDrawer from './SettingsDrawer'
 import SowingMiniGame from './SowingMiniGame'
 import GrowingTimeLapse from './GrowingTimeLapse'
@@ -55,6 +55,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
     setShowOneSeasonModal,
     showPledgeModal,
     setShowPledgeModal,
+    showComparison,
+    setShowComparison,
     showFps,
     toggleFps,
     fps,
@@ -703,6 +705,71 @@ export default function HUDOverlay({ onSwitchToLite }) {
       {/* ONE SEASON LATER CONSEQUENCE MODAL */}
       <OneSeasonLaterModal onSwitchToLite={onSwitchToLite} />
 
+      {/* PERSISTENT QUIET "WHAT ELSE?" REWIND & COMPARISON BUTTONS (Section 4.3 S8) */}
+      {hasMadeChoice && !showSeasonReport && !showComparison && (
+        <div
+          data-testid="what-else-controls"
+          style={{
+            position: 'absolute',
+            bottom: isTouchDevice ? 'calc(135px + env(safe-area-inset-bottom, 0px))' : 'calc(24px + env(safe-area-inset-bottom, 0px))',
+            left: 'calc(16px + env(safe-area-inset-left, 0px))',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            pointerEvents: 'auto',
+            zIndex: 60
+          }}
+        >
+          <button
+            type="button"
+            data-testid="what-else-rewind-button"
+            onClick={replaySeason}
+            style={{
+              backgroundColor: 'rgba(20, 26, 32, 0.90)',
+              color: '#A5D6A7',
+              border: '1px solid rgba(129, 199, 132, 0.4)',
+              borderRadius: '9999px',
+              padding: '8px 16px',
+              fontSize: '0.80rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.35)'
+            }}
+          >
+            <span>⏪</span>
+            <span>What else?</span>
+          </button>
+
+          <button
+            type="button"
+            data-testid="open-comparison-button"
+            onClick={() => setShowComparison(true)}
+            style={{
+              backgroundColor: 'rgba(20, 26, 32, 0.90)',
+              color: '#FFF176',
+              border: '1px solid rgba(255, 241, 118, 0.4)',
+              borderRadius: '9999px',
+              padding: '8px 16px',
+              fontSize: '0.80rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.35)'
+            }}
+          >
+            <span>⚖️</span>
+            <span>Compare</span>
+          </button>
+        </div>
+      )}
+
       {/* VHS REWIND VISUAL GLITCH OVERLAY */}
       <RewindGlitchOverlay />
 
@@ -713,31 +780,10 @@ export default function HUDOverlay({ onSwitchToLite }) {
       <ComparisonSliderModal onSwitchToLite={onSwitchToLite} />
 
       {/* SUSTAINABILITY PLEDGE MODAL */}
-      {showPledgeModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 140,
-            backgroundColor: 'rgba(0, 0, 0, 0.82)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-            overflowY: 'auto',
-            pointerEvents: 'auto'
-          }}
-        >
-          <div style={{ width: '100%', maxWidth: '640px', maxHeight: '92vh', overflowY: 'auto', borderRadius: '24px' }}>
-            <KidPledgeScreen
-              scenarioId="farm_crop_residue"
-              onExitToMap={() => setShowPledgeModal(false)}
-              onOpenScorecard={onSwitchToLite}
-            />
-          </div>
-        </div>
-      )}
+      <PledgeCardModal
+        isOpen={showPledgeModal}
+        onClose={() => setShowPledgeModal(false)}
+      />
 
       {/* BOTTOM TOUCH CONTROLS (for mobile / touchscreens) */}
       {isTouchDevice && (

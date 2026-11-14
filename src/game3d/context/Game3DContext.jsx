@@ -375,6 +375,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [burnState, setBurnState] = useState('idle')
   const [burnProgress, setBurnProgress] = useState(0)
   const [ignitedPiles, setIgnitedPiles] = useState([])
+  const [triedChoices, setTriedChoices] = useState([])
   const burnTimerRef = useRef(null)
   const burnIntervalRef = useRef(null)
 
@@ -718,6 +719,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setShowOneSeasonModal(false)
     setHasMadeChoice(true)
     setSeasonPhase('consequence')
+    setTriedChoices((prev) => [...new Set([...prev, 'burn'])])
     const targetPile = pile || activePile || interactionTarget || STRAW_PILES_DATA[0]
     setActivePile(targetPile)
     const targetPileId = targetPile?.id || 'straw_1'
@@ -829,6 +831,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setShowChoiceWheel(false)
     setHasMadeChoice(true)
     setSeasonPhase('consequence')
+    setTriedChoices((prev) => [...new Set([...prev, altKey])])
     sound.initAudio()
     sound.playTap()
     audioManager.setMusicState('hopeful')
@@ -1066,6 +1069,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         activeAlternative,
         alternativeProgress,
         startAlternative,
+        triedChoices,
         rupeeCount,
         showOneSeasonModal,
         setShowOneSeasonModal,

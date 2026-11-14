@@ -9,7 +9,8 @@ export default function ComparisonSliderModal({ onSwitchToLite }) {
     showComparison,
     setShowComparison,
     triggerRewind,
-    setShowPledgeModal
+    setShowPledgeModal,
+    activeAlternative
   } = useGame3D()
 
   const [sliderPos, setSliderPos] = useState(50) // 0 to 100
@@ -32,50 +33,82 @@ export default function ComparisonSliderModal({ onSwitchToLite }) {
   }
 
   const handleTryAnother = () => {
+    sound.initAudio()
+    sound.playTap()
     setShowComparison(false)
     triggerRewind()
   }
 
+  const altTitle =
+    activeAlternative === 'happy_seeder' ? 'Happy Seeder' :
+    activeAlternative === 'mulch' ? 'Mulch into Soil' :
+    activeAlternative === 'compost' ? 'Compost (bio-decomposer)' :
+    activeAlternative === 'bale_sell' ? 'Bale & Sell' : 'Sustainable Alternative'
+
   return (
     <div
+      data-testid="comparison-slider-modal"
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(15, 23, 18, 0.88)',
-        backdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(10, 15, 20, 0.88)',
+        backdropFilter: 'blur(10px)',
         zIndex: 130,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '14px',
+        padding: '16px',
         overflowY: 'auto',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         userSelect: 'none',
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        color: '#FFFFFF'
       }}
     >
       <div
         style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '24px',
+          backgroundColor: 'rgba(20, 26, 32, 0.96)',
+          borderRadius: '20px',
           width: '100%',
-          maxWidth: '620px',
-          padding: '22px',
-          boxShadow: '0 20px 48px rgba(0,0,0,0.5)',
-          border: '3px solid #2E7D32',
+          maxWidth: '680px',
+          padding: '24px',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+          border: '1.5px solid rgba(255, 255, 255, 0.16)',
           display: 'flex',
           flexDirection: 'column',
           maxHeight: '92vh',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          gap: '16px'
         }}
       >
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '14px' }}>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#1B5E20', margin: '0 0 4px 0' }}>
-            {t('game3d.comparisonTitle')}
-          </h2>
-          <p style={{ fontSize: '0.82rem', color: '#546E7A', margin: 0, lineHeight: 1.35 }}>
-            {t('game3d.comparisonSubtitle')}
+        <div style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.12)', paddingBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1.4rem' }}>⚖️</span>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#A5D6A7', margin: 0 }}>
+                {t('game3d.comparisonTitle') || 'What Else? Side-by-Side Comparison'}
+              </h2>
+            </div>
+            <button
+              onClick={() => setShowComparison(false)}
+              aria-label="Close comparison"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                color: '#FFFFFF',
+                cursor: 'pointer',
+                fontWeight: 900
+              }}
+            >
+              ✕
+            </button>
+          </div>
+          <p style={{ fontSize: '0.80rem', color: '#B0BEC5', margin: '4px 0 0 0' }}>
+            {t('game3d.comparisonSubtitle') || 'Compare the harmful burn decision with your chosen sustainable alternative.'}
           </p>
         </div>
 
@@ -87,13 +120,12 @@ export default function ComparisonSliderModal({ onSwitchToLite }) {
           style={{
             position: 'relative',
             width: '100%',
-            height: '240px',
-            borderRadius: '18px',
+            height: '200px',
+            borderRadius: '14px',
             overflow: 'hidden',
             cursor: 'ew-resize',
-            boxShadow: 'inset 0 0 16px rgba(0,0,0,0.4)',
-            marginBottom: '16px',
-            border: '2px solid #37474F'
+            boxShadow: 'inset 0 0 16px rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.15)'
           }}
         >
           {/* 1. RIGHT SIDE: SUSTAINABLE OUTCOME (Clean green) */}
@@ -101,8 +133,8 @@ export default function ComparisonSliderModal({ onSwitchToLite }) {
             style={{
               position: 'absolute',
               inset: 0,
-              backgroundColor: '#1B5E20',
-              backgroundImage: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #43A047 100%)',
+              backgroundColor: '#1B3B2B',
+              backgroundImage: 'radial-gradient(circle at top right, #2E7D32 0%, #16382B 70%)',
               color: '#FFFFFF',
               display: 'flex',
               flexDirection: 'column',
@@ -111,60 +143,48 @@ export default function ComparisonSliderModal({ onSwitchToLite }) {
               textAlign: 'right'
             }}
           >
-            <div style={{ display: 'inline-block', alignSelf: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)', padding: '4px 10px', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800 }}>
-              {t('game3d.comparisonSustainableLabel')}
+            <div style={{ display: 'inline-block', alignSelf: 'flex-end', backgroundColor: 'rgba(46, 125, 50, 0.75)', padding: '4px 10px', borderRadius: '9999px', fontSize: '0.74rem', fontWeight: 900 }}>
+              ✓ {altTitle}
             </div>
-            <div style={{ fontSize: '0.76rem', lineHeight: 1.4, maxWidth: '65%', alignSelf: 'flex-end' }}>
-              <div style={{ fontWeight: 800, color: '#C8E6C9', marginBottom: '2px' }}>
-                ✓ {t('game3d.comparisonAirSustainable')}
-              </div>
-              <div style={{ color: '#E8F5E9', marginBottom: '2px' }}>
-                ✓ {t('game3d.comparisonSoilSustainable')}
-              </div>
-              <div style={{ fontWeight: 800, color: '#FFD54F' }}>
-                ✓ {t('game3d.comparisonMoneySustainable')}
-              </div>
+            <div style={{ fontSize: '0.74rem', lineHeight: 1.4 }}>
+              <div style={{ fontWeight: 800, color: '#A5D6A7' }}>✓ Clean air, zero toxic village smoke</div>
+              <div style={{ color: '#C8E6C9' }}>✓ Organic carbon preserved in topsoil</div>
+              <div style={{ fontWeight: 800, color: '#81C784' }}>✓ Soil fertility reduces next season fertilizer costs</div>
             </div>
-            <div style={{ fontSize: '0.7rem', opacity: 0.85 }}>
-              Smoke Exposure: 1 / 100 (Clean)
+            <div style={{ fontSize: '0.70rem', color: '#81C784' }}>
+              Simulated Exposure: 0 / 100 (Safe)
             </div>
           </div>
 
-          {/* 2. LEFT SIDE: BURNED OUTCOME (Smoky ash) clipped by sliderPos */}
+          {/* 2. LEFT SIDE: BURNING MISTAKE (Smog & Ash) */}
           <div
             style={{
               position: 'absolute',
               top: 0,
-              left: 0,
               bottom: 0,
+              left: 0,
               width: `${sliderPos}%`,
-              backgroundColor: '#263238',
-              backgroundImage: 'linear-gradient(135deg, #212121 0%, #37474F 50%, #4E342E 100%)',
+              backgroundColor: '#3E2723',
+              backgroundImage: 'radial-gradient(circle at top left, #D84315 0%, #212121 80%)',
               color: '#FFFFFF',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
               padding: '16px',
               overflow: 'hidden',
-              borderRight: '3px solid #FFFFFF'
+              boxShadow: '4px 0 16px rgba(0,0,0,0.6)'
             }}
           >
-            <div style={{ display: 'inline-block', alignSelf: 'flex-start', backgroundColor: 'rgba(0,0,0,0.5)', padding: '4px 10px', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
-              {t('game3d.comparisonMistakeLabel')}
+            <div style={{ display: 'inline-block', alignSelf: 'flex-start', backgroundColor: 'rgba(198, 40, 40, 0.75)', padding: '4px 10px', borderRadius: '9999px', fontSize: '0.74rem', fontWeight: 900, whiteSpace: 'nowrap' }}>
+              ✗ Burning Stubble
             </div>
-            <div style={{ fontSize: '0.76rem', lineHeight: 1.4, minWidth: '220px' }}>
-              <div style={{ fontWeight: 800, color: '#FF8A65', marginBottom: '2px' }}>
-                ✗ {t('game3d.comparisonAirMistake')}
-              </div>
-              <div style={{ color: '#CFD8DC', marginBottom: '2px' }}>
-                ✗ {t('game3d.comparisonSoilMistake')}
-              </div>
-              <div style={{ fontWeight: 800, color: '#EF9A9A' }}>
-                ✗ {t('game3d.comparisonMoneyMistake')}
-              </div>
+            <div style={{ fontSize: '0.74rem', lineHeight: 1.4, minWidth: '220px' }}>
+              <div style={{ fontWeight: 800, color: '#FF8A65' }}>✗ Toxic PM2.5 smoke plumes blanket village</div>
+              <div style={{ color: '#CFD8DC' }}>✗ Heat kills earthworms & beneficial fungi</div>
+              <div style={{ fontWeight: 800, color: '#EF9A9A' }}>✗ -₹3,000 to ₹4,500 / acre lost (game estimate)</div>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#FFAB91', whiteSpace: 'nowrap' }}>
-              Smoke Exposure: 84 / 100 (Toxic)
+            <div style={{ fontSize: '0.70rem', color: '#FFAB91', whiteSpace: 'nowrap' }}>
+              Simulated Exposure: 84 / 100 (Toxic)
             </div>
           </div>
 
@@ -185,17 +205,17 @@ export default function ComparisonSliderModal({ onSwitchToLite }) {
           >
             <div
               style={{
-                width: '34px',
-                height: '34px',
+                width: '32px',
+                height: '32px',
                 borderRadius: '50%',
-                backgroundColor: '#FFFFFF',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-                border: '3px solid #2E7D32',
+                backgroundColor: 'rgba(20, 26, 32, 0.95)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                border: '2px solid #81C784',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '0.9rem',
-                color: '#1B5E20',
+                fontSize: '0.85rem',
+                color: '#81C784',
                 fontWeight: 900
               }}
             >
@@ -204,112 +224,91 @@ export default function ComparisonSliderModal({ onSwitchToLite }) {
           </div>
         </div>
 
-        {/* Rewards & Badges Unlocked */}
-        <div
-          style={{
-            backgroundColor: '#F1F8E9',
-            border: '2px solid #81C784',
-            borderRadius: '16px',
-            padding: '12px 16px',
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '8px'
-          }}
-        >
-          <div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 900, color: '#1B5E20' }}>
-              🏆 {t('game3d.comparisonClaimRewards')}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#33691E' }}>
-              Earned Badges: <strong>Soil Saver 🌾</strong> & <strong>Curious Mind 🔍</strong>
-            </div>
-          </div>
-          <div
-            style={{
-              backgroundColor: '#2E7D32',
-              color: '#FFFFFF',
-              fontWeight: 900,
-              fontSize: '0.95rem',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
-            }}
-          >
-            +50 PTS
-          </div>
+        {/* 2-COLUMN METRICS COMPARISON TABLE */}
+        <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <th style={{ padding: '8px 12px', textAlign: 'left', color: '#90A4AE', fontWeight: 800 }}>Metric</th>
+                <th style={{ padding: '8px 12px', textAlign: 'center', color: '#EF9A9A', fontWeight: 800 }}>Burn Stubble</th>
+                <th style={{ padding: '8px 12px', textAlign: 'center', color: '#A5D6A7', fontWeight: 800 }}>{altTitle}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <td style={{ padding: '8px 12px', fontWeight: 700, color: '#ECEFF1' }}>Farm Financial Impact</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#EF9A9A' }}>-₹3,000 to ₹4,500/ac <span style={{ fontSize: '0.65rem', color: '#B0BEC5' }}>(estimate)</span></td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#A5D6A7' }}>+₹1,500 to ₹2,500/ac <span style={{ fontSize: '0.65rem', color: '#B0BEC5' }}>(estimate)</span></td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <td style={{ padding: '8px 12px', fontWeight: 700, color: '#ECEFF1' }}>Soil Health Delta</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#EF9A9A' }}>-25 pts (microbes perished)</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#A5D6A7' }}>+25 pts (microbes thriving)</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <td style={{ padding: '8px 12px', fontWeight: 700, color: '#ECEFF1' }}>Simulated Smoke Index</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#EF9A9A' }}>84 / 100 (Toxic Smog)</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#A5D6A7' }}>0 / 100 (Clean Air)</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, color: '#ECEFF1' }}>Nutrient Retention</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#EF9A9A' }}>100% C & ~34kg NPK lost</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#A5D6A7' }}>Retained & recycled</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Sourced Takeaway */}
+        <div style={{ backgroundColor: 'rgba(76, 175, 80, 0.10)', border: '1px solid rgba(76, 175, 80, 0.3)', borderRadius: '10px', padding: '10px 14px', fontSize: '0.74rem', color: '#C8E6C9', lineHeight: 1.4 }}>
+          <strong>💡 Sourced Takeaway (NPMCR / 2021 review):</strong> Burning residue vaporizes all organic carbon and roughly 5.5kg N, 2.3kg P, 25kg K per tonne. Sustainable alternatives return nutrients directly to the soil, saving money next season.
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Take Sustainability Pledge */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' }}>
           <button
             type="button"
-            onClick={handleTakePledge}
-            style={{
-              minHeight: '48px',
-              padding: '10px 18px',
-              borderRadius: '9999px',
-              backgroundColor: '#FFD54F',
-              color: '#16382B',
-              border: '2.5px solid #E65100',
-              fontWeight: 900,
-              fontSize: '1rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 12px rgba(230, 81, 0, 0.3)'
-            }}
-          >
-            <span>🤝</span>
-            <span>{t('game3d.takePledgeBtn')}</span>
-          </button>
-
-          {/* Try Another Alternative (Rewind to Choice Wheel) */}
-          <button
-            type="button"
+            data-testid="comparison-try-another-button"
             onClick={handleTryAnother}
             style={{
-              minHeight: '44px',
-              padding: '8px 18px',
-              borderRadius: '9999px',
-              backgroundColor: '#2E7D32',
+              padding: '10px 18px',
+              borderRadius: '8px',
+              backgroundColor: 'transparent',
               color: '#FFFFFF',
-              border: 'none',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
               fontWeight: 800,
-              fontSize: '0.9rem',
+              fontSize: '0.85rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
               gap: '6px'
             }}
           >
             <span>🔄</span>
-            <span>{t('game3d.tryAnotherAlt')}</span>
+            <span>Try another alternative</span>
           </button>
 
-          {/* Switch to Lite mode fallback */}
           <button
             type="button"
-            onClick={onSwitchToLite}
+            data-testid="comparison-keep-choice-button"
+            onClick={handleTakePledge}
             style={{
-              minHeight: '40px',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              backgroundColor: '#FFFFFF',
-              color: '#546E7A',
-              border: '1.5px solid #CFD8DC',
-              fontWeight: 700,
-              fontSize: '0.82rem',
-              cursor: 'pointer'
+              padding: '10px 22px',
+              borderRadius: '8px',
+              backgroundColor: '#4CAF50',
+              color: '#141A20',
+              border: 'none',
+              fontWeight: 900,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
             }}
           >
-            📱 {t('game3d.switchToLite')}
+            <span>✓</span>
+            <span>Keep this choice</span>
           </button>
         </div>
       </div>

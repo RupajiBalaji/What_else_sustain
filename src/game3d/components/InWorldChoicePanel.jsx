@@ -95,6 +95,7 @@ export default function InWorldChoicePanel() {
     setShowChoiceWheel,
     selectedChoiceId,
     setSelectedChoiceId,
+    triedChoices = [],
     seasonPhase
   } = useGame3D()
 
@@ -272,6 +273,11 @@ export default function InWorldChoicePanel() {
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '0.84rem', color: isSelected ? opt.color : '#FFFFFF' }}>
                     {idx + 1}. {opt.label}
+                    {triedChoices.includes(opt.isBurn ? 'burn' : opt.id) && (
+                      <span style={{ marginLeft: '6px', fontSize: '0.65rem', color: '#81C784', backgroundColor: 'rgba(76, 175, 80, 0.15)', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(76, 175, 80, 0.3)' }}>
+                        ✓ Tried
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: '0.70rem', color: '#90A4AE', fontWeight: 600 }}>
                     Cost: {opt.cost} • Effort: {opt.effort}

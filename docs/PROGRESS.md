@@ -51,13 +51,29 @@
 
 ---
 
-## Phase P2: Learning Layer (started 2026-11-14)
+## Phase P2: Learning Layer (started 2026-11-14, PASSED 2026-11-14)
 
 | Task | Audit status (DONE/PARTIAL/MISSING/BROKEN) | Work done | Files | Evidence (screenshot / test names) | Verified? |
 |------|-------------------------------------------|-----------|-------|------------------------------------|-----------|
-| P2-01 | MISSING | Write `src/data/quiz.json` with 5 questions with source IDs from `SOURCES.md` | `src/data/quiz.json` | `npm run audit:data` check | no |
-| P2-02 | MISSING | Pre-check and post-check UI (S10) before first decision and after first report | `QuizModal.jsx` | Viewport rendering across touch & keyboard | no |
-| P2-03 | MISSING | Results view with before, after, delta, and concepts learned | `QuizModal.jsx` | Unit test for math calculations | no |
-| P2-04 | MISSING | Learning analytics payload with session ID, questions, answers, and deltas | `src/utils/quizAnalytics.js` | Schema validation test | no |
+| P2-01 | DONE | Write `src/data/quiz.json` with 5 questions with source IDs from `SOURCES.md` and audit integration | `src/data/quiz.json`, `scripts/audit_data.js` | `npm run audit:data` validates 19 statistics including quiz | yes |
+| P2-02 | DONE | Pre-check and post-check UI (S10) before first decision and after first report, keyboard & touch | `QuizModal.jsx`, `HUDOverlay.jsx`, `SeasonReportModal.jsx` | Responsive modal, keyboard 1-4 & Enter, skip option | yes |
+| P2-03 | DONE | Results view with before, after, delta, concepts learned, and honest feedback message | `QuizModal.jsx`, `quizAnalytics.js` | Unit test for math calculations and honest phrasing | yes |
+| P2-04 | DONE | Learning analytics payload with session ID, questions, answers, and deltas | `src/utils/quizAnalytics.js`, `tests/unit/quiz.test.js` | Unit tests for schema and payload generation | yes |
+
+### Gate result: PASSED (2026-11-14)
+### Open issues and decisions
+- All P2 tasks verified and passing unit tests and data audit. Proceeding to Phase P3 (Persistence, Sessions and Classes).
+
+---
+
+## Phase P3: Persistence, Sessions and Classes (started 2026-11-14)
+
+| Task | Audit status (DONE/PARTIAL/MISSING/BROKEN) | Work done | Files | Evidence (screenshot / test names) | Verified? |
+|------|-------------------------------------------|-----------|-------|------------------------------------|-----------|
+| P3-01 | MISSING | Postgres + SQLite storage layer with `DATABASE_URL` and migrations for sessions, events, quiz_attempts, classes | `backend/database.py`, `backend/models.py` | Backend startup test with SQLite and Postgres | no |
+| P3-02 | MISSING | Backend session endpoints (`/api/sessions`, `/api/sessions/{id}/events`, `/api/sessions/{id}/quiz`, `/api/sessions/{id}/summary`) | `backend/main.py` | API contract tests passing | no |
+| P3-03 | MISSING | Offline fallback: queue telemetry in localStorage/IndexedDB and retry without blocking gameplay | `src/utils/offlineQueue.js` | Unit/e2e network disconnect test | no |
+| P3-04 | MISSING | Class code student flow (S12) with input, validation, and fallback to direct play | `ClassCodeModal.jsx`, `LoadingScreen.jsx` | Test for valid code and invalid code error | no |
+| P3-05 | MISSING | Teacher dashboard (S12) at `/teacher` with create class, live metrics, rank distribution, and CSV export | `src/pages/TeacherDashboard.jsx`, `backend/main.py` | Simulated class sessions and CSV export test | no |
 
 ### Gate result: OPEN

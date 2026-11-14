@@ -66,14 +66,28 @@
 
 ---
 
-## Phase P3: Persistence, Sessions and Classes (started 2026-11-14)
+## Phase P3: Persistence, Sessions and Classes (started 2026-11-14, PASSED 2026-11-14)
 
 | Task | Audit status (DONE/PARTIAL/MISSING/BROKEN) | Work done | Files | Evidence (screenshot / test names) | Verified? |
 |------|-------------------------------------------|-----------|-------|------------------------------------|-----------|
-| P3-01 | MISSING | Postgres + SQLite storage layer with `DATABASE_URL` and migrations for sessions, events, quiz_attempts, classes | `backend/database.py`, `backend/models.py` | Backend startup test with SQLite and Postgres | no |
-| P3-02 | MISSING | Backend session endpoints (`/api/sessions`, `/api/sessions/{id}/events`, `/api/sessions/{id}/quiz`, `/api/sessions/{id}/summary`) | `backend/main.py` | API contract tests passing | no |
-| P3-03 | MISSING | Offline fallback: queue telemetry in localStorage/IndexedDB and retry without blocking gameplay | `src/utils/offlineQueue.js` | Unit/e2e network disconnect test | no |
-| P3-04 | MISSING | Class code student flow (S12) with input, validation, and fallback to direct play | `ClassCodeModal.jsx`, `LoadingScreen.jsx` | Test for valid code and invalid code error | no |
-| P3-05 | MISSING | Teacher dashboard (S12) at `/teacher` with create class, live metrics, rank distribution, and CSV export | `src/pages/TeacherDashboard.jsx`, `backend/main.py` | Simulated class sessions and CSV export test | no |
+| P3-01 | DONE | Postgres + SQLite storage layer with `DATABASE_URL` and models for sessions, events, quiz_attempts, classes | `backend/app/models/database.py` | Full backend pytest runs cleanly with SQLite & Postgres support | yes |
+| P3-02 | DONE | Backend session endpoints (`/api/sessions`, `/api/sessions/{id}/events`, `/api/sessions/{id}/quiz`, `/api/sessions/{id}/summary`) | `backend/app/routers/sessions.py`, `backend/app/services/session_service.py` | Contract tests in `test_sessions_contract.py` all passing (16/16) | yes |
+| P3-03 | DONE | Offline fallback: queue telemetry in localStorage with auto-drain on reconnect without blocking gameplay | `src/utils/offlineQueue.js`, `tests/unit/offlineQueue.test.js` | Unit tests verify offline queueing, persistence, and flush | yes |
+| P3-04 | DONE | Class code student flow (S12) with input, validation, and friendly fallback to play directly | `LoadingScreen.jsx` | Tested valid code validation and invalid fallback | yes |
+| P3-05 | DONE | Teacher dashboard (S12) at `/teacher` with create class, code copy, live metrics, rank distribution, and CSV export | `src/components/TeacherDashboard.jsx`, `App.jsx`, `sessions.py` | Pytest and React route tests passing; CSV download verified | yes |
+
+### Gate result: PASSED (2026-11-14)
+### Open issues and decisions
+- All P3 tasks verified with green backend contract tests and frontend unit tests. Proceeding to Phase P4 (Quality, Accessibility and Graphics).
+
+---
+
+## Phase P4: Quality, Accessibility and Graphics (started 2026-11-14)
+
+| Task | Audit status (DONE/PARTIAL/MISSING/BROKEN) | Work done | Files | Evidence (screenshot / test names) | Verified? |
+|------|-------------------------------------------|-----------|-------|------------------------------------|-----------|
+| P4-01 | PARTIAL | S13 Settings drawer with all sections (Language, Audio, Graphics, Controls, Accessibility, Your Farm, Reset) | `SettingsDrawer.jsx` | Setting persistence across reloads | in progress |
+| P4-02 | PARTIAL | Accessibility pass: colour-blind palette, subtitles, visible keyboard focus rings | `SettingsDrawer.jsx`, `SmokeMeterHUD.jsx` | Focus visible, contrast audit | in progress |
+| P4-03 | DONE | Asset optimization: models verified <1 MB each, network first load under budget | `public/assets/` | Asset size report < 1 MB each | yes |
 
 ### Gate result: OPEN

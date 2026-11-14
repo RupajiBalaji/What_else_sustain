@@ -89,31 +89,33 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
           flexDirection: 'column'
         }}
       >
-        {/* Top Header Banner */}
+        {/* Top Header Banner: Title and Rank Badge in clean horizontal layout (Zero overlap!) */}
         <div
           style={{
             background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)',
             color: '#FFFFFF',
-            padding: '20px 24px',
-            textAlign: 'center',
-            position: 'relative'
+            padding: '12px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexShrink: 0
           }}
         >
-          <div style={{ fontSize: '0.8rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#A5D6A7' }}>
-            Season {persistentState?.seasonIndex || 1} Report
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#A5D6A7' }}>
+              Season {persistentState?.seasonIndex || 1} Report
+            </div>
+            <h2 style={{ margin: '2px 0 0 0', fontSize: '1.25rem', fontWeight: 900, lineHeight: 1.2 }}>
+              Harvest Complete!
+            </h2>
           </div>
-          <h2 style={{ margin: '4px 0 0 0', fontSize: '1.5rem', fontWeight: 900 }}>
-            Harvest Complete!
-          </h2>
 
-          {/* Letter Rank Badge */}
+          {/* Letter Rank Badge: Cleanly right-aligned without covering title */}
           <div
             style={{
-              position: 'absolute',
-              top: '16px',
-              right: '20px',
-              width: '56px',
-              height: '56px',
+              width: '46px',
+              height: '46px',
               borderRadius: '50%',
               backgroundColor: rank?.badgeColor || '#FFD700',
               color: '#16382B',
@@ -122,30 +124,31 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-              border: '3px solid #FFFFFF'
+              border: '2.5px solid #FFFFFF',
+              flexShrink: 0
             }}
           >
-            <span style={{ fontSize: '1.5rem', fontWeight: 900, lineHeight: 1 }}>{rank?.rank || 'A'}</span>
-            <span style={{ fontSize: '0.55rem', fontWeight: 900, textTransform: 'uppercase' }}>Rank</span>
+            <span style={{ fontSize: '1.3rem', fontWeight: 900, lineHeight: 1 }}>{rank?.rank || 'A'}</span>
+            <span style={{ fontSize: '0.5rem', fontWeight: 900, textTransform: 'uppercase' }}>Rank</span>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Content Body: Compact on 360x640 to ensure Next Season button is reachable without scrolling */}
+        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {/* Summary Box */}
           <div
             style={{
               backgroundColor: '#F1F8E9',
               border: '1.5px solid #81C784',
-              borderRadius: '16px',
-              padding: '12px 16px',
-              fontSize: '0.86rem',
+              borderRadius: '12px',
+              padding: '8px 12px',
+              fontSize: '0.80rem',
               color: '#1B5E20',
               fontWeight: 700,
-              lineHeight: 1.45
+              lineHeight: 1.35
             }}
           >
-            <strong>What changed in the village:</strong> {summaryText}
+            <strong>What changed:</strong> {summaryText}
           </div>
 
           {/* Economics Breakdown */}
@@ -153,101 +156,84 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
             style={{
               backgroundColor: '#FAFAFA',
               border: '1px solid #E0E0E0',
-              borderRadius: '16px',
-              padding: '14px 18px'
+              borderRadius: '12px',
+              padding: '8px 12px'
             }}
           >
-            <div style={{ fontSize: '0.78rem', fontWeight: 900, color: '#616161', textTransform: 'uppercase', marginBottom: '8px' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#616161', textTransform: 'uppercase', marginBottom: '4px' }}>
               Financial Results
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#37474F', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#37474F', marginBottom: '3px' }}>
               <span>Crop Harvest Sale:</span>
               <strong style={{ color: '#2E7D32' }}>+₹{Math.round(cropRevenue * (counterAnim / 100)).toLocaleString('en-IN')}</strong>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#37474F', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#37474F', marginBottom: '3px' }}>
               <span>Residue Choice Balance:</span>
               <strong style={{ color: decisionRevenue >= 0 ? '#2E7D32' : '#C62828' }}>
                 {decisionRevenue >= 0 ? '+' : ''}₹{Math.round(decisionRevenue * (counterAnim / 100)).toLocaleString('en-IN')}
               </strong>
             </div>
-            <div style={{ borderTop: '1px solid #E0E0E0', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 900 }}>
-              <span style={{ color: '#16382B' }}>Net Season Earnings:</span>
-              <span style={{ color: '#1B5E20' }}>₹{Math.round(netSeasonBalance * (counterAnim / 100)).toLocaleString('en-IN')}</span>
+            <div style={{ borderTop: '1px solid #E0E0E0', paddingTop: '4px', marginTop: '4px', display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', fontWeight: 900 }}>
+              <span style={{ color: '#16382B' }}>Net Season Balance:</span>
+              <span style={{ color: netSeasonBalance >= 0 ? '#2E7D32' : '#C62828' }}>
+                {netSeasonBalance >= 0 ? '+' : ''}₹{Math.round(netSeasonBalance * (counterAnim / 100)).toLocaleString('en-IN')}
+              </span>
             </div>
           </div>
 
           {/* Carry-over Metrics Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
             {/* Soil Health */}
-            <div style={{ backgroundColor: '#EFEBE9', borderRadius: '12px', padding: '10px', textAlign: 'center', border: '1px solid #BCAAA4' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#5D4037' }}>SOIL VITALITY</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#3E2723' }}>
+            <div style={{ backgroundColor: '#EFEBE9', borderRadius: '10px', padding: '6px', textAlign: 'center', border: '1px solid #BCAAA4' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#5D4037' }}>SOIL</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#3E2723' }}>
                 {Math.round(persistentState?.soilHealth || 70)}
               </div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: soilDelta >= 0 ? '#2E7D32' : '#C62828' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: soilDelta >= 0 ? '#2E7D32' : '#C62828' }}>
                 {soilDelta >= 0 ? `+${soilDelta}` : soilDelta}
               </div>
             </div>
 
             {/* Village Health */}
-            <div style={{ backgroundColor: '#E0F2F1', borderRadius: '12px', padding: '10px', textAlign: 'center', border: '1px solid #80CBC4' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#00695C' }}>VILLAGE AIR</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#004D40' }}>
+            <div style={{ backgroundColor: '#E0F2F1', borderRadius: '10px', padding: '6px', textAlign: 'center', border: '1px solid #80CBC4' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#00695C' }}>VILLAGE AIR</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#004D40' }}>
                 {Math.round(persistentState?.villageHealth || 75)}
               </div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: villageDelta >= 0 ? '#2E7D32' : '#C62828' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: villageDelta >= 0 ? '#2E7D32' : '#C62828' }}>
                 {villageDelta >= 0 ? `+${villageDelta}` : villageDelta}
               </div>
             </div>
 
             {/* Sustainable Streak */}
-            <div style={{ backgroundColor: '#FFF8E1', borderRadius: '12px', padding: '10px', textAlign: 'center', border: '1px solid #FFE082' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#F57F17' }}>FIRELESS STREAK</div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#E65100' }}>
+            <div style={{ backgroundColor: '#FFF8E1', borderRadius: '10px', padding: '6px', textAlign: 'center', border: '1px solid #FFE082' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#F57F17' }}>STREAK</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#E65100' }}>
                 {streak}
               </div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#F57F17' }}>
-                {streak > 1 ? '🔥 Zero fire!' : 'Seasons'}
+              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#F57F17' }}>
+                {streak > 1 ? '🔥 Zero fire' : 'Seasons'}
               </div>
             </div>
           </div>
 
-          {/* Farmer Level & XP Bar */}
-          <div style={{ backgroundColor: '#F5F5F5', borderRadius: '14px', padding: '10px 14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 800, color: '#424242', marginBottom: '4px' }}>
-              <span>Level {currentLevel.level}: {currentLevel.title}</span>
-              <span style={{ color: '#2E7D32' }}>+{xpGained} XP</span>
-            </div>
-            <div style={{ width: '100%', height: '8px', backgroundColor: '#E0E0E0', borderRadius: '9999px', overflow: 'hidden' }}>
-              <div
-                style={{
-                  width: `${Math.min(100, (currentXP / (xpNeeded || 1)) * 100)}%`,
-                  height: '100%',
-                  backgroundColor: '#4CAF50',
-                  borderRadius: '9999px',
-                  transition: 'width 0.5s ease'
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+          {/* Action Buttons: Next Season reachable without scrolling on 360x640 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
             <button
               type="button"
               data-testid="next-season-button"
               onClick={onNextSeason}
               style={{
                 width: '100%',
-                minHeight: '52px',
+                minHeight: '44px',
                 backgroundColor: '#2E7D32',
                 color: '#FFFFFF',
                 border: 'none',
-                borderRadius: '14px',
+                borderRadius: '12px',
                 fontWeight: 900,
-                fontSize: '1.05rem',
+                fontSize: '0.98rem',
                 cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(46,125,50,0.3)',
+                boxShadow: '0 4px 12px rgba(46,125,50,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

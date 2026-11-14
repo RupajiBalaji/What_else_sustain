@@ -3,7 +3,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
 import { audioManager } from '../audio/AudioManager'
 
-export default function SettingsDrawer({ isOpen, onClose }) {
+export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
   const { t } = useLanguage()
   const {
     quality,
@@ -24,7 +24,8 @@ export default function SettingsDrawer({ isOpen, onClose }) {
     toggleMute,
     showDevStats,
     toggleDevStats,
-    resetNewGame
+    resetNewGame,
+    setShowAchievementsPanel
   } = useGame3D()
 
   if (!isOpen) return null
@@ -56,11 +57,12 @@ export default function SettingsDrawer({ isOpen, onClose }) {
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.55)',
-        zIndex: 120,
+        zIndex: 130,
         display: 'flex',
         justifyContent: 'flex-end',
         backdropFilter: 'blur(3px)',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        pointerEvents: 'auto'
       }}
       onClick={onClose}
     >
@@ -106,6 +108,63 @@ export default function SettingsDrawer({ isOpen, onClose }) {
             }}
           >
             ✕
+          </button>
+        </div>
+
+        {/* Secondary Navigation (Lite Mode & Badges) */}
+        <div style={{ borderTop: '1px solid #EEEEEE', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, color: '#3E2723' }}>
+            Quick Actions
+          </label>
+          <button
+            type="button"
+            data-testid="switch-to-lite-button"
+            onClick={() => {
+              onClose()
+              if (onSwitchToLite) onSwitchToLite()
+            }}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1.5px solid #2E7D32',
+              backgroundColor: '#E8F5E9',
+              color: '#1B5E20',
+              fontWeight: 800,
+              fontSize: '0.86rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span>📱</span>
+            <span>Switch to 2D Lite Mode</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (setShowAchievementsPanel) setShowAchievementsPanel(true)
+              onClose()
+            }}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1.5px solid #7B1FA2',
+              backgroundColor: '#F3E5F5',
+              color: '#4A148C',
+              fontWeight: 800,
+              fontSize: '0.86rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span>🏆</span>
+            <span>View Badges & Achievements</span>
           </button>
         </div>
 

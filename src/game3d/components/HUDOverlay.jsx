@@ -5,6 +5,7 @@ import { playerInput } from './FarmerPlayer'
 import ChoiceWheel from './ChoiceWheel'
 import InWorldChoicePanel from './InWorldChoicePanel'
 import SmokeMeterHUD from './SmokeMeterHUD'
+import ConsequenceCallouts from './ConsequenceCallouts'
 import OneSeasonLaterModal from './OneSeasonLaterModal'
 import RewindGlitchOverlay from './RewindGlitchOverlay'
 import RupeeCounterHUD from './RupeeCounterHUD'
@@ -217,64 +218,153 @@ export default function HUDOverlay({ onSwitchToLite }) {
           pointerEvents: 'none'
         }}
       >
-        {/* 1. TOP HUD BAR: Single non-wrapping row (menu, wind, settings, quality, [fps if enabled]) */}
+        {/* 1. TOP HUD BAR: Single non-wrapping row, icons with short numbers only, secondary items in Settings */}
         <div
+          data-testid="top-hud-bar"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '6px',
+            gap: '4px',
             flexWrap: 'nowrap',
             width: '100%',
-            overflowX: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
             pointerEvents: 'auto'
           }}
         >
-          {/* Left: Lite Mode & Wind */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            <button
-              type="button"
-              data-testid="switch-to-lite-button"
-              onClick={onSwitchToLite}
+          {/* Status Chips: Single compact row */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              flexWrap: 'nowrap',
+              overflowX: 'hidden'
+            }}
+          >
+            {/* Season Badge */}
+            <div
+              title={`Season ${persistentState?.seasonIndex || 1}, Year ${persistentState?.yearIndex || 1}`}
               style={{
-                minHeight: '40px',
-                padding: '4px 10px',
+                backgroundColor: 'rgba(27, 94, 32, 0.92)',
+                color: '#FFFFFF',
+                padding: '3px 7px',
                 borderRadius: '9999px',
-                backgroundColor: '#FFFFFF',
-                color: '#16382B',
-                border: '2px solid #2E7D32',
-                fontWeight: 800,
-                fontSize: '0.82rem',
+                fontWeight: 900,
+                fontSize: '0.74rem',
+                border: '1.5px solid #81C784',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                gap: '3px',
+                flexShrink: 0,
                 whiteSpace: 'nowrap'
               }}
-              aria-label="Switch to Lite 2D Mode"
             >
-              <span>📱</span>
-              <span>{t('game3d.switchToLite')}</span>
-            </button>
+              <span>🌾</span>
+              <span>S{persistentState?.seasonIndex || 1}</span>
+            </div>
 
-            {/* Wind Indicator Pill */}
+            {/* Soil Health */}
             <div
+              title="Soil Health"
               style={{
-                minHeight: '40px',
-                padding: '4px 10px',
+                backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                color: '#3E2723',
+                border: '1.5px solid #8D6E63',
                 borderRadius: '9999px',
-                backgroundColor: 'rgba(255, 255, 255, 0.92)',
-                border: '2px solid #0288D1',
-                color: '#01579B',
+                padding: '3px 6px',
                 fontWeight: 800,
-                fontSize: '0.8rem',
+                fontSize: '0.74rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                gap: '3px',
+                flexShrink: 0,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>🪱</span>
+              <span>{Math.round(persistentState?.soilHealth ?? 70)}%</span>
+            </div>
+
+            {/* Village Health */}
+            <div
+              title="Village Air & Health"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                color: '#1B5E20',
+                border: '1.5px solid #81C784',
+                borderRadius: '9999px',
+                padding: '3px 6px',
+                fontWeight: 800,
+                fontSize: '0.74rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                flexShrink: 0,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>🏡</span>
+              <span>{Math.round(persistentState?.villageHealth ?? 75)}%</span>
+            </div>
+
+            {/* Money */}
+            <div
+              title={`Capital: ₹${(persistentState?.money ?? 12000).toLocaleString('en-IN')}`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                color: '#BF360C',
+                border: '1.5px solid #FFB74D',
+                borderRadius: '9999px',
+                padding: '3px 6px',
+                fontWeight: 800,
+                fontSize: '0.74rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                flexShrink: 0,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>💰</span>
+              <span>₹{Math.round((persistentState?.money ?? 12000) / 1000)}k</span>
+            </div>
+
+            {/* Reputation */}
+            <div
+              title="Reputation"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                color: '#4A148C',
+                border: '1.5px solid #BA68C8',
+                borderRadius: '9999px',
+                padding: '3px 6px',
+                fontWeight: 800,
+                fontSize: '0.74rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                flexShrink: 0,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>👑</span>
+              <span>{Math.round(persistentState?.reputation ?? 50)}</span>
+            </div>
+
+            {/* Wind Indicator */}
+            <div
+              style={{
+                padding: '3px 6px',
+                borderRadius: '9999px',
+                backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                border: '1.5px solid #0288D1',
+                color: '#01579B',
+                fontWeight: 800,
+                fontSize: '0.74rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                flexShrink: 0,
                 whiteSpace: 'nowrap'
               }}
               title="Current Wind Direction & Speed (affects smoke dispersion)"
@@ -284,116 +374,62 @@ export default function HUDOverlay({ onSwitchToLite }) {
                 style={{
                   display: 'inline-block',
                   transform: `rotate(${windState?.directionDeg || 75}deg)`,
-                  fontSize: '1.05rem',
+                  fontSize: '0.85rem',
                   transition: 'transform 0.4s ease'
                 }}
               >
                 ⬆️
               </span>
-              <span>{windState?.speedMs || 3.8} m/s</span>
+              <span>{windState?.speedMs || 3.8}m/s</span>
             </div>
-
-            {/* Always-Visible HUD Button: Choose what to do with the straw */}
-            {seasonPhase !== 'decision' && burnState === 'idle' && (
-              <button
-                type="button"
-                data-testid="choose-straw-action-btn"
-                id="choose-straw-action-btn"
-                onClick={jumpToDecisionPhase}
-                style={{
-                  minHeight: '40px',
-                  padding: '4px 14px',
-                  borderRadius: '9999px',
-                  backgroundColor: '#D84315',
-                  color: '#FFFFFF',
-                  border: '2px solid #FFAB91',
-                  fontWeight: 900,
-                  fontSize: '0.84rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  cursor: 'pointer',
-                  boxShadow: '0 3px 10px rgba(216,67,21,0.35)',
-                  whiteSpace: 'nowrap'
-                }}
-                title="Choose what to do with the straw"
-              >
-                <span>🌾</span>
-                <span>Choose what to do with the straw</span>
-              </button>
-            )}
           </div>
 
-          {/* Right: Settings, Quality, and FPS toggle (hidden unless showFps is enabled) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            {/* FPS Button: Hidden unless showFps is active */}
+          {/* Right: Settings Drawer Trigger Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
             {showFps && (
               <button
                 type="button"
                 onClick={toggleFps}
                 style={{
-                  minHeight: '40px',
-                  padding: '4px 10px',
+                  padding: '3px 6px',
                   borderRadius: '9999px',
                   backgroundColor: '#E8F5E9',
-                  border: '2px solid #37474F',
+                  border: '1px solid #37474F',
                   fontWeight: 800,
-                  fontSize: '0.78rem',
+                  fontSize: '0.7rem',
                   color: '#263238',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap'
                 }}
-                title="FPS display active (press F or click to hide)"
               >
-                ⚡ {fps} FPS
+                {fps}F
               </button>
             )}
-
-            {/* Quality Toggle */}
             <button
               type="button"
-              onClick={toggleQuality}
-              style={{
-                minHeight: '40px',
-                padding: '4px 10px',
-                borderRadius: '9999px',
-                backgroundColor: quality === 'high' ? '#FFF9C4' : quality === 'medium' ? '#E1F5FE' : '#ECEFF1',
-                border: '2px solid #E65100',
-                fontWeight: 800,
-                fontSize: '0.8rem',
-                color: '#BF360C',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
-              title="Toggle graphics quality"
-            >
-              {quality === 'high' ? '💎 High' : quality === 'medium' ? '⚖️ Med' : '⚡ Low'}
-            </button>
-
-            {/* Settings Drawer Button */}
-            <button
-              type="button"
+              data-testid="settings-toggle-button"
               onClick={() => setShowSettings(true)}
               style={{
-                minHeight: '40px',
-                padding: '4px 10px',
+                minHeight: '34px',
+                padding: '3px 8px',
                 borderRadius: '9999px',
-                backgroundColor: '#FFFFFF',
-                border: '2px solid #2E7D32',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: '1.5px solid #2E7D32',
                 fontWeight: 800,
-                fontSize: '0.8rem',
+                fontSize: '0.76rem',
                 color: '#16382B',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                whiteSpace: 'nowrap'
+                gap: '3px',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
               }}
-              title="Open Settings"
-              aria-label="Open Game Settings"
+              title="Open Settings (Quality, Audio, Mode, Badges)"
+              aria-label="Open Settings"
             >
               <span>⚙️</span>
-              <span>Settings</span>
+              <span style={{ display: 'inline' }}>Settings</span>
             </button>
           </div>
         </div>
@@ -545,187 +581,13 @@ export default function HUDOverlay({ onSwitchToLite }) {
             <span>{isTouchDevice ? t('game3d.objectiveInteractTouch') : t('game3d.objectiveInteractDesktop')}</span>
           </div>
         )}
-
-        {/* 3. STATUS CHIPS STRIP: Horizontally scrollable single row below objective banner */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            width: '100%',
-            boxSizing: 'border-box',
-            pointerEvents: 'auto',
-            paddingBottom: '2px'
-          }}
-        >
-          {/* Season & Year Badge */}
-          <div
-            style={{
-              backgroundColor: 'rgba(27, 94, 32, 0.92)',
-              color: '#FFFFFF',
-              padding: '4px 10px',
-              borderRadius: '9999px',
-              fontWeight: 900,
-              fontSize: '0.78rem',
-              border: '1.5px solid #81C784',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              flexShrink: 0,
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <span>🌾</span>
-            <span>S{persistentState?.seasonIndex || 1} • Y{persistentState?.yearIndex || 1}</span>
-            <span style={{ fontSize: '0.7rem', backgroundColor: '#388E3C', padding: '1px 6px', borderRadius: '8px' }}>
-              {seasonPhase.toUpperCase()}
-            </span>
-          </div>
-
-          {/* Soil Health */}
-          <div
-            title="Soil Health"
-            style={{
-              backgroundColor: '#FFFFFF',
-              color: '#3E2723',
-              border: '1.5px solid #8D6E63',
-              borderRadius: '9999px',
-              padding: '3px 8px',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0,
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <span>🪱</span>
-            <span>{Math.round(persistentState?.soilHealth ?? 70)}%</span>
-          </div>
-
-          {/* Village Health */}
-          <div
-            title="Village Community Air Health"
-            style={{
-              backgroundColor: '#FFFFFF',
-              color: '#1B5E20',
-              border: '1.5px solid #81C784',
-              borderRadius: '9999px',
-              padding: '3px 8px',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0,
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <span>🏡</span>
-            <span>{Math.round(persistentState?.villageHealth ?? 75)}%</span>
-          </div>
-
-          {/* Money */}
-          <div
-            title="Farmer Capital"
-            style={{
-              backgroundColor: '#FFFFFF',
-              color: '#BF360C',
-              border: '1.5px solid #FFB74D',
-              borderRadius: '9999px',
-              padding: '3px 8px',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0,
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <span>💰</span>
-            <span>₹{(persistentState?.money ?? 12000).toLocaleString('en-IN')}</span>
-          </div>
-
-          {/* Reputation */}
-          <div
-            title="Reputation"
-            style={{
-              backgroundColor: '#FFFFFF',
-              color: '#4A148C',
-              border: '1.5px solid #BA68C8',
-              borderRadius: '9999px',
-              padding: '3px 8px',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0,
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <span>👑</span>
-            <span>{Math.round(persistentState?.reputation ?? 50)}</span>
-          </div>
-
-          {/* Streak */}
-          <div
-            title="Sustainable Streak"
-            style={{
-              backgroundColor: (persistentState?.streak || 0) > 0 ? '#FFF3E0' : '#ECEFF1',
-              color: (persistentState?.streak || 0) > 0 ? '#E65100' : '#78909C',
-              border: '1.5px solid #FF9800',
-              borderRadius: '9999px',
-              padding: '3px 8px',
-              fontWeight: 900,
-              fontSize: '0.76rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0,
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <span>🔥</span>
-            <span>{persistentState?.streak ?? 0}</span>
-          </div>
-
-          {/* Badges Panel Trigger */}
-          <button
-            type="button"
-            onClick={() => setShowAchievements(true)}
-            style={{
-              backgroundColor: '#FFF8E1',
-              color: '#F57F17',
-              border: '1.5px solid #FBC02D',
-              borderRadius: '9999px',
-              padding: '3px 8px',
-              fontWeight: 900,
-              fontSize: '0.76rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0,
-              whiteSpace: 'nowrap'
-            }}
-            title="View Achievements"
-          >
-            <span>🏆</span>
-            <span>Badges</span>
-          </button>
-        </div>
       </div>
 
       {/* LIVE SMOKE EXPOSURE METERS (During fire & consequence) */}
       <SmokeMeterHUD />
+
+      {/* SEQUENCED TIMED CONSEQUENCE CALLOUTS (Left column on desktop, compact above touch controls on mobile) */}
+      <ConsequenceCallouts />
 
       {/* CENTER INTERACTION PROMPT: Only shown when in wheel/Lite fallback mode */}
       {!useInWorldChoices && interactionTarget && burnState === 'idle' && (
@@ -778,7 +640,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
         <div
           style={{
             position: 'absolute',
-            bottom: 'calc(35px + env(safe-area-inset-bottom, 0px))',
+            bottom: isTouchDevice ? 'calc(150px + env(safe-area-inset-bottom, 0px))' : 'calc(35px + env(safe-area-inset-bottom, 0px))',
             left: '50%',
             transform: 'translateX(-50%)',
             pointerEvents: 'auto',
@@ -986,127 +848,143 @@ export default function HUDOverlay({ onSwitchToLite }) {
         </div>
       )}
 
-      {/* ON-SCREEN ORBIT CAMERA CONTROLS (for people without a mouse or on touch devices) */}
+      {/* ON-SCREEN ORBIT CAMERA CONTROLS: Small, top-right, vertical, semi-transparent */}
       <div
         data-testid="camera-controls-cluster"
         style={{
           position: 'absolute',
-          right: '16px',
-          bottom: isTouchDevice
-            ? (isChoicePanelOpen ? 'calc(58vh + 20px)' : 'calc(140px + env(safe-area-inset-bottom, 0px))')
-            : 'calc(24px + env(safe-area-inset-bottom, 0px))',
+          top: 'calc(54px + env(safe-area-inset-top, 0px))',
+          right: 'calc(12px + env(safe-area-inset-right, 0px))',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '6px',
-          backgroundColor: 'rgba(22, 56, 43, 0.90)',
-          padding: '8px',
-          borderRadius: '16px',
-          border: '1.5px solid rgba(129, 199, 132, 0.6)',
-          boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
+          gap: '4px',
+          backgroundColor: 'rgba(20, 26, 32, 0.72)',
+          padding: '4px',
+          borderRadius: '10px',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           pointerEvents: 'auto',
           zIndex: 70
         }}
       >
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <button
-            type="button"
-            data-testid="cam-rotate-left"
-            onClick={() => rotateCamera(0.35)}
-            style={{
-              padding: '6px 10px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              cursor: 'pointer'
-            }}
-            title="Rotate camera left (turn view)"
-            aria-label="Rotate camera left"
-          >
-            🔄 Left
-          </button>
-          <button
-            type="button"
-            data-testid="cam-rotate-right"
-            onClick={() => rotateCamera(-0.35)}
-            style={{
-              padding: '6px 10px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              cursor: 'pointer'
-            }}
-            title="Rotate camera right (turn view)"
-            aria-label="Rotate camera right"
-          >
-            Right 🔄
-          </button>
-        </div>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <button
-            type="button"
-            data-testid="cam-zoom-in"
-            onClick={() => zoomCamera(-1.0)}
-            style={{
-              padding: '6px 10px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              cursor: 'pointer'
-            }}
-            title="Zoom in (closer to farmer)"
-            aria-label="Zoom in"
-          >
-            ➕ Zoom
-          </button>
-          <button
-            type="button"
-            data-testid="cam-zoom-out"
-            onClick={() => zoomCamera(1.0)}
-            style={{
-              padding: '6px 10px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              cursor: 'pointer'
-            }}
-            title="Zoom out (wider view)"
-            aria-label="Zoom out"
-          >
-            ➖ Out
-          </button>
-        </div>
+        <button
+          type="button"
+          data-testid="cam-rotate-left"
+          onClick={() => rotateCamera(0.35)}
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '6px',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            color: '#FFFFFF',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            fontSize: '0.82rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0
+          }}
+          title="Rotate left"
+          aria-label="Rotate camera left"
+        >
+          ↺
+        </button>
+        <button
+          type="button"
+          data-testid="cam-rotate-right"
+          onClick={() => rotateCamera(-0.35)}
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '6px',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            color: '#FFFFFF',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            fontSize: '0.82rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0
+          }}
+          title="Rotate right"
+          aria-label="Rotate camera right"
+        >
+          ↻
+        </button>
+        <button
+          type="button"
+          data-testid="cam-zoom-in"
+          onClick={() => zoomCamera(-1.0)}
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '6px',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            color: '#FFFFFF',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            fontSize: '0.86rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0
+          }}
+          title="Zoom in"
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          data-testid="cam-zoom-out"
+          onClick={() => zoomCamera(1.0)}
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '6px',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            color: '#FFFFFF',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            fontSize: '0.86rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0
+          }}
+          title="Zoom out"
+          aria-label="Zoom out"
+        >
+          −
+        </button>
         <button
           type="button"
           data-testid="cam-reset"
           onClick={resetCamera}
           style={{
-            width: '100%',
-            padding: '5px 8px',
-            borderRadius: '8px',
-            backgroundColor: '#FFD54F',
+            width: '28px',
+            height: '22px',
+            borderRadius: '6px',
+            backgroundColor: 'rgba(255, 213, 79, 0.85)',
             color: '#16382B',
             border: 'none',
+            fontSize: '0.68rem',
             fontWeight: 900,
-            fontSize: '0.76rem',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0
           }}
-          title="Reset camera view (Key: R)"
+          title="Reset view (R)"
           aria-label="Reset view"
         >
-          🎯 Reset View (R)
+          R
         </button>
       </div>
 
@@ -1144,6 +1022,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
       <SettingsDrawer
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
+        onSwitchToLite={onSwitchToLite}
+        onOpenAchievements={() => setShowAchievements(true)}
       />
     </div>
   )

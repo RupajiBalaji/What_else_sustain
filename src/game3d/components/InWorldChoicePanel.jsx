@@ -4,19 +4,27 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
 import { sound } from '../../game/soundManager'
 
+/**
+ * 5 Crop Residue Choices:
+ * 1. Burn the Stubble
+ * 2. Happy Seeder
+ * 3. Bale & Sell
+ * 4. Mulch into Soil
+ * 5. Compost (bio-decomposer)
+ */
 export const CHOICE_OPTIONS = [
   {
     id: 'burn',
-    label: 'Burn Stubble',
+    label: 'Burn the Stubble',
     shortLabel: 'Burn',
     icon: '🔥',
     isBurn: true,
-    color: '#D84315',
-    bgColor: '#FFEBEE',
-    borderColor: '#FF5722',
-    cost: '₹0 Upfront',
-    effort: 'Low (1 hr)',
-    desc: 'Quick but toxic. Destroys soil carbon and fills village air with hazardous PM2.5 smog.'
+    color: '#FF7043',
+    bgColor: 'rgba(216, 67, 21, 0.22)',
+    borderColor: '#D84315',
+    cost: '₹0 upfront',
+    effort: 'Low',
+    desc: 'Quickest clearance, but releases toxic smoke plume across the village and vaporizes soil nutrients.'
   },
   {
     id: 'happy_seeder',
@@ -24,9 +32,9 @@ export const CHOICE_OPTIONS = [
     shortLabel: 'Seeder',
     icon: '🚜',
     isBurn: false,
-    color: '#2E7D32',
-    bgColor: '#E8F5E9',
-    borderColor: '#4CAF50',
+    color: '#81C784',
+    bgColor: 'rgba(46, 125, 50, 0.22)',
+    borderColor: '#2E7D32',
     cost: '~₹1,400 / acre',
     effort: 'Medium',
     desc: 'Direct tractor drilling wheat through standing stubble. Keeps village skies clean.'
@@ -37,8 +45,8 @@ export const CHOICE_OPTIONS = [
     shortLabel: 'Baler',
     icon: '🚛',
     isBurn: false,
-    color: '#0D47A1',
-    bgColor: '#E3F2FD',
+    color: '#64B5F6',
+    bgColor: 'rgba(13, 71, 161, 0.22)',
     borderColor: '#1976D2',
     cost: 'Paid by plant',
     effort: 'Medium',
@@ -50,21 +58,21 @@ export const CHOICE_OPTIONS = [
     shortLabel: 'Mulch',
     icon: '🌾',
     isBurn: false,
-    color: '#33691E',
-    bgColor: '#F1F8E9',
-    borderColor: '#689F38',
+    color: '#AED581',
+    bgColor: 'rgba(51, 105, 30, 0.22)',
+    borderColor: '#558B2F',
     cost: '~₹1,200 / acre',
     effort: 'Low-Med',
     desc: 'Retains 15-25% soil moisture, blocks weeds and feeds underground earthworms.'
   },
   {
     id: 'compost',
-    label: 'Bio-Decomposer',
+    label: 'Compost (bio-decomposer)',
     shortLabel: 'Compost',
     icon: '🧪',
     isBurn: false,
-    color: '#4E342E',
-    bgColor: '#EFEBE9',
+    color: '#D7CCC8',
+    bgColor: 'rgba(78, 52, 46, 0.25)',
     borderColor: '#8D6E63',
     cost: '~₹400 / acre',
     effort: 'Medium',
@@ -80,17 +88,16 @@ export default function InWorldChoicePanel() {
     burnState,
     activeAlternative,
     hasMadeChoice,
+    useInWorldChoices,
     startBurnSequence,
     startAlternative,
     activePile,
     setShowChoiceWheel,
-    useInWorldChoices,
     selectedChoiceId,
     setSelectedChoiceId,
     seasonPhase
   } = useGame3D()
 
-  // Track responsive screen width for mobile viewport adaptation
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth < 680 : false
   )
@@ -103,10 +110,12 @@ export default function InWorldChoicePanel() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+
   const selectedId = selectedChoiceId
   const setSelectedId = setSelectedChoiceId || (() => {})
 
-  // Visible when in decision phase (or harvest completed with target), no action in progress, and no modal
+  // Visible when in decision phase, no action in progress, and no modal
   const isVisible =
     Boolean(useInWorldChoices) &&
     (harvestState === 'harvested' || seasonPhase === 'decision') &&
@@ -134,22 +143,21 @@ export default function InWorldChoicePanel() {
     }
   }
 
-  // Keyboard shortcut listener: 1-5 to select, Enter to confirm
+  // Keyboard shortcut listener: 1-5 to select, Enter to confirm ONLY after selecting
   useEffect(() => {
     if (!isVisible) return
 
     const handleKeyDown = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return
 
-      if (e.key >= '1' && e.key <= '5') {
-        const idx = parseInt(e.key, 10) - 1
-        if (CHOICE_OPTIONS[idx]) {
-          sound.initAudio()
-          sound.playTap()
-          setSelectedId(CHOICE_OPTIONS[idx].id)
-        }
-      } else if (e.key === 'Enter') {
+      const num = parseInt(e.key, 10)
+      if (num >= 1 && num <= 5) {
+        e.preventDefault()
+        const opt = CHOICE_OPTIONS[num - 1]
+        if (opt) handleSelectOption(opt)
+      } else if (e.code === 'Enter') {
         if (activeOption) {
+          e.preventDefault()
           handleConfirm(activeOption)
         }
       }
@@ -161,8 +169,8 @@ export default function InWorldChoicePanel() {
 
   if (!isVisible || typeof document === 'undefined') return null
 
-  // Fixed screen position: Right-side card on desktop, bottom sheet on mobile.
-  // Never covers the farmer and does not overlap the top HUD bar.
+  // Fixed screen position: Right card on desktop, bottom sheet on mobile.
+  // Dark, calm, minimal aesthetic matching serious product direction (Zero white box!).
   const panelContent = (
     <div
       data-testid="in-world-choice-panel"
@@ -174,29 +182,31 @@ export default function InWorldChoicePanel() {
               left: '8px',
               right: '8px',
               bottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
-              maxHeight: '58vh',
-              borderRadius: '24px 24px 18px 18px',
-              boxShadow: '0 -8px 32px rgba(0,0,0,0.4)'
+              maxHeight: '64vh',
+              borderRadius: '20px 20px 16px 16px',
+              boxShadow: '0 -8px 32px rgba(0,0,0,0.6)'
             }
           : {
-              right: '20px',
-              top: 'calc(74px + env(safe-area-inset-top, 0px))',
-              width: 'min(380px, calc(100vw - 40px))',
-              maxHeight: 'calc(100dvh - 94px)',
-              borderRadius: '24px',
-              boxShadow: '0 16px 40px rgba(0,0,0,0.35)'
+              right: 'calc(54px + env(safe-area-inset-right, 0px))',
+              top: 'calc(54px + env(safe-area-inset-top, 0px))',
+              width: 'min(380px, calc(100vw - 74px))',
+              maxHeight: 'calc(100dvh - 74px)',
+              borderRadius: '20px',
+              boxShadow: '0 16px 40px rgba(0,0,0,0.5)'
             }),
-        backgroundColor: '#FFFFFF',
-        border: '3px solid #2E7D32',
+        backgroundColor: 'rgba(20, 26, 32, 0.96)',
+        backdropFilter: 'blur(12px)',
+        border: '1.5px solid rgba(255, 255, 255, 0.16)',
         display: 'flex',
         flexDirection: 'column',
-        padding: '16px',
-        gap: '10px',
+        padding: isMobile ? '12px' : '16px',
+        gap: '8px',
         zIndex: 95,
         overflowY: 'auto',
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         userSelect: 'none',
         pointerEvents: 'auto',
+        color: '#FFFFFF',
         animation: isMobile ? 'fadeInUp 0.25s ease' : 'fadeInRight 0.25s ease'
       }}
     >
@@ -206,32 +216,32 @@ export default function InWorldChoicePanel() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: '#1B5E20',
-          color: '#FFFFFF',
-          borderRadius: '16px',
-          padding: '8px 14px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          backgroundColor: 'rgba(27, 94, 32, 0.65)',
+          border: '1px solid #81C784',
+          borderRadius: '12px',
+          padding: '6px 12px'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.25rem' }}>🌾</span>
+          <span style={{ fontSize: '1.15rem' }}>🌾</span>
           <div>
-            <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', color: '#A5D6A7', fontWeight: 900, letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: '#A5D6A7', fontWeight: 900, letterSpacing: '0.04em' }}>
               Crop Residue Decision
             </div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 900 }}>
-              What will you do with the straw?
+            <div style={{ fontSize: '0.86rem', fontWeight: 900 }}>
+              Choose what to do with the straw
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. Options Grid (Horizontal strip on mobile, vertical cards on desktop) */}
+      {/* 2. Compact Options List (All 5 options visible without horizontal scroll) */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? 'repeat(5, 1fr)' : '1fr',
-          gap: '8px'
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          width: '100%'
         }}
       >
         {CHOICE_OPTIONS.map((opt, idx) => {
@@ -245,42 +255,33 @@ export default function InWorldChoicePanel() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: isMobile ? 'center' : 'space-between',
-                flexDirection: isMobile ? 'column' : 'row',
-                padding: isMobile ? '8px 4px' : '10px 14px',
-                borderRadius: '14px',
-                border: isSelected ? `2.5px solid ${opt.borderColor}` : '1.5px solid #E0E0E0',
-                backgroundColor: isSelected ? opt.bgColor : '#FAFAFA',
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                borderRadius: '10px',
+                border: isSelected ? `2px solid ${opt.borderColor}` : '1px solid rgba(255, 255, 255, 0.12)',
+                backgroundColor: isSelected ? opt.bgColor : 'rgba(255, 255, 255, 0.04)',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
-                gap: '6px',
-                minHeight: '48px',
-                boxShadow: isSelected ? `0 4px 12px ${opt.borderColor}33` : 'none'
+                gap: '8px',
+                minHeight: '40px',
+                boxShadow: isSelected ? `0 2px 10px ${opt.borderColor}44` : 'none'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: isMobile ? '1.3rem' : '1.4rem' }}>{opt.icon}</span>
-                {!isMobile && (
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontWeight: 900, fontSize: '0.88rem', color: isSelected ? opt.color : '#212121' }}>
-                      {idx + 1}. {opt.label}
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#616161', fontWeight: 700 }}>
-                      {opt.cost} • {opt.effort}
-                    </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'left' }}>
+                <span style={{ fontSize: '1.2rem' }}>{opt.icon}</span>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.84rem', color: isSelected ? opt.color : '#FFFFFF' }}>
+                    {idx + 1}. {opt.label}
                   </div>
-                )}
-                {isMobile && (
-                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: isSelected ? opt.color : '#37474F' }}>
-                    {opt.shortLabel}
-                  </span>
-                )}
+                  <div style={{ fontSize: '0.70rem', color: '#90A4AE', fontWeight: 600 }}>
+                    Cost: {opt.cost} • Effort: {opt.effort}
+                  </div>
+                </div>
               </div>
-              {!isMobile && (
-                <span style={{ fontSize: '0.72rem', fontWeight: 900, color: isSelected ? opt.color : '#9E9E9E' }}>
-                  {isSelected ? '✓ SELECTED' : `[${idx + 1}]`}
-                </span>
-              )}
+
+              <span style={{ fontSize: '0.70rem', fontWeight: 900, color: isSelected ? opt.color : '#78909C', flexShrink: 0 }}>
+                {isSelected ? '✓ SELECTED' : isMobile ? 'TAP' : `[${idx + 1}]`}
+              </span>
             </button>
           )
         })}
@@ -291,25 +292,25 @@ export default function InWorldChoicePanel() {
         <div
           style={{
             backgroundColor: activeOption.bgColor,
-            border: `2px solid ${activeOption.borderColor}`,
-            borderRadius: '16px',
-            padding: '12px 14px',
+            border: `1.5px solid ${activeOption.borderColor}`,
+            borderRadius: '12px',
+            padding: '10px 12px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
+            gap: '6px',
             animation: 'fadeIn 0.2s ease'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontWeight: 900, fontSize: '0.92rem', color: activeOption.color }}>
+            <span style={{ fontWeight: 900, fontSize: '0.86rem', color: activeOption.color }}>
               {activeOption.icon} {activeOption.label}
             </span>
-            <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#37474F' }}>
-              Cost: {activeOption.cost}
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#B0BEC5' }}>
+              {activeOption.cost}
             </span>
           </div>
 
-          <p style={{ margin: 0, fontSize: '0.8rem', color: '#37474F', lineHeight: 1.35, fontWeight: 600 }}>
+          <p style={{ margin: 0, fontSize: '0.76rem', color: '#ECEFF1', lineHeight: 1.35, fontWeight: 500 }}>
             {activeOption.desc}
           </p>
 
@@ -319,19 +320,19 @@ export default function InWorldChoicePanel() {
             onClick={() => handleConfirm(activeOption)}
             style={{
               width: '100%',
-              minHeight: '48px',
-              borderRadius: '12px',
+              minHeight: '44px',
+              borderRadius: '10px',
               backgroundColor: activeOption.isBurn ? '#D84315' : '#2E7D32',
               color: '#FFFFFF',
               border: 'none',
               fontWeight: 900,
-              fontSize: '0.95rem',
+              fontSize: '0.90rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+              gap: '6px',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
               marginTop: '4px'
             }}
           >
@@ -340,8 +341,8 @@ export default function InWorldChoicePanel() {
           </button>
         </div>
       ) : (
-        <div style={{ textAlign: 'center', padding: '10px', fontSize: '0.82rem', color: '#616161', fontWeight: 700 }}>
-          👆 Click an option or press 1–5 to select
+        <div style={{ textAlign: 'center', padding: '6px', fontSize: '0.76rem', color: '#90A4AE', fontWeight: 600 }}>
+          {isTouch ? '👆 Tap an option to select, then tap Confirm' : '⌨️ Click an option or press 1–5 to select, Enter to confirm'}
         </div>
       )}
     </div>

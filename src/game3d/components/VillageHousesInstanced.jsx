@@ -3,29 +3,12 @@ import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
 import { useModelAvailability, applyKenneyTextures } from '../assets/ModelLoader'
+import { VILLAGE_HOUSES_LAYOUT, VILLAGE_COLLIDERS_LAYOUT } from '../world/layout'
 
 // 10 Village Houses in the distance along the north edge with 3 distinct architectural variants
-// Scaled so each house is 6-8 units wide as required by specification
-export const VILLAGE_HOUSES_DATA = [
-  { id: 'h1', variant: 1, x: -15, z: 42, rot: 0.2, s: 1.6, wallColor: '#E0D7C6', roofColor: '#D35400' },
-  { id: 'h2', variant: 2, x: -8, z: 46, rot: -0.1, s: 1.65, wallColor: '#F5EEF8', roofColor: '#78909C' },
-  { id: 'h3', variant: 3, x: 0, z: 43, rot: 0.4, s: 1.55, wallColor: '#FEF9E7', roofColor: '#D4AC0D' },
-  { id: 'h4', variant: 1, x: 8, z: 48, rot: -0.3, s: 1.7, wallColor: '#EBF5FB', roofColor: '#C0392B' },
-  { id: 'h5', variant: 2, x: 16, z: 44, rot: 0.1, s: 1.6, wallColor: '#EAFAF1', roofColor: '#607D8B' },
-  { id: 'h6', variant: 3, x: 24, z: 47, rot: -0.2, s: 1.65, wallColor: '#FDFEFE', roofColor: '#B7950B' },
-  { id: 'h7', variant: 1, x: -18, z: 52, rot: 0.3, s: 1.65, wallColor: '#FDEDEC', roofColor: '#E65100' },
-  { id: 'h8', variant: 2, x: -4, z: 54, rot: -0.15, s: 1.6, wallColor: '#F4F6F6', roofColor: '#546E7A' },
-  { id: 'h9', variant: 3, x: 10, z: 55, rot: 0.25, s: 1.7, wallColor: '#F9EBEA', roofColor: '#D4AC0D' },
-  { id: 'h10', variant: 1, x: 20, z: 56, rot: -0.4, s: 1.6, wallColor: '#E8F8F5', roofColor: '#C0392B' }
-]
-
-// Export collision boundaries for the village buildings (6-8 units footprint)
-export const VILLAGE_COLLIDERS = VILLAGE_HOUSES_DATA.map((h) => ({
-  minX: h.x - 3.8,
-  maxX: h.x + 3.8,
-  minZ: h.z - 3.2,
-  maxZ: h.z + 3.2
-}))
+// Sourced directly from src/game3d/world/layout.js as the single source of truth
+export const VILLAGE_HOUSES_DATA = VILLAGE_HOUSES_LAYOUT
+export const VILLAGE_COLLIDERS = VILLAGE_COLLIDERS_LAYOUT
 
 /**
  * GLTF-based Village Houses using Kenney models textured with colormap.png

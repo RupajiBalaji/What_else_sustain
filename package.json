@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "audit:data": "node scripts/audit_data.js",
     "test:unit": "node --test tests/unit/*.test.js",
+    "lint": "node scripts/lint.js",
+    "format": "node scripts/format.js",
     "test:e2e": "playwright test"
   },
   "dependencies": {

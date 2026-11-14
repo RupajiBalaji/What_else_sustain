@@ -65,7 +65,6 @@ function SceneContent() {
       <AirSensorPole position={[-2.5, 0, 40.5]} />
       <SoilCutawayCrossSection position={[-4.0, 0, 8.2]} rotation={[0, 0.25, 0]} />
       <InWorldStatusProps />
-      <ConsequenceCallouts />
       <WindFlag />
       <FarmerPlayer initialPosition={[-1.2, 0, 10.0]} />
       <FireSmokeSystem />

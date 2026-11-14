@@ -47,6 +47,19 @@ export function OverlayManagerProvider({ children }) {
       .sort((a, b) => b.priority - a.priority)
 
     const placedBoxes = []
+    let visibleCount = 0
+
+    // Exclusion zones for farmer head and ignited pile
+    const ignitedPilePos = window.__wes_debug?.getIgnitedPileScreenPos?.()
+    const exclusionZones = []
+    if (ignitedPilePos?.inFrustum) {
+      exclusionZones.push({
+        left: ignitedPilePos.x - 48,
+        right: ignitedPilePos.x + 48,
+        top: ignitedPilePos.y - 48,
+        bottom: ignitedPilePos.y + 48
+      })
+    }
 
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
@@ -56,6 +69,11 @@ export function OverlayManagerProvider({ children }) {
       let offsetX = 0
       let offsetY = 0
       let shouldCollapse = false
+
+      // At most 2 world labels visible at once; lower priority collapse to icon
+      if (visibleCount >= 2) {
+        shouldCollapse = true
+      }
 
       // 1. Initial clamp to viewport safe margins
       if (rawRect.top < safeTop) {
@@ -79,7 +97,22 @@ export function OverlayManagerProvider({ children }) {
         height: rawRect.height
       }
 
-      // 2. Check collision against all already-placed higher-priority overlays
+      // 2. Check collision against exclusion zones (ignited pile / farmer)
+      for (const zone of exclusionZones) {
+        const overlapsZone = !(
+          candidateRect.right < zone.left ||
+          candidateRect.left > zone.right ||
+          candidateRect.bottom < zone.top ||
+          candidateRect.top > zone.bottom
+        )
+        if (overlapsZone) {
+          offsetY -= (candidateRect.bottom - zone.top + 8)
+          candidateRect.top += offsetY
+          candidateRect.bottom += offsetY
+        }
+      }
+
+      // 3. Check collision against all already-placed higher-priority overlays
       for (const placed of placedBoxes) {
         const overlaps = !(
           candidateRect.right + 6 < placed.left ||
@@ -108,6 +141,10 @@ export function OverlayManagerProvider({ children }) {
             }
           }
         }
+      }
+
+      if (!shouldCollapse) {
+        visibleCount++
       }
 
       placedBoxes.push(candidateRect)
@@ -156,8 +193,13 @@ export function ManagedOverlay({
   distanceFactor,
   visible = true
 }) {
-  const { isAnyModalOpen, showSeasonReport } = useGame3D()
+  const { isAnyModalOpen, showSeasonReport, showChoiceWheel } = useGame3D()
   const manager = useOverlayManager()
+
+  // Hide village sign, air-station label, and straw labels while choice panel is open
+  if (showChoiceWheel && (id === 'village_sign' || id === 'village_air_station' || id?.startsWith('straw') || id?.startsWith('villager'))) {
+    return null
+  }
 
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isCollapsed, setIsCollapsed] = useState(false)

@@ -238,30 +238,7 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
         />
       </instancedMesh>
 
-      {/* Ruler depth captions attached directly to slice frame */}
-      {!isAnyModalOpen && (
-        <>
-          <Html position={[-1.15, -0.05, 0.32]} center={false} distanceFactor={18} zIndexRange={[5, 0]}>
-            <div style={{ fontSize: '9px', fontWeight: 800, color: '#C8E6C9', textShadow: '0 1px 3px rgba(0,0,0,0.9)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-              0cm Topsoil
-            </div>
-          </Html>
-
-          <Html position={[-1.15, -0.55, 0.32]} center={false} distanceFactor={18} zIndexRange={[5, 0]}>
-            <div style={{ fontSize: '9px', fontWeight: 800, color: '#FFE0B2', textShadow: '0 1px 3px rgba(0,0,0,0.9)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-              -25cm Root Zone
-            </div>
-          </Html>
-
-          <Html position={[-1.15, -1.15, 0.32]} center={false} distanceFactor={18} zIndexRange={[5, 0]}>
-            <div style={{ fontSize: '9px', fontWeight: 800, color: '#D7CCC8', textShadow: '0 1px 3px rgba(0,0,0,0.9)', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
-              -50cm Subsoil
-            </div>
-          </Html>
-        </>
-      )}
-
-      {/* Cutaway Title Plaque: Clean 2-line title, clamped and managed by OverlayManager */}
+      {/* Cutaway Title Plaque & Attached Depth Ruler, clamped and managed by OverlayManager */}
       <ManagedOverlay
         id="soil_cutaway_plaque"
         priority="status_prop"
@@ -278,7 +255,7 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
               ? 'rgba(46, 125, 50, 0.94)'
               : 'rgba(46, 56, 48, 0.92)',
             color: '#FFFFFF',
-            padding: '4px 8px',
+            padding: '5px 10px',
             borderRadius: '12px',
             border: '1.5px solid rgba(255,255,255,0.7)',
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -286,17 +263,25 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            maxWidth: '155px',
+            maxWidth: '180px',
             boxSizing: 'border-box',
             textAlign: 'center'
           }}
         >
-          <span style={{ fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '145px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '170px' }}>
             {isBurnt ? '🔥 Burnt Soil Slice' : isEnriched ? '🌿 Regenerated Soil' : '🔬 Soil Cross-Section'}
           </span>
-          <span style={{ fontSize: '9px', opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '145px' }}>
+          <span style={{ fontSize: '9px', opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '170px' }}>
             {isBurnt ? '(Worms Lost)' : isEnriched ? '(Microbes Multiplying)' : '(Living Microbes)'}
           </span>
+          {/* Depth indicators attached cleanly to plaque */}
+          <div style={{ display: 'flex', gap: '5px', fontSize: '8px', opacity: 0.9, marginTop: '3px', fontWeight: 800 }}>
+            <span style={{ color: '#C8E6C9' }}>0cm Topsoil</span>
+            <span>•</span>
+            <span style={{ color: '#FFE0B2' }}>-25cm Root</span>
+            <span>•</span>
+            <span style={{ color: '#D7CCC8' }}>-50cm Subsoil</span>
+          </div>
         </div>
       </ManagedOverlay>
     </group>

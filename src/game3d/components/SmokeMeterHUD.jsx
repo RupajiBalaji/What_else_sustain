@@ -4,7 +4,7 @@ import { useGame3D } from '../context/Game3DContext'
 
 export default function SmokeMeterHUD() {
   const { t } = useLanguage()
-  const { burnState, burnProgress, smokeData } = useGame3D()
+  const { burnState, burnProgress, smokeData, isWatchingVillage, watchVillageProgress } = useGame3D()
 
   const isVisible = burnState === 'burning' || burnState === 'consequence'
   if (!isVisible) return null
@@ -13,12 +13,18 @@ export default function SmokeMeterHUD() {
   const playerRatio = burnState === 'consequence' ? 1.0 : Math.min(1.0, (burnProgress || 0) * 1.35)
 
   // Village exposure rises as the smoke plume travels and reaches the village (~3.5s in, prog >= 0.18)
+  // During "Watch the village", it visibly climbs from its arrival level to full index
   const plumeArrivalProgress = 0.18
-  const villageRatio = burnState === 'consequence'
-    ? 1.0
-    : (burnProgress || 0) < plumeArrivalProgress
-    ? 0
-    : Math.min(1.0, ((burnProgress || 0) - plumeArrivalProgress) / (1.0 - plumeArrivalProgress))
+  let villageRatio = 0
+  if (burnState === 'consequence') {
+    if (isWatchingVillage) {
+      villageRatio = 0.45 + (watchVillageProgress || 0) * 0.55
+    } else {
+      villageRatio = 1.0
+    }
+  } else if ((burnProgress || 0) >= plumeArrivalProgress) {
+    villageRatio = Math.min(1.0, ((burnProgress || 0) - plumeArrivalProgress) / (1.0 - plumeArrivalProgress))
+  }
 
   const playerTarget = Number(smokeData?.playerExposure) || 84
   const villageTarget = Number(smokeData?.villageExposure) || 62
@@ -26,23 +32,24 @@ export default function SmokeMeterHUD() {
   const currentPlayerVal = Math.round(playerTarget * playerRatio)
   const currentVillageVal = Math.round(villageTarget * villageRatio)
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+
   return (
     <div
       style={{
         position: 'absolute',
-        top: '68px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        backgroundColor: 'rgba(38, 50, 56, 0.92)',
-        backdropFilter: 'blur(6px)',
-        border: '2px solid #FF7043',
-        borderRadius: '16px',
-        padding: '10px 18px',
+        top: isMobile ? 'calc(50px + env(safe-area-inset-top, 0px))' : 'calc(64px + env(safe-area-inset-top, 0px))',
+        left: isMobile ? '50%' : '20px',
+        transform: isMobile ? 'translateX(-50%)' : 'none',
+        backgroundColor: 'rgba(30, 38, 44, 0.94)',
+        backdropFilter: 'blur(8px)',
+        border: '1.5px solid #FF7043',
+        borderRadius: '14px',
+        padding: '8px 14px',
         color: '#FFFFFF',
         zIndex: 40,
-        boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-        width: '320px',
-        maxWidth: '92vw',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+        width: isMobile ? 'min(310px, 92vw)' : '280px',
         pointerEvents: 'auto',
         fontFamily: 'system-ui, -apple-system, sans-serif'
       }}

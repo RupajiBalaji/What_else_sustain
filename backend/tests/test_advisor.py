@@ -56,6 +56,19 @@ def test_advisor_telugu_offline_answer(client):
     assert "హ్యాపీ సీడర్" in data["answer"]
 
 
+def test_advisor_hindi_offline_answer(client):
+    # Hindi question
+    response = client.post(
+        "/api/advisor",
+        json={"prompt": "धान की पराली का क्या करें?", "lang": "hi"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["fallbackNeeded"] is True
+    assert data["source"] == "offline"
+    assert "हैप्पी सीडर" in data["answer"]
+
+
 def test_advisor_rate_limiting(client):
     # Make 10 requests from the same IP
     headers = {"X-Forwarded-For": "198.51.100.1"}

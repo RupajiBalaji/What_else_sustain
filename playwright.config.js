@@ -43,6 +43,13 @@ export default defineConfig({
       }
     },
     {
+      name: 'Tablet portrait (768x1024)',
+      use: {
+        viewport: { width: 768, height: 1024 },
+        hasTouch: true
+      }
+    },
+    {
       name: 'Desktop (1366x768)',
       use: {
         viewport: { width: 1366, height: 768 }

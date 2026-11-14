@@ -244,6 +244,14 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     audioManager.updateWind(windState.speedMs)
   }, [windState.speedMs])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.getQualityTier = () => quality
+      window.__wes_debug.getFps = () => fps
+    }
+  }, [quality, fps])
+
   const isNoFpsFallback = useMemo(() => {
     try {
       return typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('noFpsFallback')

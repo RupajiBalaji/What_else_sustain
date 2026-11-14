@@ -28,6 +28,15 @@ export function OverlayManagerProvider({ children }) {
     registryRef.current.delete(id)
   }, [])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.getVisibleOverlays = () => {
+        return Array.from(registryRef.current.keys())
+      }
+    }
+  }, [])
+
   // Resolve collisions across all registered world overlays
   const resolveCollisions = useCallback(() => {
     if (typeof window === 'undefined') return

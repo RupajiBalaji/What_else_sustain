@@ -137,8 +137,8 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   const panelBox = await choicePanel.boundingBox()
   expect(panelBox).not.toBeNull()
   if (!isMobile) {
-    // Desktop: positioned on the right side of the screen
-    expect(panelBox.x).toBeGreaterThan(500)
+    // Desktop / Tablet: positioned on the right side of the screen
+    expect(panelBox.x).toBeGreaterThan(vp.width * 0.4)
   }
 
   // SCREENSHOT 1: Farm at decision point with fixed choice panel
@@ -178,6 +178,17 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   })
   expect(decisionOverlayOverlap).toBe(true)
 
+  // Assert max 2 world-anchored cards visible simultaneously per Section 4.2
+  const maxWorldCards = await page.evaluate(() => {
+    const overlays = Array.from(document.querySelectorAll('[data-overlay-type="world-card"], [data-overlay-id*="world"], [data-overlay-id*="pile"]'))
+      .filter((el) => {
+        const style = window.getComputedStyle(el)
+        return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0'
+      })
+    return overlays.length <= 2
+  })
+  expect(maxWorldCards).toBe(true)
+
   // 4. VERIFY REQUIREMENT B: Free Camera (360 degrees) orbit around farmer
   // Verify camera controls object is registered on window
   await page.waitForFunction(() => typeof window.__wes_camera !== 'undefined', { timeout: 8000 })
@@ -186,9 +197,12 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
     return {
       yaw: window.__wes_camera.getYaw(),
       pitch: window.__wes_camera.getPitch(),
-      dist: window.__wes_camera.getDistance()
+      dist: window.__wes_camera.getDistance(),
+      pose: window.__wes_debug?.getCameraPose?.()
     }
   })
+  expect(initialCam.pose).toBeDefined()
+  expect(initialCam.pose.position).toHaveLength(3)
 
   // Test camera yaw and pitch drag on canvas
   const canvas = page.locator('canvas').first()

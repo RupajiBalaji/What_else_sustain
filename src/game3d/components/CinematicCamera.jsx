@@ -122,6 +122,14 @@ export default function CinematicCamera() {
 
     if (typeof window !== 'undefined') {
       window.__wes_camera = controls
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.getCameraPose = () => ({
+        position: [camera.position.x, camera.position.y, camera.position.z],
+        target: [_lookTarget.x, _lookTarget.y, _lookTarget.z],
+        distance: currentDistanceRef.current,
+        yaw: currentYawRef.current,
+        pitch: currentPitchRef.current
+      })
     }
 
     return () => {

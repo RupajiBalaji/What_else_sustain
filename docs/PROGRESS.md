@@ -25,11 +25,11 @@
 
 ---
 
-## Phase P1: Complete the Core Loop (started 2026-11-14)
+## Phase P1: Complete the Core Loop (started 2026-11-14, PASSED 2026-11-14)
 
 | Task | Audit status (DONE/PARTIAL/MISSING/BROKEN) | Work done | Files | Evidence (screenshot / test names) | Verified? |
 |------|-------------------------------------------|-----------|-------|------------------------------------|-----------|
-| P1-01 | MISSING | Extract explicit season state machine per 5.1 with unit tests | `src/game3d/state/seasonMachine.js`, `tests/unit/seasonMachine.test.js` | Unit tests for valid/invalid transitions | no |
+| P1-01 | DONE | Extract explicit season state machine per 5.1 with unit tests | `src/game3d/state/seasonMachine.js`, `tests/unit/seasonMachine.test.js` | Unit tests for valid/invalid transitions (4 tests passing) | yes |
 | P1-02 | DONE | S1 Loading screen with Quick Play and Full Season modes, language switch, waking server notice | `LoadingScreen.jsx` | Screenshots on all viewports, Quick Play <10s | yes |
 | P1-03 | DONE | Sowing mini-game with timing meter, planting rows visible, skip option | `SowingMiniGame.jsx` | Playable on touch & mouse | yes |
 | P1-04 | DONE | Growing time-lapse and harvest combine sequence with skip | `GrowingTimeLapse.jsx`, `CombineHarvester.jsx` | Skip button functional, piles spawned | yes |
@@ -37,12 +37,27 @@
 | P1-06 | DONE | S6 Burn consequence timeline (0-20s), docked meters, plume, coughs, callouts, end buttons | `Game3DContext.jsx`, `SmokeMeterHUD.jsx`, `Villagers.jsx` | Timeline events verified | yes |
 | P1-07 | DONE | Soil cutaway panel with labelled depths (0cm, -25cm, -50cm) and fading microbes | `SoilCutawayCrossSection.jsx` | Docked plaque, non-overlapping | yes |
 | P1-08 | DONE | Villagers 4 variants, idle, walk, cough on plume arrival | `Villagers.jsx` | Animated head bob & procedural cough audio | yes |
-| P1-09 | PARTIAL | "What Else?" rewind button with reverse time-lapse, tried marks, history tracking | `RewindGlitchOverlay.jsx`, `Game3DContext.jsx` | Rewind flow integration | in progress |
-| P1-10 | PARTIAL | S8 Comparison card (Option A vs Option B) with ranges, sources, and takeaway | `ComparisonSliderModal.jsx` | Two-column comparison after 2 choices | in progress |
+| P1-09 | DONE | "What Else?" rewind button with reverse time-lapse, tried marks, history tracking | `RewindGlitchOverlay.jsx`, `HUDOverlay.jsx`, `Game3DContext.jsx` | Rewind flow integration, persistent button | yes |
+| P1-10 | DONE | S8 Comparison card (Option A vs Option B) with ranges, sources, and takeaway | `ComparisonSliderModal.jsx` | Two-column dark glass comparison table | yes |
 | P1-11 | DONE | S9 Season report modal with rank badge, financial metrics, soil & air deltas, streak | `SeasonReportModal.jsx` | Responsive layout, numbers match HUD | yes |
-| P1-12 | PARTIAL | 12 structured achievements, unlock toasts, rank ladder, pledge card, share image | `AchievementsPanel.jsx`, `gameBalance.js` | Achievements verified in tests | in progress |
-| P1-13 | DONE | Seasonal non-blocking events from events.json, closable | `SeasonalEventModal.jsx` | Non-blocking, never before decision | yes |
+| P1-12 | DONE | 12 structured achievements, unlock toasts, rank ladder, pledge card, share image | `achievements.json`, `PledgeCardModal.jsx`, `shareCard.js`, `achievements.test.js` | Unit tests for all 12 unlocks, canvas share blob | yes |
+| P1-13 | DONE | Seasonal non-blocking events from events.json, closable | `events.json`, `SeasonalEventModal.jsx` | Non-blocking, never before decision | yes |
 | P1-14 | DONE | Lite mode parity using shared scenarios.json data, labels, and locale | `ScenarioPlayer.jsx` | Lite mode full season playable | yes |
 | P1-15 | DONE | Local browser persistence for player state across reloads | `Game3DContext.jsx` | LocalStorage session persistence | yes |
+
+### Gate result: PASSED (2026-11-14)
+### Open issues and decisions
+- All P1 tasks verified and green. Proceeding to Phase P2 (Learning Layer).
+
+---
+
+## Phase P2: Learning Layer (started 2026-11-14)
+
+| Task | Audit status (DONE/PARTIAL/MISSING/BROKEN) | Work done | Files | Evidence (screenshot / test names) | Verified? |
+|------|-------------------------------------------|-----------|-------|------------------------------------|-----------|
+| P2-01 | MISSING | Write `src/data/quiz.json` with 5 questions with source IDs from `SOURCES.md` | `src/data/quiz.json` | `npm run audit:data` check | no |
+| P2-02 | MISSING | Pre-check and post-check UI (S10) before first decision and after first report | `QuizModal.jsx` | Viewport rendering across touch & keyboard | no |
+| P2-03 | MISSING | Results view with before, after, delta, and concepts learned | `QuizModal.jsx` | Unit test for math calculations | no |
+| P2-04 | MISSING | Learning analytics payload with session ID, questions, answers, and deltas | `src/utils/quizAnalytics.js` | Schema validation test | no |
 
 ### Gate result: OPEN

@@ -23,14 +23,14 @@ export default function MoneyFloatingTag({ position = [0, 2.35, 0] }) {
   if (isBurnt) {
     tagData = {
       icon: '💸',
-      title: 'Net Loss: ~₹3,500 / acre',
-      total: '-₹17,500 total drain (5 acres)',
+      title: 'Net Drain: ~₹3,000–₹4,500 / acre',
+      total: '-₹15,000 to ₹22,500 total drain (game estimate)',
       detail: 'Burnt soil nutrients force expensive synthetic urea & DAP next season',
       bgColor: 'rgba(255, 235, 238, 0.96)',
       borderColor: '#D32F2F',
       textColor: '#B71C1C',
       badgeColor: '#FFCDD2',
-      badgeText: '⚠️ HIDDEN LOSS'
+      badgeText: '⚠️ GAME ESTIMATE'
     }
   } else if (activeAlternative === 'bale_sell') {
     tagData = {

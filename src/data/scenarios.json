@@ -56,12 +56,12 @@
               },
               "stat": {
                 "label": {
-                  "en": "Estimated organic carbon loss per acre",
-                  "te": "ఎకరానికి కోల్పోయే సేంద్రీయ కర్బనం"
+                  "en": "Nutrient & carbon loss per tonne of burnt straw",
+                  "te": "దహనం చేసిన టన్ను గడ్డికి పోషకాలు మరియు కర్బన నష్టం"
                 },
-                "value": "~100% Nitrogen & ~25-40% Organic Matter Lost",
-                "source": "ICAR-Indian Agricultural Research Institute observational estimates",
-                "verified": false
+                "value": "Per tonne: 100% organic C, ~5.5kg N, 2.3kg P, 25kg K, 1.2kg S lost",
+                "source": "National Policy for Management of Crop Residues (NPMCR), via 2021 review",
+                "verified": true
               }
             },
             {
@@ -81,8 +81,8 @@
                   "te": "పొలంలో దహనం వల్ల వెలువడే కాలుష్యం"
                 },
                 "value": {
-                  "en": "Releases dense hazardous smoke that blankets nearby villages and harms respiratory health",
-                  "te": "గ్రామాలను కమ్మేసే దట్టమైన ప్రమాదకర పొగను వెలువరిస్తుంది, శ్వాసకోశ ఆరోగ్యానికి హానికరం"
+                  "en": "Releases dense hazardous smoke that blankets nearby villages and harms respiratory health (game estimate)",
+                  "te": "గ్రామాలను కమ్మేసే దట్టమైన ప్రమాదకర పొగను వెలువరిస్తుంది, శ్వాసకోశ ఆరోగ్యానికి హానికరం (సుమారు అంచనా)"
                 },
                 "source": "Central Pollution Control Board (CPCB) field models",
                 "verified": false
@@ -101,10 +101,10 @@
               },
               "stat": {
                 "label": {
-                  "en": "Approximate net financial loss per acre",
-                  "te": "ఎకరానికి సుమారు నికర ఆర్థిక నష్టం"
+                  "en": "Approximate net financial drain per acre (game estimate)",
+                  "te": "ఎకరానికి సుమారు నికర ఆర్థిక నష్టం (సుమారు అంచనా)"
                 },
-                "value": "~₹3,000 to ₹4,500 / acre lost",
+                "value": "~₹3,000 to ₹4,500 / acre lost (game estimate)",
                 "source": "State Agricultural University Agronomy survey averages",
                 "verified": false
               }

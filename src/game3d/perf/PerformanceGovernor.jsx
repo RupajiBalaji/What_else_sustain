@@ -90,12 +90,13 @@ export default function PerformanceGovernor() {
 
     const deltaSec = deltaMs / 1000
 
-    if (currentFps < targetFps && currentFps > 5) {
+    // Strict Requirement: Require sustained low frames (average under 24 fps for 5 seconds) before downgrading
+    if (currentFps < 24 && currentFps > 5) {
       belowTargetDurationRef.current += deltaSec
       aboveTargetDurationRef.current = 0
 
-      // Stays below target for 3.5 consecutive seconds: step down one tier at a time
-      if (belowTargetDurationRef.current >= 3.5) {
+      // Stays below 24 fps for 5.0 consecutive seconds: step down one tier at a time
+      if (belowTargetDurationRef.current >= 5.0) {
         belowTargetDurationRef.current = 0
 
         // Step down one tier at a time
@@ -112,7 +113,7 @@ export default function PerformanceGovernor() {
           triggerToast('Adjusted graphics for smooth play')
         }
       }
-    } else if (currentFps >= targetFps + 6) {
+    } else if (currentFps >= 32) {
       aboveTargetDurationRef.current += deltaSec
       belowTargetDurationRef.current = 0
 

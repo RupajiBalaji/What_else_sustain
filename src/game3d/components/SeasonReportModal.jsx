@@ -10,7 +10,8 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
   const {
     seasonReportData,
     persistentState,
-    setShowSeasonReport
+    setShowSeasonReport,
+    openQuiz
   } = useGame3D()
 
   const [counterAnim, setCounterAnim] = useState(0)
@@ -246,35 +247,58 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
               <span>Next Season ➔</span>
             </button>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '6px' }}>
               <button
                 type="button"
                 onClick={onRewindSeason}
                 style={{
-                  padding: '10px',
+                  padding: '8px 4px',
                   backgroundColor: '#FFF8E1',
                   color: '#E65100',
                   border: '1.5px solid #FFB74D',
                   borderRadius: '10px',
                   fontWeight: 800,
-                  fontSize: '0.8rem',
-                  cursor: 'pointer'
+                  fontSize: '0.74rem',
+                  cursor: 'pointer',
+                  textAlign: 'center'
                 }}
               >
-                ↺ Replay Season
+                ↺ Replay
+              </button>
+              <button
+                type="button"
+                data-testid="report-quiz-button"
+                onClick={() => {
+                  setShowSeasonReport(false)
+                  openQuiz?.('post')
+                }}
+                style={{
+                  padding: '8px 4px',
+                  backgroundColor: '#E1F5FE',
+                  color: '#01579B',
+                  border: '1.5px solid #81D4FA',
+                  borderRadius: '10px',
+                  fontWeight: 800,
+                  fontSize: '0.74rem',
+                  cursor: 'pointer',
+                  textAlign: 'center'
+                }}
+              >
+                📝 Quiz
               </button>
               <button
                 type="button"
                 onClick={handleShare}
                 style={{
-                  padding: '10px',
+                  padding: '8px 4px',
                   backgroundColor: '#E8F5E9',
                   color: '#1B5E20',
                   border: '1.5px solid #81C784',
                   borderRadius: '10px',
                   fontWeight: 800,
-                  fontSize: '0.8rem',
-                  cursor: 'pointer'
+                  fontSize: '0.74rem',
+                  cursor: 'pointer',
+                  textAlign: 'center'
                 }}
               >
                 📤 Share
@@ -283,14 +307,15 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
                 type="button"
                 onClick={onOpenAchievements}
                 style={{
-                  padding: '10px',
+                  padding: '8px 4px',
                   backgroundColor: '#EDE7F6',
                   color: '#4A148C',
                   border: '1.5px solid #B39DDB',
                   borderRadius: '10px',
                   fontWeight: 800,
-                  fontSize: '0.8rem',
-                  cursor: 'pointer'
+                  fontSize: '0.74rem',
+                  cursor: 'pointer',
+                  textAlign: 'center'
                 }}
               >
                 🏆 Badges

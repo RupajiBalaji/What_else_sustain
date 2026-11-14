@@ -398,6 +398,15 @@ export function Game3DProvider({ children, onFallbackToLite }) {
 
   const [showComparison, setShowComparison] = useState(false)
   const [showPledgeModal, setShowPledgeModal] = useState(false)
+  const [quizState, setQuizState] = useState({ isOpen: false, mode: 'pre' })
+
+  const openQuiz = useCallback((mode = 'pre') => {
+    setQuizState({ isOpen: true, mode })
+  }, [])
+
+  const closeQuiz = useCallback(() => {
+    setQuizState((prev) => ({ ...prev, isOpen: false }))
+  }, [])
 
   const altIntervalRef = useRef(null)
   const altTimerRef = useRef(null)
@@ -965,6 +974,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     showSettings ||
     showComparison ||
     showOneSeasonModal ||
+    quizState.isOpen ||
     activeSeasonalEvent
   )
 
@@ -1077,6 +1087,10 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         setShowComparison,
         showPledgeModal,
         setShowPledgeModal,
+        quizState,
+        setQuizState,
+        openQuiz,
+        closeQuiz,
         showFps,
         toggleFps,
         fps,

@@ -11,6 +11,7 @@ import RewindGlitchOverlay from './RewindGlitchOverlay'
 import RupeeCounterHUD from './RupeeCounterHUD'
 import ComparisonSliderModal from './ComparisonSliderModal'
 import PledgeCardModal from './PledgeCardModal'
+import QuizModal from './QuizModal'
 import SettingsDrawer from './SettingsDrawer'
 import SowingMiniGame from './SowingMiniGame'
 import GrowingTimeLapse from './GrowingTimeLapse'
@@ -55,6 +56,10 @@ export default function HUDOverlay({ onSwitchToLite }) {
     setShowOneSeasonModal,
     showPledgeModal,
     setShowPledgeModal,
+    quizState,
+    openQuiz,
+    closeQuiz,
+    setPersistentState,
     showComparison,
     setShowComparison,
     showFps,
@@ -407,6 +412,32 @@ export default function HUDOverlay({ onSwitchToLite }) {
                 {fps}F
               </button>
             )}
+            <button
+              type="button"
+              data-testid="quiz-open-btn"
+              onClick={() => openQuiz?.('pre')}
+              style={{
+                minHeight: '34px',
+                padding: '3px 8px',
+                borderRadius: '9999px',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: '1.5px solid #0288D1',
+                fontWeight: 800,
+                fontSize: '0.76rem',
+                color: '#01579B',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+              }}
+              title="Knowledge Check"
+              aria-label="Knowledge Check"
+            >
+              <span>📝</span>
+              <span style={{ display: 'inline' }}>Quiz</span>
+            </button>
             <button
               type="button"
               data-testid="settings-toggle-button"
@@ -783,6 +814,22 @@ export default function HUDOverlay({ onSwitchToLite }) {
       <PledgeCardModal
         isOpen={showPledgeModal}
         onClose={() => setShowPledgeModal(false)}
+      />
+
+      {/* KNOWLEDGE PRE-CHECK & POST-CHECK QUIZ MODAL */}
+      <QuizModal
+        isOpen={Boolean(quizState?.isOpen)}
+        mode={quizState?.mode || 'pre'}
+        onComplete={(res) => {
+          if (res.mode === 'pre') {
+            setPersistentState((prev) => ({ ...prev, preCheckCompleted: true }))
+            closeQuiz?.()
+          } else if (res.mode === 'results') {
+            setPersistentState((prev) => ({ ...prev, postCheckCompleted: true }))
+            closeQuiz?.()
+          }
+        }}
+        onSkip={() => closeQuiz?.()}
       />
 
       {/* BOTTOM TOUCH CONTROLS (for mobile / touchscreens) */}

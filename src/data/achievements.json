@@ -1,0 +1,86 @@
+[
+  {
+    "id": "first_season",
+    "title": "First Harvest",
+    "desc": "Complete your first farming season.",
+    "icon": "🌱",
+    "category": "milestone"
+  },
+  {
+    "id": "first_clear_sky",
+    "title": "Clear Sky Pioneer",
+    "desc": "Finish a season without burning any straw piles.",
+    "icon": "🌤️",
+    "category": "environment"
+  },
+  {
+    "id": "three_seasons_clean",
+    "title": "Breath of Fresh Air",
+    "desc": "Achieve 3 consecutive sustainable seasons without fire.",
+    "icon": "🌬️",
+    "category": "streak"
+  },
+  {
+    "id": "soil_savior",
+    "title": "Soil Savior",
+    "desc": "Nurture soil health above 88 points.",
+    "icon": "🪱",
+    "category": "soil"
+  },
+  {
+    "id": "village_guardian",
+    "title": "Village Guardian",
+    "desc": "Elevate village health above 88 points.",
+    "icon": "🏡",
+    "category": "community"
+  },
+  {
+    "id": "fast_hands",
+    "title": "Green Thumb Rhythm",
+    "desc": "Execute a perfect timing release during seed sowing.",
+    "icon": "🎯",
+    "category": "skill"
+  },
+  {
+    "id": "biomass_tycoon",
+    "title": "Biomass Merchant",
+    "desc": "Earn ₹30,000 or more in cumulative straw baling sales.",
+    "icon": "💰",
+    "category": "economy"
+  },
+  {
+    "id": "happy_seeder_hero",
+    "title": "Happy Seeder Hero",
+    "desc": "Adopt direct Happy Seeder drilling twice.",
+    "icon": "🚜",
+    "category": "practice"
+  },
+  {
+    "id": "compost_master",
+    "title": "Microbial Alchemist",
+    "desc": "Transform crop residue into living bio-compost twice.",
+    "icon": "🧪",
+    "category": "soil"
+  },
+  {
+    "id": "mulch_pioneer",
+    "title": "Moisture Master",
+    "desc": "Apply mulch across the field to protect the topsoil.",
+    "icon": "🌾",
+    "category": "soil"
+  },
+  {
+    "id": "pillar_of_community",
+    "title": "Pillar of the Village",
+    "desc": "Attain a farmer reputation score of 85 or higher.",
+    "icon": "👑",
+    "category": "community"
+  },
+  {
+    "id": "five_season_legend",
+    "title": "Regenerative Master",
+    "desc": "Complete 5 seasons of stewardship.",
+    "icon": "🏆",
+    "category": "milestone"
+  }
+]

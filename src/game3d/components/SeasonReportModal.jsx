@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useGame3D } from '../context/Game3DContext'
 import { GAME_BALANCE } from '../config/gameBalance'
 import { sound } from '../../game/soundManager'
+import { shareOrDownloadCard } from '../../utils/shareCard'
 
 export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpenAchievements }) {
   const {
@@ -44,16 +45,18 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
   const xpNeeded = nextLevel ? nextLevel.xpNeeded : 9999
   const currentXP = persistentState?.farmerXP || 0
 
-  const handleShare = () => {
+  const handleShare = async () => {
     sound.initAudio()
     sound.playTap()
-    const text = `🌾 What Else Sustain - Finished Season ${persistentState?.seasonIndex || 1} with Rank ${rank?.rank || 'A'}! Net earnings: ₹${netSeasonBalance.toLocaleString('en-IN')}, Soil Health: ${Math.round(persistentState?.soilHealth || 70)}/100! 🌍 #SustainableFarming`
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({ title: 'What Else Sustain', text }).catch(() => {})
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text)
-      alert('Report copied to clipboard!')
-    }
+    await shareOrDownloadCard({
+      rank: rank?.rank || 'A',
+      rankTitle: rank?.title || 'Sustainable Steward',
+      seasonIndex: persistentState?.seasonIndex || 1,
+      balance: netSeasonBalance,
+      soilHealth: Math.round(persistentState?.soilHealth || 70),
+      villageHealth: Math.round(persistentState?.villageHealth || 75),
+      siteUrl: window.location.origin || 'https://what-else-sustain.web.app'
+    })
   }
 
   return createPortal(

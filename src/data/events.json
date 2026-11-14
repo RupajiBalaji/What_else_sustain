@@ -1,0 +1,77 @@
+[
+  {
+    "id": "event_wind_shift",
+    "title": "Sudden Autumn Gale",
+    "desc": "Winds have shifted briskly towards the village school and health clinic.",
+    "icon": "🌬️",
+    "visualCue": "wind_high",
+    "optionA": {
+      "label": "Delay action & monitor breeze",
+      "effectText": "Air exposure risk minimized."
+    },
+    "optionB": {
+      "label": "Distribute cloth face covers to school",
+      "effectText": "Cost ₹500, Village health +6, Reputation +8"
+    }
+  },
+  {
+    "id": "event_neighbour_drift",
+    "title": "Neighbour's Stubble Fire",
+    "desc": "Thick smoke drifts from a distant field where a neighbor ignited their paddy straw.",
+    "icon": "🔥",
+    "visualCue": "distant_smoke",
+    "optionA": {
+      "label": "Demonstrate the Baler machine to neighbor",
+      "effectText": "Cost ₹800 fuel, Village health +8, Reputation +12"
+    },
+    "optionB": {
+      "label": "Focus on own farm boundaries",
+      "effectText": "No cost, but air haze lingers."
+    }
+  },
+  {
+    "id": "event_unseasonal_rain",
+    "title": "Unseasonal Monsoon Shower",
+    "desc": "A gentle 2-hour rain shower dampens the fields and raises soil moisture.",
+    "icon": "🌧️",
+    "visualCue": "rain",
+    "optionA": {
+      "label": "Incorporate moisture into soil with mulch",
+      "effectText": "Soil Health +8, next crop density boosted!"
+    },
+    "optionB": {
+      "label": "Store rainwater in canal trench",
+      "effectText": "Water clarity improved, Reputation +5"
+    }
+  },
+  {
+    "id": "event_inspector_visit",
+    "title": "Agricultural Officer Inspection",
+    "desc": "The district agricultural officer visits to review residue management.",
+    "icon": "📋",
+    "visualCue": "inspector",
+    "optionA": {
+      "label": "Present clean residue logs & soil cutaway",
+      "effectText": "Sustainable Farmer Grant eligibility!"
+    },
+    "optionB": {
+      "label": "Request bio-decomposer demonstration",
+      "effectText": "Cost ₹400, Soil awareness +6, XP +35"
+    }
+  },
+  {
+    "id": "event_baler_subsidy",
+    "title": "Clean Energy Biomass Scheme",
+    "desc": "A nearby compressed biogas plant offers a direct incentive for paddy straw bales.",
+    "icon": "⚡",
+    "visualCue": "subsidy",
+    "optionA": {
+      "label": "Sign up for bulk baling reservation",
+      "effectText": "Next baling sale earns +₹4,000 bonus!"
+    },
+    "optionB": {
+      "label": "Co-op share with neighboring farmers",
+      "effectText": "Reputation +14, Village Health +5"
+    }
+  }
+]

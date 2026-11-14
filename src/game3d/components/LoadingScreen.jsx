@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import { sound } from '../../game/soundManager'
 import { audioManager } from '../audio/AudioManager'
 import SproutMascot from '../../game/SproutMascot'
+import { safeStorage } from '../../utils/safeStorage'
 
 const SUSTAINABILITY_TIPS = [
   '🌱 Mulching with paddy straw retains up to 40% more soil moisture and protects topsoil.',
@@ -20,6 +21,14 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
   const [tipIndex, setTipIndex] = useState(0)
   const [isTouchDevice, setIsTouchDevice] = useState(false)
   const [minProgress, setMinProgress] = useState(15)
+  const [classCode, setClassCode] = useState(() => {
+    try {
+      return safeStorage.getItem('wes_student_class_code') || ''
+    } catch {
+      return ''
+    }
+  })
+  const [classStatus, setClassStatus] = useState(null) // null | { valid: true, name } | { valid: false, message }
 
   // Smoothly increment a baseline floor so the bar looks lively while downloading
   useEffect(() => {
@@ -42,6 +51,30 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
   // Calculate actual combined progress
   const actualProgress = Math.max(minProgress, Math.round(dreiProgress || 0))
   const isReady = actualProgress >= 100 || (!active && actualProgress >= 75)
+
+  const handleClassCodeChange = async (val) => {
+    const clean = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)
+    setClassCode(clean)
+    if (clean.length >= 4) {
+      try {
+        const res = await fetch(`/api/classes/${clean}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.valid) {
+            setClassStatus({ valid: true, name: data.name })
+            safeStorage.setItem('wes_student_class_code', clean)
+            return
+          }
+        }
+      } catch {
+        // network error fallback
+      }
+      setClassStatus({ valid: false, message: 'Class code not found — you can still play without a code!' })
+    } else {
+      setClassStatus(null)
+      if (!clean) safeStorage.removeItem('wes_student_class_code')
+    }
+  }
 
   const handleStart = async (mode = 'sowing') => {
     try {
@@ -207,6 +240,45 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
         {/* Start Button Options: Quick play (default) vs Full season */}
         {isReady ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+            {/* Optional Class Code Input */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '2px' }}>
+              <input
+                type="text"
+                data-testid="student-class-code-input"
+                placeholder="Class code (optional, e.g. PUNJAB)"
+                value={classCode}
+                onChange={(e) => handleClassCodeChange(e.target.value)}
+                maxLength={8}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  border: '1.5px solid #A1887F',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                  color: '#3E2723',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+              {classStatus && (
+                <div
+                  data-testid="class-code-feedback"
+                  style={{
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    color: classStatus.valid ? '#2E7D32' : '#D84315',
+                    textAlign: 'center'
+                  }}
+                >
+                  {classStatus.valid ? `✓ Joined Class: ${classStatus.name}` : classStatus.message}
+                </div>
+              )}
+            </div>
+
             {/* Primary Default: Quick Play */}
             <button
               data-testid="start-quick-play-button"

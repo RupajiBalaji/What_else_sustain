@@ -22,6 +22,7 @@ const ScenarioPlayer = lazy(() => import('./components/ScenarioPlayer'))
 const BadgeCollectionPage = lazy(() => import('./components/BadgeCollectionPage'))
 const FinalScoreScreen = lazy(() => import('./components/FinalScoreScreen'))
 const AskAdvisorPanel = lazy(() => import('./components/AskAdvisorPanel'))
+const TeacherDashboard = lazy(() => import('./components/TeacherDashboard'))
 
 function LoadingFallback() {
   return (
@@ -79,6 +80,17 @@ function MainContent() {
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false)
   const [fallbackMessage, setFallbackMessage] = useState(null)
+  const [isTeacherRoute, setIsTeacherRoute] = useState(() => {
+    return typeof window !== 'undefined' && window.location.pathname.startsWith('/teacher')
+  })
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setIsTeacherRoute(window.location.pathname.startsWith('/teacher'))
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   const { language, t } = useLanguage()
 
@@ -129,6 +141,20 @@ function MainContent() {
     )
     setMode('lite')
   }, [language])
+
+  // Teacher Dashboard Route (/teacher)
+  if (isTeacherRoute) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <TeacherDashboard
+          onExitToGame={() => {
+            window.history.pushState({}, '', '/')
+            setIsTeacherRoute(false)
+          }}
+        />
+      </Suspense>
+    )
+  }
 
   // 1. PRIMARY 3D GAME MODE (Scene: The Farm - Fullscreen fixed 100dvh)
   if (mode === '3d') {

@@ -324,6 +324,34 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
 
         {/* Career Progression & Reset */}
         <div style={{ borderTop: '1px solid #EEEEEE', paddingTop: '14px' }}>
+          {/* Teacher Dashboard Link */}
+          <button
+            type="button"
+            data-testid="open-teacher-dashboard-btn"
+            onClick={() => {
+              window.location.href = '/teacher'
+            }}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#E8F5E9',
+              color: '#1B5E20',
+              border: '1.5px solid #81C784',
+              borderRadius: '10px',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              marginBottom: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🎓</span>
+            <span>Teacher Class Dashboard</span>
+          </button>
+
           <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#C62828', marginBottom: '4px' }}>
             Season Career
           </div>

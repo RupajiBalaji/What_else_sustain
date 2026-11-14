@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "audit:data": "node scripts/audit_data.js",
     "audit:translations": "node scripts/audit_translations.js",
+    "test": "node scripts/audit_data.js && node scripts/audit_translations.js && node --test tests/unit/*.test.js",
     "test:unit": "node --test tests/unit/*.test.js",
     "lint": "node scripts/lint.js",
     "format": "node scripts/format.js",

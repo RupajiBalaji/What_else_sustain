@@ -1,11 +1,13 @@
 # What Else Sustain 🌿
 
-An experiential, bilingual (English & Telugu) web game that teaches students, everyday citizens, and farmers sustainable choices by simulating real-world cause and effect.
+An experiential, multilingual (English, Telugu & Hindi) web game that teaches students, everyday citizens, and farmers sustainable choices by simulating real-world cause and effect.
 
-> *"Make the mistake. Understand it. Choose what else."*
-> *"తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి."*
+> *"Make the mistake. Understand it. Choose what else."*  
+> *"తప్పు చేయండి. తెలుసుకోండి. ప్రత్యామ్నాయాన్ని ఎంచుకోండి."*  
+> *"गलती करें। समझें। सही विकल्प चुनें।"*
 
-🔗 **Live Prototype**: https://what-else-sustain.onrender.com/
+🔗 **Live Prototype**: https://what-else-sustain.onrender.com/  
+👨‍🏫 **Teacher & Facilitator Guide**: [docs/TEACHER_GUIDE.md](file:///e:/What%20else%20sustain/docs/TEACHER_GUIDE.md)
 
 ---
 
@@ -113,6 +115,19 @@ npm run build
 # The FastAPI backend automatically serves dist/ as static files in production:
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
+
+---
+
+### 4. Containerized Run (Docker)
+
+```bash
+# Build multi-stage Docker container
+docker build -t what-else-sustain .
+
+# Run container on port 8000
+docker run -p 8000:8000 -e PORT=8000 what-else-sustain
+```
+Open [http://localhost:8000](http://localhost:8000) to view the unified application with health checks at `/api/health`.
 
 ---
 

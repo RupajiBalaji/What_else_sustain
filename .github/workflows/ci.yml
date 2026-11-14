@@ -40,6 +40,8 @@ jobs:
         run: npm run format
       - name: Run data integrity audit
         run: npm run audit:data
+      - name: Run translation parity audit
+        run: npm run audit:translations
       - name: Run unit tests
         run: npm run test:unit
       - name: Build production bundle

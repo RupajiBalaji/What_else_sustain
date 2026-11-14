@@ -27,19 +27,34 @@ export function getSharedColormapTexture() {
   if (!sharedColormapTexture) {
     sharedColormapTexture = textureLoader.load('/Textures/colormap.png', (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace
-      tex.flipY = true // Must be true for correct Kenney palette UV mapping
+      tex.flipY = false // Standard glTF UV convention (V=0 is top)
       tex.magFilter = THREE.NearestFilter
       tex.minFilter = THREE.NearestFilter
       tex.generateMipmaps = false
       tex.needsUpdate = true
     })
     sharedColormapTexture.colorSpace = THREE.SRGBColorSpace
-    sharedColormapTexture.flipY = true
+    sharedColormapTexture.flipY = false
     sharedColormapTexture.magFilter = THREE.NearestFilter
     sharedColormapTexture.minFilter = THREE.NearestFilter
     sharedColormapTexture.generateMipmaps = false
   }
   return sharedColormapTexture
+}
+
+/**
+ * Semantic solid-color fallback materials for models if textures fail or are missing.
+ * Ensures models NEVER render drab grey or pitch black.
+ */
+const fallbackMaterials = {
+  treeFoliage: new THREE.MeshStandardMaterial({ color: '#388E3C', roughness: 0.85, metalness: 0.0 }),
+  treeTrunk: new THREE.MeshStandardMaterial({ color: '#5D4037', roughness: 0.9, metalness: 0.0 }),
+  houseWall: new THREE.MeshStandardMaterial({ color: '#E0D7C6', roughness: 0.88, metalness: 0.0 }),
+  houseRoof: new THREE.MeshStandardMaterial({ color: '#D35400', roughness: 0.8, metalness: 0.0 }),
+  barnRed: new THREE.MeshStandardMaterial({ color: '#C62828', roughness: 0.85, metalness: 0.0 }),
+  tractorGreen: new THREE.MeshStandardMaterial({ color: '#2E7D32', roughness: 0.65, metalness: 0.05 }),
+  tractorTrim: new THREE.MeshStandardMaterial({ color: '#FBC02D', roughness: 0.5, metalness: 0.1 }),
+  rubberTire: new THREE.MeshStandardMaterial({ color: '#212121', roughness: 0.95, metalness: 0.0 })
 }
 
 /**
@@ -52,7 +67,7 @@ export function getSharedKenneyMaterial() {
     const colormap = getSharedColormapTexture()
     sharedKenneyMaterial = new THREE.MeshStandardMaterial({
       map: colormap,
-      roughness: 0.9,
+      roughness: 0.85,
       metalness: 0.0,
       side: THREE.FrontSide,
       shadowSide: THREE.BackSide
@@ -75,26 +90,53 @@ export function applyKenneyTextures(root, manifest = null) {
       child.castShadow = manifest ? manifest.castShadow : true
       child.receiveShadow = manifest ? manifest.receiveShadow : true
 
+      const name = (child.name || '').toLowerCase()
+      const parentName = (child.parent?.name || '').toLowerCase()
+
+      // Ensure material uses the shared colormap texture
       if (!child.material) {
         child.material = sharedMat
       } else if (Array.isArray(child.material)) {
         child.material = child.material.map((mat) => {
           if (!mat || !mat.map) return sharedMat
-          mat.roughness = 0.9
+          mat.map = colormap
+          mat.map.flipY = false
+          mat.roughness = 0.85
           mat.metalness = 0.0
           mat.side = THREE.FrontSide
           mat.shadowSide = THREE.BackSide
           return mat
         })
-      } else if (!child.material.map) {
-        child.material = sharedMat
       } else {
+        child.material.map = colormap
+        if (child.material.map) {
+          child.material.map.flipY = false
+          child.material.map.colorSpace = THREE.SRGBColorSpace
+          child.material.map.magFilter = THREE.NearestFilter
+          child.material.map.minFilter = THREE.NearestFilter
+        }
         child.material.side = THREE.FrontSide
         child.material.shadowSide = THREE.BackSide
-        child.material.roughness = 0.9
+        child.material.roughness = 0.85
         child.material.metalness = 0.0
-        if (child.material.map) {
-          child.material.map.anisotropy = 4
+      }
+
+      // Safe semantic solid-color fallback if texture fails to load
+      if (!colormap || !colormap.image) {
+        if (name.includes('wheel') || name.includes('tire') || name.includes('tyre')) {
+          child.material = fallbackMaterials.rubberTire
+        } else if (name.includes('roof')) {
+          child.material = fallbackMaterials.houseRoof
+        } else if (name.includes('barn')) {
+          child.material = fallbackMaterials.barnRed
+        } else if (name.includes('house') || name.includes('wall') || name.includes('building')) {
+          child.material = fallbackMaterials.houseWall
+        } else if (name.includes('tree') || name.includes('leaf') || name.includes('foliage')) {
+          child.material = fallbackMaterials.treeFoliage
+        } else if (name.includes('trunk') || name.includes('wood')) {
+          child.material = fallbackMaterials.treeTrunk
+        } else if (name.includes('tractor') || parentName.includes('tractor')) {
+          child.material = fallbackMaterials.tractorGreen
         }
       }
     }

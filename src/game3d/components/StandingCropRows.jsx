@@ -88,6 +88,100 @@ function createCropClusterGeometry(soilHealth = 70) {
   return merged
 }
 
+/**
+ * Creates short, dried stubble stalk geometry for the harvested field.
+ */
+function createStubbleGeometry() {
+  const g1 = new THREE.PlaneGeometry(0.22, 0.3, 1, 1)
+  g1.translate(0, 0.15, 0)
+  const g2 = new THREE.PlaneGeometry(0.22, 0.3, 1, 1)
+  g2.rotateY(Math.PI / 2)
+  g2.translate(0, 0.15, 0)
+
+  const p1 = g1.attributes.position.array
+  const p2 = g2.attributes.position.array
+  const n1 = g1.attributes.normal.array
+  const n2 = g2.attributes.normal.array
+
+  const totalVerts = (p1.length + p2.length) / 3
+  const positions = new Float32Array(totalVerts * 3)
+  const normals = new Float32Array(totalVerts * 3)
+  const colors = new Float32Array(totalVerts * 3)
+
+  positions.set(p1)
+  positions.set(p2, p1.length)
+  normals.set(n1)
+  normals.set(n2, n1.length)
+
+  const indices = []
+  for (let i = 0; i < g1.index.array.length; i++) indices.push(g1.index.array[i])
+  const off = g1.attributes.position.count
+  for (let i = 0; i < g2.index.array.length; i++) indices.push(g2.index.array[i] + off)
+
+  const cBase = new THREE.Color('#5D4037')
+  const cTip = new THREE.Color('#D7CCC8')
+  const finalCol = new THREE.Color()
+
+  for (let i = 0; i < totalVerts; i++) {
+    const y = positions[i * 3 + 1]
+    const t = Math.max(0, Math.min(1.0, y / 0.3))
+    finalCol.lerpColors(cBase, cTip, t)
+    colors[i * 3] = finalCol.r
+    colors[i * 3 + 1] = finalCol.g
+    colors[i * 3 + 2] = finalCol.b
+  }
+
+  const merged = new THREE.BufferGeometry()
+  merged.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  merged.setAttribute('normal', new THREE.BufferAttribute(normals, 3))
+  merged.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  merged.setIndex(indices)
+
+  g1.dispose()
+  g2.dispose()
+  return merged
+}
+
+function StubbleField({ cropData, count, isShadows }) {
+  const stubbleRef = useRef(null)
+  const geo = useMemo(() => createStubbleGeometry(), [])
+  const mat = useMemo(() => new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    roughness: 0.9,
+    metalness: 0.0,
+    side: THREE.DoubleSide
+  }), [])
+
+  useLayoutEffect(() => {
+    if (!stubbleRef.current) return
+    cropData.forEach((item, i) => {
+      _cropDummy.position.set(item.x, 0, item.z)
+      _cropDummy.rotation.set(0, item.rotY, 0)
+      _cropDummy.scale.set(item.scale, item.scale * 0.9, item.scale)
+      _cropDummy.updateMatrix()
+      stubbleRef.current.setMatrixAt(i, _cropDummy.matrix)
+    })
+    stubbleRef.current.instanceMatrix.needsUpdate = true
+  }, [cropData])
+
+  useEffect(() => {
+    return () => {
+      geo.dispose()
+      mat.dispose()
+    }
+  }, [geo, mat])
+
+  return (
+    <instancedMesh
+      ref={stubbleRef}
+      args={[geo, mat, count]}
+      castShadow={isShadows}
+      receiveShadow={isShadows}
+      name="HarvestedStubbleRows"
+    />
+  )
+}
+
 export default function StandingCropRows() {
   const { qualityConfig, windState, harvestState, harvestProgress, persistentState } = useGame3D()
   const isShadows = qualityConfig.shadows
@@ -240,7 +334,7 @@ export default function StandingCropRows() {
   }, [geometry, material])
 
   if (harvestState === 'harvested') {
-    return null
+    return <StubbleField cropData={cropData} count={count} isShadows={isShadows} />
   }
 
   return (

@@ -138,10 +138,10 @@
           "metrics": [
             {
               "label": {
-                "en": "Irrigation water saved due to mulch cover",
-                "te": "మల్చింగ్ వల్ల ఆదా అయ్యే సాగునీరు"
+                "en": "Irrigation water saved due to mulch cover (game estimate)",
+                "te": "మల్చింగ్ వల్ల ఆదా అయ్యే సాగునీరు (సుమారు అంచనా)"
               },
-              "value": "~15% to 25% moisture retained",
+              "value": "~15% to 25% moisture retained (game estimate)",
               "source": "FAO Conservation Agriculture guidelines",
               "verified": false
             }
@@ -192,10 +192,10 @@
           "metrics": [
             {
               "label": {
-                "en": "Organic carbon returned to soil per hectare",
-                "te": "భూమికి చేరే సేంద్రీయ కర్బనం"
+                "en": "Organic carbon returned to soil per hectare (game estimate)",
+                "te": "భూమికి చేరే సేంద్రీయ కర్బనం (సుమారు అంచనా)"
               },
-              "value": "~3.5 tons organic matter / ha",
+              "value": "~3.5 tons organic matter / ha (game estimate)",
               "source": "ICAR-IARI Pusa Decomposer field trials",
               "verified": false
             }
@@ -246,10 +246,10 @@
           "metrics": [
             {
               "label": {
-                "en": "Fossil fuel displaced by 1 ton biomass straw",
-                "te": "1 టన్ను గడ్డితో ఆదా అయ్యే శిలాజ ఇంధనం"
+                "en": "Fossil fuel displaced by 1 ton biomass straw (game estimate)",
+                "te": "1 టన్ను గడ్డితో ఆదా అయ్యే శిలాజ ఇంధనం (సుమారు అంచనా)"
               },
-              "value": "~0.5 tons coal displaced",
+              "value": "~0.5 tons coal displaced (game estimate)",
               "source": "Ministry of New and Renewable Energy (MNRE) biomass benchmarks",
               "verified": false
             }
@@ -333,10 +333,10 @@
               },
               "stat": {
                 "label": {
-                  "en": "Estimated natural decomposition lifespan",
-                  "te": "భూమిలో కరిగిపోవడానికి పట్టే సుమారు కాలం"
+                  "en": "Estimated natural decomposition lifespan (game estimate)",
+                  "te": "భూమిలో కరిగిపోవడానికి పట్టే సుమారు కాలం (సుమారు అంచనా)"
                 },
-                "value": "~450 to 1,000 years",
+                "value": "~450 to 1,000 years (game estimate)",
                 "source": "US EPA & National Oceanic and Atmospheric Administration (NOAA) approximate research",
                 "verified": false
               }
@@ -354,12 +354,12 @@
               },
               "stat": {
                 "label": {
-                  "en": "Dumpsite fires linked to mixed plastic waste",
-                  "te": "ప్లాస్టిక్ వ్యర్థాల వల్ల సంభవించే డంపింగ్ యార్డ్ మంటలు"
+                  "en": "Dumpsite fires linked to mixed plastic waste (game estimate)",
+                  "te": "ప్లాస్టిక్ వ్యర్థాల వల్ల సంభవించే డంపింగ్ యార్డ్ మంటలు (సుమారు అంచనా)"
                 },
                 "value": {
-                  "en": "Frequent contributor to hazardous dumpsite fires and toxic urban haze",
-                  "te": "డంపింగ్ యార్డుల్లో ప్రమాదకర మంటలు మరియు నగరంలో విష పొగ కమ్ముకోవడానికి ప్రధాన కారణం"
+                  "en": "Frequent contributor to hazardous dumpsite fires and toxic urban haze (game estimate)",
+                  "te": "డంపింగ్ యార్డుల్లో ప్రమాదకర మంటలు మరియు నగరంలో విష పొగ కమ్ముకోవడానికి ప్రధాన కారణం (సుమారు అంచనా)"
                 },
                 "source": "Urban Waste Management & CPCB observational estimates",
                 "verified": false
@@ -378,10 +378,10 @@
               },
               "stat": {
                 "label": {
-                  "en": "Approximate recyclable value lost per household",
-                  "te": "ఒక ఇంటి నుండి వృధా అయ్యే రీసైక్లింగ్ విలువ"
+                  "en": "Approximate recyclable value lost per household (game estimate)",
+                  "te": "ఒక ఇంటి నుండి వృధా అయ్యే రీసైక్లింగ్ విలువ (సుమారు అంచనా)"
                 },
-                "value": "~₹600 to ₹1,200 / year in scrap value lost",
+                "value": "~₹600 to ₹1,200 / year in scrap value lost (game estimate)",
                 "source": "Informal Waste Sector Economy field benchmarks",
                 "verified": false
               }
@@ -426,12 +426,12 @@
               },
               "stat": {
                 "label": {
-                  "en": "Toxicity comparison to clean wood fire",
-                  "te": "కట్టెల పొగతో పోలిస్తే విషపూరిత తీవ్రత"
+                  "en": "Toxicity comparison to clean wood fire (game estimate)",
+                  "te": "కట్టెల పొగతో పోలిస్తే విషపూరిత తీవ్రత (సుమారు అంచనా)"
                 },
                 "value": {
-                  "en": "Burning plastic releases toxic fumes and carcinogenic soot that harm lungs",
-                  "te": "ప్లాస్టిక్ కాల్చడం వల్ల ఊపిరితిత్తులను దెబ్బతీసే క్యాన్సర్ కారక విష వాయువులు విడుదలవుతాయి"
+                  "en": "Burning plastic releases toxic fumes and carcinogenic soot that harm lungs (game estimate)",
+                  "te": "ప్లాస్టిక్ కాల్చడం వల్ల ఊపిరితిత్తులను దెబ్బతీసే క్యాన్సర్ కారక విష వాయువులు విడుదలవుతాయి (సుమారు అంచనా)"
                 },
                 "source": "WHO & Environmental Health observational benchmarks",
                 "verified": false
@@ -450,10 +450,10 @@
               },
               "stat": {
                 "label": {
-                  "en": "Ash soil persistence duration",
-                  "te": "నేలలో బూడిద విష అవశేషాలు ఉండే కాలం"
+                  "en": "Ash soil persistence duration (game estimate)",
+                  "te": "నేలలో బూడిద విష అవశేషాలు ఉండే కాలం (సుమారు అంచనా)"
                 },
-                "value": "~5 to 15 years in backyard topsoil",
+                "value": "~5 to 15 years in backyard topsoil (game estimate)",
                 "source": "Soil Contamination Research approximate models",
                 "verified": false
               }
@@ -471,10 +471,10 @@
               },
               "stat": {
                 "label": {
-                  "en": "Average clinic expense per burning episode",
-                  "te": "ఒక్కో అనారోగ్యానికి అయ్యే సగటు ఖర్చు"
+                  "en": "Average clinic expense per burning episode (game estimate)",
+                  "te": "ఒక్కో అనారోగ్యానికి అయ్యే సగటు ఖర్చు (సుమారు అంచనా)"
                 },
-                "value": "~₹800 to ₹1,500 in medical bills",
+                "value": "~₹800 to ₹1,500 in medical bills (game estimate)",
                 "source": "Rural Clinic Health Cost survey approximations",
                 "verified": false
               }
@@ -508,10 +508,10 @@
           "metrics": [
             {
               "label": {
-                "en": "Plastic pots saved per 10 upcycled bottles",
-                "te": "ఆదా అయిన కొత్త ప్లాస్టిక్ కుండీల సంఖ్య"
+                "en": "Plastic pots saved per 10 upcycled bottles (game estimate)",
+                "te": "ఆదా అయిన కొత్త ప్లాస్టిక్ కుండీల సంఖ్య (సుమారు అంచనా)"
               },
-              "value": "10 pots saved (~₹300 - ₹500 saved)",
+              "value": "10 pots saved (~₹300 - ₹500 saved) (game estimate)",
               "source": "Urban Gardening & Circular Economy benchmarks",
               "verified": false
             }
@@ -562,10 +562,10 @@
           "metrics": [
             {
               "label": {
-                "en": "Crude oil energy saved by recycling 1 ton PET",
-                "te": "1 టన్ను PET రీసైక్లింగ్‌తో ఆదా అయ్యే ముడి చమురు"
+                "en": "Crude oil energy saved by recycling 1 ton PET (game estimate)",
+                "te": "1 టన్ను PET రీసైక్లింగ్‌తో ఆదా అయ్యే ముడి చమురు (సుమారు అంచనా)"
               },
-              "value": "~3.8 barrels of petroleum saved",
+              "value": "~3.8 barrels of petroleum saved (game estimate)",
               "source": "Association of Plastic Recyclers (APR) energy metrics",
               "verified": false
             }

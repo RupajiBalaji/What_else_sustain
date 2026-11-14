@@ -4,7 +4,7 @@ import { useGame3D } from '../context/Game3DContext'
 
 export default function SmokeMeterHUD() {
   const { t } = useLanguage()
-  const { burnState, burnProgress, smokeData, isWatchingVillage, watchVillageProgress } = useGame3D()
+  const { burnState, burnProgress, smokeData, isWatchingVillage, watchVillageProgress, colorBlindSafe } = useGame3D()
 
   const isVisible = burnState === 'burning' || burnState === 'consequence'
   if (!isVisible) return null
@@ -34,6 +34,11 @@ export default function SmokeMeterHUD() {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
 
+  const playerBarColor = colorBlindSafe ? '#29B6F6' : '#FF5722'
+  const villageBarColor = colorBlindSafe ? '#FFD54F' : '#FFA726'
+  const borderColor = colorBlindSafe ? '#42A5F5' : '#FF7043'
+  const headerColor = colorBlindSafe ? '#90CAF9' : '#FFAB91'
+
   return (
     <div
       style={{
@@ -43,7 +48,7 @@ export default function SmokeMeterHUD() {
         transform: isMobile ? 'translateX(-50%)' : 'none',
         backgroundColor: 'rgba(30, 38, 44, 0.94)',
         backdropFilter: 'blur(8px)',
-        border: '1.5px solid #FF7043',
+        border: `1.5px solid ${borderColor}`,
         borderRadius: '14px',
         padding: '8px 14px',
         color: '#FFFFFF',
@@ -56,7 +61,7 @@ export default function SmokeMeterHUD() {
     >
       {/* Title */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#FFAB91', letterSpacing: '0.2px' }}>
+        <span style={{ fontSize: '0.8rem', fontWeight: 900, color: headerColor, letterSpacing: '0.2px' }}>
           💨 {t('game3d.smokeMeterTitle')}
         </span>
         <span style={{ fontSize: '0.65rem', backgroundColor: '#37474F', padding: '2px 6px', borderRadius: '6px', color: '#B0BEC5' }}>
@@ -68,14 +73,14 @@ export default function SmokeMeterHUD() {
       <div style={{ marginBottom: '6px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', fontWeight: 800, marginBottom: '2px' }}>
           <span>{t('game3d.smokeMeterPlayer')}</span>
-          <span style={{ color: '#FF7043' }}>{currentPlayerVal} / 100</span>
+          <span style={{ color: playerBarColor }}>{currentPlayerVal} / 100</span>
         </div>
         <div style={{ width: '100%', height: '8px', backgroundColor: '#455A64', borderRadius: '4px', overflow: 'hidden' }}>
           <div
             style={{
               width: `${currentPlayerVal}%`,
               height: '100%',
-              backgroundColor: '#FF5722',
+              backgroundColor: playerBarColor,
               transition: 'width 0.2s ease',
               borderRadius: '4px'
             }}
@@ -87,14 +92,14 @@ export default function SmokeMeterHUD() {
       <div style={{ marginBottom: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', fontWeight: 800, marginBottom: '2px' }}>
           <span>{t('game3d.smokeMeterVillage')}</span>
-          <span style={{ color: '#FFA726' }}>{currentVillageVal} / 100</span>
+          <span style={{ color: villageBarColor }}>{currentVillageVal} / 100</span>
         </div>
         <div style={{ width: '100%', height: '8px', backgroundColor: '#455A64', borderRadius: '4px', overflow: 'hidden' }}>
           <div
             style={{
               width: `${currentVillageVal}%`,
               height: '100%',
-              backgroundColor: '#FFA726',
+              backgroundColor: villageBarColor,
               transition: 'width 0.2s ease',
               borderRadius: '4px'
             }}

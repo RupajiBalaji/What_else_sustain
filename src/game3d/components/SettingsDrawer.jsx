@@ -4,7 +4,7 @@ import { useGame3D } from '../context/Game3DContext'
 import { audioManager } from '../audio/AudioManager'
 
 export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
-  const { t } = useLanguage()
+  const { language, setLanguage, t } = useLanguage()
   const {
     quality,
     setQuality,
@@ -25,7 +25,15 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
     showDevStats,
     toggleDevStats,
     resetNewGame,
-    setShowAchievementsPanel
+    setShowAchievementsPanel,
+    colorBlindSafe,
+    setColorBlindSafe,
+    subtitlesEnabled,
+    setSubtitlesEnabled,
+    largeTextEnabled,
+    setLargeTextEnabled,
+    farmConfig,
+    setFarmConfig
   } = useGame3D()
 
   if (!isOpen) return null
@@ -320,6 +328,136 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
               style={{ width: '18px', height: '18px', accentColor: '#2E7D32' }}
             />
           </label>
+        </div>
+
+        {/* 4. Language Selection (S13) */}
+        <div style={{ borderTop: '1px solid #EEEEEE', paddingTop: '14px' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, color: '#3E2723', marginBottom: '8px' }}>
+            Language / భాష / भाषा
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+            {[
+              { code: 'en', label: 'English' },
+              { code: 'te', label: 'తెలుగు' },
+              { code: 'hi', label: 'हिन्दी' }
+            ].map((lng) => {
+              const isSelected = language === lng.code
+              return (
+                <button
+                  key={lng.code}
+                  type="button"
+                  onClick={() => setLanguage(lng.code)}
+                  style={{
+                    padding: '8px 4px',
+                    borderRadius: '8px',
+                    border: isSelected ? '2px solid #2E7D32' : '1px solid #BDBDBD',
+                    backgroundColor: isSelected ? '#E8F5E9' : '#FAFAFA',
+                    color: isSelected ? '#1B5E20' : '#424242',
+                    fontWeight: isSelected ? 900 : 700,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {lng.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* 5. Accessibility Controls (Task P4-02 & S13) */}
+        <div style={{ borderTop: '1px solid #EEEEEE', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, color: '#3E2723' }}>
+            Accessibility
+          </label>
+
+          {/* Colour-Blind Safe Palette */}
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3E2723' }}>Colour-Blind Safe Palette</div>
+              <div style={{ fontSize: '0.74rem', color: '#757575' }}>High-contrast blue/amber meters and badges</div>
+            </div>
+            <input
+              type="checkbox"
+              data-testid="toggle-colorblind-safe"
+              checked={Boolean(colorBlindSafe)}
+              onChange={(e) => setColorBlindSafe(e.target.checked)}
+              style={{ width: '18px', height: '18px', accentColor: '#2E7D32' }}
+            />
+          </label>
+
+          {/* Subtitles */}
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3E2723' }}>Audio Subtitles</div>
+              <div style={{ fontSize: '0.74rem', color: '#757575' }}>Text captions for coughs and audio events</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={Boolean(subtitlesEnabled)}
+              onChange={(e) => setSubtitlesEnabled(e.target.checked)}
+              style={{ width: '18px', height: '18px', accentColor: '#2E7D32' }}
+            />
+          </label>
+
+          {/* Large Text */}
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3E2723' }}>Large Readable Text</div>
+              <div style={{ fontSize: '0.74rem', color: '#757575' }}>Enlarged UI typography</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={Boolean(largeTextEnabled)}
+              onChange={(e) => setLargeTextEnabled(e.target.checked)}
+              style={{ width: '18px', height: '18px', accentColor: '#2E7D32' }}
+            />
+          </label>
+        </div>
+
+        {/* 6. Your Farm Configuration (S13) */}
+        <div style={{ borderTop: '1px solid #EEEEEE', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, color: '#3E2723' }}>
+            Your Farm Setup
+          </label>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.80rem', color: '#616161', fontWeight: 700 }}>Region State:</span>
+            <select
+              value={farmConfig?.state || 'Punjab'}
+              onChange={(e) => setFarmConfig({ ...farmConfig, state: e.target.value })}
+              style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #BDBDBD', fontSize: '0.80rem', fontWeight: 700 }}
+            >
+              <option value="Punjab">Punjab</option>
+              <option value="Haryana">Haryana</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.80rem', color: '#616161', fontWeight: 700 }}>Residue Crop:</span>
+            <select
+              value={farmConfig?.crop || 'Paddy'}
+              onChange={(e) => setFarmConfig({ ...farmConfig, crop: e.target.value })}
+              style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #BDBDBD', fontSize: '0.80rem', fontWeight: 700 }}
+            >
+              <option value="Paddy">Paddy Straw</option>
+              <option value="Wheat">Wheat Stubble</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.80rem', color: '#616161', fontWeight: 700 }}>Farm Scale:</span>
+            <select
+              value={farmConfig?.acres || 5}
+              onChange={(e) => setFarmConfig({ ...farmConfig, acres: parseInt(e.target.value, 10) })}
+              style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #BDBDBD', fontSize: '0.80rem', fontWeight: 700 }}
+            >
+              <option value={2}>2 Acres (Smallholder)</option>
+              <option value={5}>5 Acres (Typical)</option>
+              <option value={10}>10 Acres (Commercial)</option>
+            </select>
+          </div>
         </div>
 
         {/* Career Progression & Reset */}

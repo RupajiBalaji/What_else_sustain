@@ -400,6 +400,68 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [showPledgeModal, setShowPledgeModal] = useState(false)
   const [quizState, setQuizState] = useState({ isOpen: false, mode: 'pre' })
 
+  // Accessibility & Farm Configuration (Task P4-01 & P4-02)
+  const [colorBlindSafe, setColorBlindSafeState] = useState(() => {
+    try {
+      return localStorage.getItem('wes_colorblind') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const setColorBlindSafe = useCallback((val) => {
+    setColorBlindSafeState(val)
+    try {
+      localStorage.setItem('wes_colorblind', String(val))
+    } catch {}
+  }, [])
+
+  const [subtitlesEnabled, setSubtitlesEnabledState] = useState(() => {
+    try {
+      return localStorage.getItem('wes_subtitles') !== 'false'
+    } catch {
+      return true
+    }
+  })
+
+  const setSubtitlesEnabled = useCallback((val) => {
+    setSubtitlesEnabledState(val)
+    try {
+      localStorage.setItem('wes_subtitles', String(val))
+    } catch {}
+  }, [])
+
+  const [largeTextEnabled, setLargeTextEnabledState] = useState(() => {
+    try {
+      return localStorage.getItem('wes_largetext') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const setLargeTextEnabled = useCallback((val) => {
+    setLargeTextEnabledState(val)
+    try {
+      localStorage.setItem('wes_largetext', String(val))
+    } catch {}
+  }, [])
+
+  const [farmConfig, setFarmConfigState] = useState(() => {
+    try {
+      const raw = localStorage.getItem('wes_farm_config')
+      return raw ? JSON.parse(raw) : { state: 'Punjab', crop: 'Paddy', acres: 5 }
+    } catch {
+      return { state: 'Punjab', crop: 'Paddy', acres: 5 }
+    }
+  })
+
+  const setFarmConfig = useCallback((val) => {
+    setFarmConfigState(val)
+    try {
+      localStorage.setItem('wes_farm_config', JSON.stringify(val))
+    } catch {}
+  }, [])
+
   const openQuiz = useCallback((mode = 'pre') => {
     setQuizState({ isOpen: true, mode })
   }, [])
@@ -1087,6 +1149,14 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         setShowComparison,
         showPledgeModal,
         setShowPledgeModal,
+        colorBlindSafe,
+        setColorBlindSafe,
+        subtitlesEnabled,
+        setSubtitlesEnabled,
+        largeTextEnabled,
+        setLargeTextEnabled,
+        farmConfig,
+        setFarmConfig,
         quizState,
         setQuizState,
         openQuiz,

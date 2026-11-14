@@ -384,6 +384,41 @@ class AudioManager {
     }
   }
 
+  // Procedural cough sound for villagers engulfed in smoke
+  playCoughSound() {
+    if (!this.audioCtx || !this.isUnlocked || this.isMuted) return
+    try {
+      const t = this.audioCtx.currentTime
+      const bufferSize = Math.floor(this.audioCtx.sampleRate * 0.22)
+      const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate)
+      const data = buffer.getChannelData(0)
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.audioCtx.sampleRate * 0.045))
+      }
+      const noise = this.audioCtx.createBufferSource()
+      noise.buffer = buffer
+
+      const filter = this.audioCtx.createBiquadFilter()
+      filter.type = 'bandpass'
+      filter.frequency.setValueAtTime(780, t)
+      filter.frequency.exponentialRampToValueAtTime(310, t + 0.18)
+      filter.Q.value = 3.2
+
+      const gain = this.audioCtx.createGain()
+      gain.gain.setValueAtTime(0.045 * this.sfxVolume, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.21)
+
+      noise.connect(filter)
+      filter.connect(gain)
+      gain.connect(this.sfxGain || this.audioCtx.destination)
+
+      noise.start(t)
+      noise.stop(t + 0.22)
+    } catch {
+      // Safe fallback
+    }
+  }
+
   // 5. Layered Adaptive Music System (Calm, Tense, Hopeful)
   setMusicState(newState) {
     if (this.musicState === newState) return

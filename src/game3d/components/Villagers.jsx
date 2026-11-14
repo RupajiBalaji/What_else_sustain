@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 import { ManagedOverlay } from '../ui/OverlayManager'
 import ModelWithFallback from '../assets/ModelLoader'
+import { audioManager } from '../audio/AudioManager'
 
 const VILLAGERS_DATA = [
   { id: 'v1', assetId: 'villager_1', x: -6, z: 42, rot: 0.1, kurtaColor: '#FFCC80', dhotiColor: '#FFFFFF' },
@@ -199,16 +200,30 @@ function SingleVillager({ data, isCoughing, isWaving, qualityConfig }) {
 }
 
 export default function Villagers() {
-  const { burnState, burnProgress, activeAlternative, qualityConfig, persistentState } = useGame3D()
+  const { burnState, burnProgress, activeAlternative, qualityConfig, persistentState, isWatchingVillage } = useGame3D()
+  const lastCoughAudioRef = useRef(0)
 
   const villageHealth = persistentState?.villageHealth ?? 75
 
-  // Coughing triggers strictly when the smoke plume reaches the village (burnProgress >= 0.22)
+  // Coughing triggers strictly when the smoke plume reaches the village
+  // (burnProgress >= 0.22, during consequence, or during "Watch the village")
   const isCoughing =
     !activeAlternative &&
-    (burnState === 'consequence' ||
+    (isWatchingVillage ||
+      burnState === 'consequence' ||
       (burnState === 'burning' && (burnProgress || 0) >= 0.22) ||
       (villageHealth < 45 && burnState !== 'lighting' && burnState !== 'burning'))
+
+  // Play audio cough cue during the smoke plume arrival
+  useFrame(({ clock }) => {
+    if (isCoughing) {
+      const now = clock.getElapsedTime()
+      if (now - lastCoughAudioRef.current > 3.6) {
+        lastCoughAudioRef.current = now
+        audioManager.playCoughSound()
+      }
+    }
+  })
 
   // Waving triggers on sustainable choices OR high village health
   const isWaving =

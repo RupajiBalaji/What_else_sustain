@@ -22,12 +22,13 @@ import { TREE_POSITIONS } from './TreesInstanced'
  * 8. On-screen button triggers and R-key reset.
  */
 export default function CinematicCamera() {
-  const { camera } = useThree()
+  const { camera, size } = useThree()
   const {
     cinematicMode,
     isFlyoverActive,
     skipFlyover,
     burnState,
+    ignitedPiles,
     seasonPhase,
     activeAlternative,
     playerPositionRef,
@@ -52,8 +53,9 @@ export default function CinematicCamera() {
   const lastPhaseRef = useRef(seasonPhase)
   const lastBurnStateRef = useRef(burnState)
 
-  // "Watch the village" timer
+  // "Watch the village" timer and state
   const watchVillageEndTimeRef = useRef(0)
+  const isWatchingVillageRef = useRef(false)
 
   // Input drag tracking
   const isDraggingRef = useRef(false)
@@ -92,6 +94,7 @@ export default function CinematicCamera() {
       },
       reset: () => {
         isEasingPhaseRef.current = false
+        isWatchingVillageRef.current = false
         watchVillageEndTimeRef.current = 0
         targetYawRef.current = 0.0
         targetPitchRef.current = 0.32
@@ -99,10 +102,14 @@ export default function CinematicCamera() {
       },
       watchVillage: () => {
         isEasingPhaseRef.current = false
+        isWatchingVillageRef.current = true
         watchVillageEndTimeRef.current = performance.now() + 4500
-        targetYawRef.current = Math.PI // 180° facing north toward village
-        targetPitchRef.current = 0.16
-        targetDistanceRef.current = 8.5
+        const isPortrait = size.width < size.height
+        const aspectVal = size.width / Math.max(1, size.height)
+        targetYawRef.current = 3.05 // Facing north toward village houses
+        targetPitchRef.current = isPortrait ? 0.15 : 0.18
+        const baseDist = 13.5
+        targetDistanceRef.current = isPortrait ? baseDist * Math.min(1.45, 0.92 / Math.max(0.42, aspectVal)) : baseDist
       },
       getYaw: () => currentYawRef.current,
       getPitch: () => currentPitchRef.current,
@@ -141,15 +148,19 @@ export default function CinematicCamera() {
   useEffect(() => {
     if (burnState !== lastBurnStateRef.current) {
       lastBurnStateRef.current = burnState
-      if (burnState === 'lighting') {
+      if (burnState === 'lighting' || burnState === 'burning') {
         isEasingPhaseRef.current = true
-        easingEndTimeRef.current = performance.now() + 1500
-        targetYawRef.current = 0.35
-        targetPitchRef.current = 0.24
-        targetDistanceRef.current = 4.8
+        easingEndTimeRef.current = performance.now() + 2000
+        const isPortrait = size.width < size.height
+        const aspectVal = size.width / Math.max(1, size.height)
+        targetYawRef.current = 0.28
+        targetPitchRef.current = isPortrait ? 0.20 : 0.24
+        const baseDist = 5.8
+        const distMult = isPortrait ? Math.min(1.75, 0.94 / Math.max(0.42, aspectVal)) : 1.0
+        targetDistanceRef.current = baseDist * distMult
       }
     }
-  }, [burnState])
+  }, [burnState, size.width, size.height])
 
   // Mouse drag, wheel zoom, touch drag, and R-key listener
   useEffect(() => {
@@ -187,6 +198,7 @@ export default function CinematicCamera() {
       if (e.target && e.target.closest('[data-scrollable="true"]')) {
         return
       }
+      isEasingPhaseRef.current = false
       targetDistanceRef.current = Math.max(3.0, Math.min(14.0, targetDistanceRef.current + e.deltaY * 0.006))
     }
 
@@ -318,18 +330,33 @@ export default function CinematicCamera() {
     const curPitch = currentPitchRef.current
     const curDist = currentDistanceRef.current
 
-    // Look target tracks farmer upper chest / eyes
-    _lookTarget.set(pPos.x, pPos.y + 1.4, pPos.z)
+    // Look target tracks farmer upper chest / eyes normally
+    // During burn, frame both farmer and the ignited pile
+    // During watch village, frame village center (House 2, House 3, Villager 1, Villager 2)
+    const isBurnActive = burnState === 'lighting' || burnState === 'burning'
+    if (isWatchingVillageRef.current) {
+      _lookTarget.set(-3.5, 2.0, 44.0)
+    } else if (isBurnActive) {
+      const leadPile = STRAW_PILES_DATA.find((p) => ignitedPiles?.includes(p.id)) || STRAW_PILES_DATA[0]
+      const pileBias = 0.62
+      _lookTarget.set(
+        leadPile.x * pileBias + pPos.x * (1 - pileBias),
+        1.3,
+        leadPile.z * pileBias + pPos.z * (1 - pileBias)
+      )
+    } else {
+      _lookTarget.set(pPos.x, pPos.y + 1.4, pPos.z)
+    }
 
-    // Compute spherical orbit offset
+    // Compute spherical orbit offset around _lookTarget
     const cosPitch = Math.cos(curPitch)
     const sinPitch = Math.sin(curPitch)
     const sinYaw = Math.sin(curYaw)
     const cosYaw = Math.cos(curYaw)
 
-    let camX = pPos.x - sinYaw * cosPitch * curDist
-    let camY = pPos.y + 1.4 + sinPitch * curDist
-    let camZ = pPos.z - cosYaw * cosPitch * curDist
+    let camX = _lookTarget.x - sinYaw * cosPitch * curDist
+    let camY = _lookTarget.y + sinPitch * curDist
+    let camZ = _lookTarget.z - cosYaw * cosPitch * curDist
 
     // Subtle camera shake during active fire
     if (burnState === 'burning' && !reducedMotion) {

@@ -76,7 +76,7 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          answer: 'Mulching with stubble retains 40% more soil moisture and protects earthworms.',
+          answer: 'Mulching with stubble retains 15-25% more soil moisture and protects earthworms (Source: NPMCR).',
           source: 'gemini'
         })
       })

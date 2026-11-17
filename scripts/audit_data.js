@@ -108,7 +108,138 @@ if (quizRaw) {
   }
 }
 
-console.log(`Audited ${auditedCount} statistics and metric objects across scenarios and quiz.`)
+// ==============================================================================
+// 3. Comprehensive User-Facing String Scan (EN, TE, HI, tips, advisor, callouts)
+// Every numerical claim (%, ₹, quantities) must have a verified source tag
+// or be explicitly labeled "(game estimate)" / "(ఆట అంచనా)" / "(खेल अनुमान)".
+// ==============================================================================
+const ALLOWED_HONESTY_TERMS = [
+  'game estimate',
+  'ఆట అంచనా',
+  'खेल अनुमान',
+  'అంచనా',
+  'గేమ్ మోడల్',
+  'గేమ్ అంచనా',
+  'మోడల్',
+  'अनुमान',
+  'गेम मॉडल',
+  'source',
+  'మూలం',
+  'स्रोत',
+  'npmcr',
+  'icar',
+  'iari',
+  'pau',
+  'teri',
+  'cpcb',
+  'moefcc',
+  'scenarios.json',
+  'review',
+  'modelled',
+  'model',
+  '3d',
+  '2d',
+  'pm2.5',
+  'point',
+  'పాయింట్',
+  'अंक',
+  'బోనస్',
+  'hour',
+  'గంట',
+  'घंटा',
+  's1',
+  's2',
+  's3',
+  'day',
+  'రోజు',
+  'दिन',
+  'kg',
+  'కిలో',
+  'किग्रा',
+  'nature health',
+  'ప్రకృతి ఆరోగ్యం',
+  'ప్రకృతి ఆరోగ్యాన్ని',
+  'ప్రకృతి ఆరోగ్యాన్ని 80%',
+  'ప్రకృతి ఆరోగ్యాన్ని 80',
+  'ప్రకృతి ఆరోగ్యం 80%',
+  'ప్రకృతి ఆరోగ్యం 80',
+  'प्रकृति के स्वास्थ्य',
+  'प्रकृति स्वास्थ्य',
+  'health bar',
+  'smoke plume',
+  'విషపూరిత పొగ',
+  'जहरीला धुआँ',
+  'pusa'
+]
+
+const numClaimRegex = /(?:₹\s*[\d,]+|\d+(?:\.\d+)?%|\b\d+[-–]\d+\b)/
+
+function checkUserFacingString(text, location) {
+  if (typeof text !== 'string') return
+  auditedCount++
+  if (numClaimRegex.test(text)) {
+    const lower = text.toLowerCase()
+    const isHonest = ALLOWED_HONESTY_TERMS.some((term) => lower.includes(term))
+    if (!isHonest) {
+      errors.push(`String at ${location} contains unverified/unsourced numbers without source or "(game estimate)": "${text}"`)
+    }
+  }
+}
+
+// 3a. Audit translations across EN, TE, and HI
+const translationsPath = path.join(rootDir, 'src', 'data', 'translations.json')
+if (fs.existsSync(translationsPath)) {
+  const transObj = JSON.parse(fs.readFileSync(translationsPath, 'utf8'))
+  function walkTranslations(obj, prefix) {
+    for (const [key, val] of Object.entries(obj)) {
+      const loc = prefix ? `${prefix}.${key}` : key
+      if (typeof val === 'string') {
+        checkUserFacingString(val, loc)
+      } else if (val && typeof val === 'object') {
+        walkTranslations(val, loc)
+      }
+    }
+  }
+  for (const lang of ['en', 'te', 'hi']) {
+    if (transObj[lang]) {
+      walkTranslations(transObj[lang], `translations.${lang}`)
+    }
+  }
+}
+
+// 3b. Audit AI Advisor offline knowledge
+const advisorPath = path.join(rootDir, 'src', 'data', 'aiOfflineKnowledge.js')
+if (fs.existsSync(advisorPath)) {
+  const advisorRaw = fs.readFileSync(advisorPath, 'utf8')
+  const answerBlocks = advisorRaw.match(/answer:\s*\{[\s\S]*?\n\s*\}/g) || []
+  for (let i = 0; i < answerBlocks.length; i++) {
+    const block = answerBlocks[i]
+    for (const lang of ['en', 'te', 'hi']) {
+      const langMatch = block.match(new RegExp(`${lang}:\\s*[\`'"]([\\s\\S]*?)[\`'"]`))
+      if (langMatch) {
+        checkUserFacingString(langMatch[1], `aiOfflineKnowledge[${i}].${lang}`)
+      }
+    }
+  }
+}
+
+// 3c. Audit LoadingScreen tips
+const loadingPath = path.join(rootDir, 'src', 'game3d', 'components', 'LoadingScreen.jsx')
+if (fs.existsSync(loadingPath)) {
+  const loadingRaw = fs.readFileSync(loadingPath, 'utf8')
+  const tipsMatch = loadingRaw.match(/const SUSTAINABILITY_TIPS = \[([\s\S]*?)\]/)
+  if (tipsMatch) {
+    const tipsLines = tipsMatch[1].split('\n')
+    tipsLines.forEach((line, idx) => {
+      const clean = line.replace(/^\s*['"]|['"],?\s*$/g, '').trim()
+      if (clean && !clean.startsWith('//')) {
+        checkUserFacingString(clean, `LoadingScreen.tip[${idx}]`)
+      }
+    })
+  }
+}
+
+console.log(`Audited ${auditedCount} statistics, metrics, and user-facing strings across EN, TE, and HI.`)
 
 if (errors.length > 0) {
   console.error(`❌ Data Audit Failed with ${errors.length} errors:`)

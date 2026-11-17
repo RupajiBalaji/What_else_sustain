@@ -92,7 +92,7 @@ export const GAME_BALANCE = {
     mulch: {
       id: 'mulch',
       name: 'Surface Mulch Layer',
-      soilHealthDelta: +20,        // Moisture retention +40%, suppresses weeds
+      soilHealthDelta: +20,        // Moisture retention +15-25% (NPMCR), suppresses weeds
       villageHealthDelta: +16,     // Clean atmosphere
       reputationDelta: +12,        // Admired for soil-first conservation mindset
       moneyCost: -1200,            // Mulcher tractor pass fuel

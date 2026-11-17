@@ -8,11 +8,11 @@ import SproutMascot from '../../game/SproutMascot'
 import { safeStorage } from '../../utils/safeStorage'
 
 const SUSTAINABILITY_TIPS = [
-  '🌱 Mulching with paddy straw retains up to 40% more soil moisture and protects topsoil.',
+  '🌱 Mulching with paddy straw retains 15–25% more soil moisture during early crop growth (Source: NPMCR).',
   '🌾 Happy Seeder sows wheat directly into standing stubble with zero burning.',
-  '🚜 Baling straw earns farmers up to ₹3,000/acre while supplying clean biomass fuel.',
-  '🧪 Bio-decomposer sprays convert stubble into rich organic compost in 20–25 days.',
-  '💨 Open burning destroys essential nitrogen, phosphorus, and friendly earthworms.'
+  '🚜 Baling straw earns farmers up to ₹3,000/acre while supplying clean biomass fuel (game estimate).',
+  '🧪 Bio-decomposer sprays convert stubble into rich organic compost in 20–25 days (Source: IARI / ICAR).',
+  '💨 Open burning destroys essential nitrogen, phosphorus, and friendly earthworms (Source: NPMCR).'
 ]
 
 export default function LoadingScreen({ onStart, onSwitchToLite }) {

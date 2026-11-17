@@ -154,7 +154,9 @@ export default function AirSensorPole({ position = [-2.5, 0, 40.5] }) {
             border: `2px solid ${meterColor}`,
             boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
             color: '#FFFFFF',
-            width: '210px',
+            width: '200px',
+            maxWidth: 'min(200px, 80vw)',
+            boxSizing: 'border-box',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             userSelect: 'none',
             pointerEvents: 'none'

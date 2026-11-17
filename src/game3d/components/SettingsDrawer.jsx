@@ -33,7 +33,8 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
     largeTextEnabled,
     setLargeTextEnabled,
     farmConfig,
-    setFarmConfig
+    setFarmConfig,
+    openQuiz
   } = useGame3D()
 
   if (!isOpen) return null
@@ -462,6 +463,35 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
 
         {/* Career Progression & Reset */}
         <div style={{ borderTop: '1px solid #EEEEEE', paddingTop: '14px' }}>
+          {/* Knowledge Check Quiz Button */}
+          <button
+            type="button"
+            data-testid="settings-quiz-button"
+            onClick={() => {
+              onClose()
+              openQuiz?.('pre')
+            }}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#E1F5FE',
+              color: '#0277BD',
+              border: '1.5px solid #81D4FA',
+              borderRadius: '10px',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>📝</span>
+            <span>Knowledge Check Quiz</span>
+          </button>
+
           {/* Teacher Dashboard Link */}
           <button
             type="button"

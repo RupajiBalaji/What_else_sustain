@@ -32,9 +32,9 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
       uniforms: {
         uTime: { value: 0 },
         uProgress: { value: burnProgress },
-        uCoreColor: { value: new THREE.Color('#FFFDE7') }, // Incandescent white-yellow core
-        uFlameColor: { value: new THREE.Color('#FF6D00') }, // Vivid fiery orange
-        uTipColor: { value: new THREE.Color('#D50000') } // Crimson tips
+        uCoreColor: { value: new THREE.Color('#FFF59D') }, // Incandescent yellow-white core
+        uFlameColor: { value: new THREE.Color('#FF7A00') }, // Vivid fiery orange
+        uTipColor: { value: new THREE.Color('#D84315') } // Crimson-orange tips
       },
       vertexShader: `
         uniform float uTime;
@@ -59,26 +59,27 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
         varying vec2 vUv;
 
         void main() {
-          // Flame tongue shape mask
-          float distFromCenter = abs(vUv.x - 0.5) * 2.3;
-          float flicker = sin(uTime * 20.0 + vUv.y * 12.0) * 0.14;
-          float heightFactor = pow(max(0.0, 1.0 - vUv.y), 1.3);
-          float alpha = smoothstep(1.0 + flicker, 0.15, distFromCenter / (heightFactor + 0.05));
+          // Flame tongue shape: organic teardrop tapering to zero at tips and edges
+          float widthAtY = (1.0 - pow(vUv.y, 1.25)) * pow(max(0.01, vUv.y), 0.28) * 1.85;
+          float distFromCenter = abs(vUv.x - 0.5) * 2.0;
+          float flicker = sin(uTime * 18.0 + vUv.y * 14.0) * 0.08 * vUv.y;
+          float flameShape = widthAtY + flicker - distFromCenter;
+          float alpha = smoothstep(-0.02, 0.22, flameShape);
 
-          if (alpha <= 0.03) discard;
+          if (alpha <= 0.01) discard;
 
-          // Color gradient from white core to red tips
-          vec3 col = mix(uCoreColor, uFlameColor, smoothstep(0.0, 0.4, vUv.y));
-          col = mix(col, uTipColor, smoothstep(0.4, 0.95, vUv.y));
+          // Color gradient from white-hot incandescent core to vivid orange to crimson tips
+          vec3 col = mix(uCoreColor, uFlameColor, smoothstep(0.08, 0.45, vUv.y));
+          col = mix(col, uTipColor, smoothstep(0.45, 0.95, vUv.y));
 
           // Gradually subsides in the very last quarter as pile turns to ash
           float intensity = smoothstep(1.0, 0.78, uProgress) * 0.85 + 0.15;
-          gl_FragColor = vec4(col * 1.3, alpha * 0.95 * intensity);
+          gl_FragColor = vec4(col, alpha * 0.95 * intensity);
         }
       `,
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending,
       side: THREE.DoubleSide
     })
   }, [])
@@ -107,11 +108,11 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
       <mesh material={flameMaterial} rotation={[0, (Math.PI * 2) / 3, 0]}>
         <planeGeometry args={[2.1, 2.6, 8, 10]} />
       </mesh>
-      {/* Bright flickering ground fire light */}
+      {/* Warm flickering ground fire light */}
       <pointLight
         color="#FF6D00"
-        intensity={3.2 * Math.max(0.3, 1.0 - burnProgress * 0.4)}
-        distance={10}
+        intensity={1.6 * Math.max(0.3, 1.0 - burnProgress * 0.4)}
+        distance={8}
         decay={2}
         position={[0, 0.5, 0]}
       />

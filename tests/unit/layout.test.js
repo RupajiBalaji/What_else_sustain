@@ -9,7 +9,9 @@ test('Layout scales: verify farmer, houses, barn, tractor, trees, and straw pile
   assert.equal(farmerCheck.valid, true)
   assert.ok(farmerCheck.deviation <= 0.25)
 
-  // 2. House scale target (height and width)
+  // 2. House scale target (height and width: 2.5 to 3.0x farmer height)
+  assert.ok(SCALES.HOUSE_TARGET_HEIGHT >= 1.7 * 2.5, 'House target height must be >= 2.5x farmer height')
+  assert.ok(SCALES.HOUSE_TARGET_HEIGHT <= 1.7 * 3.0, 'House target height must be <= 3.0x farmer height')
   const houseHeightCheck = verifyModelScale('house', { height: 4.8 })
   assert.equal(houseHeightCheck.valid, true)
   assert.ok(houseHeightCheck.deviation <= 0.25)

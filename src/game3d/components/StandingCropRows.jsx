@@ -7,21 +7,23 @@ const _cropDummy = new THREE.Object3D()
 const _colorDummy = new THREE.Color()
 
 /**
- * Creates an instanced crop blade cluster (3 curved vertical cards fanning out)
+ * Creates an instanced 3D crop stalk cluster (volumetric cylindrical stalks with angled tillers)
  * with a natural vertical color gradient: deep root/stalk green -> rich vibrant leaf green -> golden wheat/paddy ear tips.
  */
 function createCropClusterGeometry(soilHealth = 70) {
-  // 3 vertical blade cards angled at 0, 45, and -45 degrees
-  const g1 = new THREE.PlaneGeometry(0.28, 1.35, 1, 4)
+  // 3 volumetric stalks (central main stem and two angled tillers)
+  const g1 = new THREE.CylinderGeometry(0.018, 0.035, 1.35, 5, 2)
   g1.translate(0, 0.675, 0)
 
-  const g2 = new THREE.PlaneGeometry(0.26, 1.3, 1, 4)
-  g2.rotateY(Math.PI / 4)
-  g2.translate(0, 0.65, 0)
+  const g2 = new THREE.CylinderGeometry(0.015, 0.028, 1.25, 5, 2)
+  g2.rotateZ(0.12)
+  g2.rotateY(Math.PI / 3)
+  g2.translate(0.06, 0.625, 0.04)
 
-  const g3 = new THREE.PlaneGeometry(0.26, 1.3, 1, 4)
-  g3.rotateY(-Math.PI / 4)
-  g3.translate(0, 0.65, 0)
+  const g3 = new THREE.CylinderGeometry(0.015, 0.028, 1.25, 5, 2)
+  g3.rotateZ(-0.12)
+  g3.rotateY(-Math.PI / 3)
+  g3.translate(-0.06, 0.625, -0.04)
 
   const p1 = g1.attributes.position.array
   const p2 = g2.attributes.position.array
@@ -89,14 +91,14 @@ function createCropClusterGeometry(soilHealth = 70) {
 }
 
 /**
- * Creates short, dried stubble stalk geometry for the harvested field.
+ * Creates short, dried stubble 3D stalk geometry for the harvested field.
  */
 function createStubbleGeometry() {
-  const g1 = new THREE.PlaneGeometry(0.22, 0.3, 1, 1)
+  const g1 = new THREE.CylinderGeometry(0.025, 0.038, 0.3, 5, 1)
   g1.translate(0, 0.15, 0)
-  const g2 = new THREE.PlaneGeometry(0.22, 0.3, 1, 1)
-  g2.rotateY(Math.PI / 2)
-  g2.translate(0, 0.15, 0)
+  const g2 = new THREE.CylinderGeometry(0.02, 0.03, 0.26, 5, 1)
+  g2.rotateZ(0.15)
+  g2.translate(0.05, 0.13, 0.02)
 
   const p1 = g1.attributes.position.array
   const p2 = g2.attributes.position.array

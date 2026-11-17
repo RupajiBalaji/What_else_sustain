@@ -8,6 +8,11 @@ import { VILLAGE_COLLIDERS } from './VillageHousesInstanced'
 import { STRAW_PILES_DATA } from './StrawPiles'
 import { TREE_POSITIONS } from './TreesInstanced'
 
+const POLE_COLLIDERS = [
+  { id: 'air_sensor', minX: -13.5, maxX: -11.5, minZ: 31.0, maxZ: 33.0 },
+  { id: 'swachh_sign', minX: -4.5, maxX: -2.5, minZ: 35.5, maxZ: 37.5 }
+]
+
 /**
  * 360-Degree Free Orbit Camera Controller around the Farmer.
  * 
@@ -73,7 +78,8 @@ export default function CinematicCamera() {
   const colliders = useMemo(() => [
     FARMHOUSE_COLLIDER,
     TRACTOR_COLLIDER,
-    ...VILLAGE_COLLIDERS
+    ...VILLAGE_COLLIDERS,
+    ...POLE_COLLIDERS
   ], [])
 
   // Register controls to Game3DContext and window for HUD buttons and Playwright testing
@@ -103,13 +109,17 @@ export default function CinematicCamera() {
       watchVillage: () => {
         isEasingPhaseRef.current = false
         isWatchingVillageRef.current = true
-        watchVillageEndTimeRef.current = performance.now() + 4500
+        watchVillageEndTimeRef.current = performance.now() + 6000
         const isPortrait = size.width < size.height
         const aspectVal = size.width / Math.max(1, size.height)
-        targetYawRef.current = 3.05 // Facing north toward village houses
-        targetPitchRef.current = isPortrait ? 0.15 : 0.18
-        const baseDist = 13.5
-        targetDistanceRef.current = isPortrait ? baseDist * Math.min(1.45, 0.92 / Math.max(0.42, aspectVal)) : baseDist
+        // Farm-side western vantage (height ~7.5m, distance ~23.5m) framing plume and at least two houses & villagers
+        targetYawRef.current = 0.51
+        targetPitchRef.current = isPortrait ? 0.22 : 0.24
+        const baseDist = 23.5
+        targetDistanceRef.current = isPortrait ? baseDist * Math.min(1.15, 0.92 / Math.max(0.42, aspectVal)) : baseDist
+        currentYawRef.current = targetYawRef.current
+        currentPitchRef.current = targetPitchRef.current
+        currentDistanceRef.current = targetDistanceRef.current
       },
       getYaw: () => currentYawRef.current,
       getPitch: () => currentPitchRef.current,
@@ -407,8 +417,8 @@ export default function CinematicCamera() {
       }
     }
 
-    // Collision against Farmhouse, Tractor, and Village houses
-    const camMargin = 0.9
+    // Collision against Farmhouse, Tractor, Village houses, and Poles
+    const camMargin = 1.0
     for (let c = 0; c < colliders.length; c++) {
       const col = colliders[c]
       if (
@@ -417,9 +427,18 @@ export default function CinematicCamera() {
         camZ >= col.minZ - camMargin &&
         camZ <= col.maxZ + camMargin
       ) {
-        camX = THREE.MathUtils.lerp(_lookTarget.x, camX, 0.45)
-        camZ = THREE.MathUtils.lerp(_lookTarget.z, camZ, 0.45)
-        camY = THREE.MathUtils.lerp(_lookTarget.y + 0.6, camY, 0.45)
+        const cx = (col.minX + col.maxX) / 2
+        const cz = (col.minZ + col.maxZ) / 2
+        const dx = camX - cx
+        const dz = camZ - cz
+        const halfW = (col.maxX - col.minX) / 2 + camMargin
+        const halfD = (col.maxZ - col.minZ) / 2 + camMargin
+        if (Math.abs(dx) / halfW > Math.abs(dz) / halfD) {
+          camX = cx + Math.sign(dx || 1) * halfW
+        } else {
+          camZ = cz + Math.sign(dz || 1) * halfD
+        }
+        camY = Math.max(camY, 6.5)
         break
       }
     }

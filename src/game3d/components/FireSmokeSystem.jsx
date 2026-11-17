@@ -12,21 +12,40 @@ const _particleDummy = new THREE.Object3D()
 function createParticleTexture(type) {
   const canvas = document.createElement('canvas')
   canvas.width = 128
-  canvas.height = 128
+  canvas.height = type === 'fire' ? 256 : 128
   const ctx = canvas.getContext('2d')
-  ctx.clearRect(0, 0, 128, 128)
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   if (type === 'fire') {
-    // Soft glowing radial flame puff
-    const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 60)
-    grad.addColorStop(0, 'rgba(255, 255, 240, 1.0)') // White-hot core
-    grad.addColorStop(0.25, 'rgba(255, 183, 77, 0.85)') // Bright golden flame
-    grad.addColorStop(0.6, 'rgba(230, 81, 0, 0.55)') // Deep orange
-    grad.addColorStop(0.85, 'rgba(191, 54, 12, 0.25)') // Dark crimson tip
-    grad.addColorStop(1.0, 'rgba(191, 54, 12, 0.0)')
+    // Tall flame tongue with wide base, bright core, golden body, and red edges
+    const grad = ctx.createLinearGradient(64, 250, 64, 10)
+    grad.addColorStop(0, 'rgba(255, 255, 240, 1.0)') // White-hot core at bottom
+    grad.addColorStop(0.2, 'rgba(255, 214, 0, 0.95)') // Bright yellow
+    grad.addColorStop(0.55, 'rgba(255, 109, 0, 0.85)') // Rich vivid orange
+    grad.addColorStop(0.85, 'rgba(213, 0, 0, 0.65)') // Crimson flame edges
+    grad.addColorStop(1.0, 'rgba(183, 28, 28, 0.0)') // Tapered flickering tip
+
     ctx.fillStyle = grad
     ctx.beginPath()
-    ctx.arc(64, 64, 60, 0, Math.PI * 2)
+    ctx.moveTo(64, 10)
+    ctx.bezierCurveTo(95, 80, 115, 170, 105, 245)
+    ctx.quadraticCurveTo(64, 255, 23, 245)
+    ctx.bezierCurveTo(13, 170, 33, 80, 64, 10)
+    ctx.closePath()
+    ctx.fill()
+
+    // Inner bright core tongue
+    const coreGrad = ctx.createLinearGradient(64, 250, 64, 60)
+    coreGrad.addColorStop(0, 'rgba(255, 255, 255, 1.0)')
+    coreGrad.addColorStop(0.4, 'rgba(255, 245, 157, 0.9)')
+    coreGrad.addColorStop(1.0, 'rgba(255, 179, 0, 0.0)')
+    ctx.fillStyle = coreGrad
+    ctx.beginPath()
+    ctx.moveTo(64, 60)
+    ctx.bezierCurveTo(80, 120, 90, 190, 85, 245)
+    ctx.quadraticCurveTo(64, 252, 43, 245)
+    ctx.bezierCurveTo(38, 190, 48, 120, 64, 60)
+    ctx.closePath()
     ctx.fill()
   } else if (type === 'ember') {
     // Sharp glowing spark
@@ -58,59 +77,7 @@ function createParticleTexture(type) {
   return tex
 }
 
-/**
- * Heat Distortion Shimmer Plane directly above active fire
- * Cheap animated wave refraction plane (High tier only).
- */
-function HeatShimmer({ visible = true, position = [0, 2.5, 0] }) {
-  const meshRef = useRef(null)
 
-  const shimmerMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 }
-      },
-      vertexShader: `
-        uniform float uTime;
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          vec3 pos = position;
-          pos.x += sin(pos.y * 5.0 + uTime * 12.0) * 0.06;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float uTime;
-        varying vec2 vUv;
-        void main() {
-          float wave = sin(vUv.y * 18.0 - uTime * 10.0) * 0.5 + 0.5;
-          float mask = smoothstep(0.0, 0.4, vUv.y) * smoothstep(1.0, 0.6, vUv.y);
-          mask *= smoothstep(0.0, 0.2, vUv.x) * smoothstep(1.0, 0.8, vUv.x);
-          gl_FragColor = vec4(1.0, 0.85, 0.6, mask * wave * 0.12);
-        }
-      `,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide
-    })
-  }, [])
-
-  useFrame(({ clock }) => {
-    if (shimmerMaterial.uniforms) {
-      shimmerMaterial.uniforms.uTime.value = clock.getElapsedTime()
-    }
-  })
-
-  if (!visible) return null
-
-  return (
-    <mesh ref={meshRef} position={position} material={shimmerMaterial}>
-      <planeGeometry args={[4.5, 3.5, 12, 12]} />
-    </mesh>
-  )
-}
 
 export default function FireSmokeSystem() {
   const {
@@ -360,8 +327,8 @@ export default function FireSmokeSystem() {
           p.y += (p.vy * 0.88 + Math.sin(progress * Math.PI) * 0.45) * delta
           p.z += (p.vz + smokeDriftZ * progress * 2.8) * delta
 
-          // Expands naturally into thick billowing clouds drifting towards the village
-          const size = Math.max(1.4, 1.6 + progress * 6.5)
+          // Expands naturally into billowing smoke puffs drifting towards the village
+          const size = Math.max(0.9, 1.2 + progress * 3.5)
 
           _particleDummy.position.set(p.x, p.y, p.z)
           _particleDummy.quaternion.copy(camera.quaternion)
@@ -396,18 +363,19 @@ export default function FireSmokeSystem() {
         decay={2}
       />
 
-      {/* 2. Layered Fire Particles with Additive Blending and Billboarding */}
+      {/* 2. Layered Fire Particles with Billboarding */}
       <instancedMesh
         ref={fireMeshRef}
         args={[undefined, undefined, 320]}
         frustumCulled={false}
         depthWrite={false}
       >
-        <planeGeometry args={[1.3, 1.3]} />
+        <planeGeometry args={[1.2, 2.6]} />
         <meshBasicMaterial
           map={fireTexture}
           transparent
           blending={THREE.AdditiveBlending}
+          opacity={0.6}
           depthWrite={false}
           side={THREE.DoubleSide}
         />
@@ -437,24 +405,18 @@ export default function FireSmokeSystem() {
         frustumCulled={false}
         depthWrite={false}
       >
-        <planeGeometry args={[2.2, 2.2]} />
+        <planeGeometry args={[1.6, 1.6]} />
         <meshBasicMaterial
           map={smokeTexture}
           transparent
           blending={THREE.NormalBlending}
-          opacity={0.86}
+          opacity={0.68}
           depthWrite={false}
           side={THREE.DoubleSide}
         />
       </instancedMesh>
 
-      {/* 5. Heat Distortion Shimmer (High Tier Only) */}
-      {isBurning && qualityConfig.heatShimmer && (
-        <HeatShimmer
-          position={[leadPile.x, 2.8, leadPile.z]}
-          visible={Boolean(qualityConfig.heatShimmer)}
-        />
-      )}
+
     </group>
   )
 }

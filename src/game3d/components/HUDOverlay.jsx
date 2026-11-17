@@ -414,32 +414,6 @@ export default function HUDOverlay({ onSwitchToLite }) {
             )}
             <button
               type="button"
-              data-testid="quiz-open-btn"
-              onClick={() => openQuiz?.('pre')}
-              style={{
-                minHeight: '34px',
-                padding: '3px 8px',
-                borderRadius: '9999px',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                border: '1.5px solid #0288D1',
-                fontWeight: 800,
-                fontSize: '0.76rem',
-                color: '#01579B',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '3px',
-                whiteSpace: 'nowrap',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
-              }}
-              title="Knowledge Check"
-              aria-label="Knowledge Check"
-            >
-              <span>📝</span>
-              <span style={{ display: 'inline' }}>Quiz</span>
-            </button>
-            <button
-              type="button"
               data-testid="settings-toggle-button"
               onClick={() => setShowSettings(true)}
               style={{
@@ -908,12 +882,12 @@ export default function HUDOverlay({ onSwitchToLite }) {
         </div>
       )}
 
-      {/* Dynamic Performance & Tier Adjustment Toast Notice */}
+      {/* Dynamic Performance & Tier Adjustment Toast Notice (Docked center-top under HUD bar) */}
       {toastNotice && (
         <div
           style={{
             position: 'absolute',
-            bottom: isTouchDevice ? 'calc(140px + env(safe-area-inset-bottom, 0px))' : 'calc(80px + env(safe-area-inset-bottom, 0px))',
+            top: 'calc(58px + env(safe-area-inset-top, 0px))',
             left: '50%',
             transform: 'translateX(-50%)',
             backgroundColor: 'rgba(22, 56, 43, 0.94)',

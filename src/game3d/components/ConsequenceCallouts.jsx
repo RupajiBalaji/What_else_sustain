@@ -114,11 +114,11 @@ export default function ConsequenceCallouts() {
       data-testid="consequence-callout-card"
       style={{
         position: 'absolute',
-        left: isMobile ? '50%' : '20px',
-        transform: isMobile ? 'translateX(-50%)' : 'none',
-        top: isMobile ? 'auto' : '150px',
-        bottom: isMobile ? 'calc(96px + env(safe-area-inset-bottom, 0px))' : 'auto',
-        width: isMobile ? 'min(340px, 92vw)' : '290px',
+        left: isMobile ? '12px' : '20px',
+        transform: 'none',
+        top: isMobile ? 'calc(275px + env(safe-area-inset-top, 0px))' : '190px',
+        bottom: 'auto',
+        width: isMobile ? 'min(260px, calc(100vw - 80px))' : '290px',
         zIndex: 75,
         backgroundColor: 'rgba(22, 28, 34, 0.95)',
         backdropFilter: 'blur(8px)',

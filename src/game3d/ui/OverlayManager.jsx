@@ -45,10 +45,10 @@ export function OverlayManagerProvider({ children }) {
     const isMobile = winW < 640
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
 
-    const safeTop = isMobile ? 82 : 72
-    const safeBottom = isTouch ? 96 : 42
+    const safeTop = isMobile ? 84 : 76
+    const safeBottom = isTouch ? 160 : 46
     const safeLeft = 16
-    const safeRight = isMobile ? 20 : 36
+    const safeRight = isMobile ? 24 : 36
 
     // Convert to array and sort descending by priority
     const entries = Array.from(registryRef.current.values())
@@ -225,7 +225,18 @@ export function ManagedOverlay({
     const entry = {
       id,
       priority: numericPriority,
-      getRect: () => containerRef.current?.getBoundingClientRect(),
+      getRect: () => {
+        const r = containerRef.current?.getBoundingClientRect()
+        if (!r) return null
+        return {
+          left: r.left - offset.x,
+          right: r.right - offset.x,
+          top: r.top - offset.y,
+          bottom: r.bottom - offset.y,
+          width: r.width,
+          height: r.height
+        }
+      },
       setOffset,
       setCollapsed: setIsCollapsed
     }

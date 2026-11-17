@@ -43,18 +43,18 @@ export default function SmokeMeterHUD() {
     <div
       style={{
         position: 'absolute',
-        top: isMobile ? 'calc(50px + env(safe-area-inset-top, 0px))' : 'calc(64px + env(safe-area-inset-top, 0px))',
-        left: isMobile ? '50%' : '20px',
-        transform: isMobile ? 'translateX(-50%)' : 'none',
+        top: isMobile ? 'calc(54px + env(safe-area-inset-top, 0px))' : 'calc(64px + env(safe-area-inset-top, 0px))',
+        left: isMobile ? '12px' : '20px',
+        transform: 'none',
         backgroundColor: 'rgba(30, 38, 44, 0.94)',
         backdropFilter: 'blur(8px)',
         border: `1.5px solid ${borderColor}`,
         borderRadius: '14px',
-        padding: '8px 14px',
+        padding: '8px 12px',
         color: '#FFFFFF',
         zIndex: 40,
         boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-        width: isMobile ? 'min(310px, 92vw)' : '280px',
+        width: isMobile ? 'min(220px, calc(100vw - 70px))' : '260px',
         pointerEvents: 'auto',
         fontFamily: 'system-ui, -apple-system, sans-serif'
       }}

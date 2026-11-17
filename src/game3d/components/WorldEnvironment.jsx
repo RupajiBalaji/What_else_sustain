@@ -43,12 +43,12 @@ function GoldenHourSkyDome({ burnProgress = 0, sunPosition, isPaused = false }) 
           float h = normalize(vWorldPosition + offset).y;
           vec3 sky = mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0));
 
-          // Sun disc & golden halo calculation
+          // Tightly clamped sun disc and subtle halo (removes white-yellow glare over buildings)
           float sunDot = max(0.0, dot(dir, normalize(sunDirection)));
-          float sunDisc = smoothstep(0.9985, 0.9996, sunDot);
-          float sunHalo = pow(sunDot, 18.0) * 0.45;
+          float sunDisc = smoothstep(0.9992, 0.9998, sunDot);
+          float sunHalo = pow(sunDot, 48.0) * 0.15;
 
-          vec3 finalColor = sky + (sunHaloColor * sunHalo) + (sunColor * sunDisc * 2.2);
+          vec3 finalColor = sky + (sunHaloColor * sunHalo) + (sunColor * sunDisc * 1.2);
           gl_FragColor = vec4(finalColor, 1.0);
         }
       `
@@ -217,28 +217,28 @@ export default function WorldEnvironment() {
       sunLightRef.current.position.set(42, 36, 28)
     }
 
-    // Dim sun intensity and shift to smoky reddish tone as fire spreads
-    const baseIntensity = 1.35 * (1.0 - effectiveProgress * 0.72)
-    sunLightRef.current.intensity = Math.max(0.35, baseIntensity)
+    // Dim sun intensity and shift to smoky warm tone as fire spreads (crisp contrast)
+    const baseIntensity = 1.35 * (1.0 - effectiveProgress * 0.32)
+    sunLightRef.current.intensity = Math.max(0.85, baseIntensity)
 
     const normalSun = new THREE.Color('#FFF4CC')
-    const smogSun = new THREE.Color('#FF7043')
+    const smogSun = new THREE.Color('#FFAB91')
     sunLightRef.current.color.lerpColors(normalSun, smogSun, effectiveProgress)
   })
 
-  // Distance fog: tinted to horizon golden mist, thickening and browning with fire
+  // Distance fog: tinted to warm atmospheric haze, maintaining visibility for village houses & plume
   const normalFogColor = new THREE.Color('#FCE5B5')
-  const smogFogColor = new THREE.Color('#6D5D53')
+  const smogFogColor = new THREE.Color('#D7CCC8')
   const currentFogColor = new THREE.Color().lerpColors(normalFogColor, smogFogColor, effectiveProgress)
 
   const fogNear = THREE.MathUtils.lerp(
-    qualityConfig.shadows ? 35 : 22,
-    qualityConfig.shadows ? 10 : 6,
+    qualityConfig.shadows ? 40 : 32,
+    qualityConfig.shadows ? 28 : 24,
     effectiveProgress
   )
   const fogFar = THREE.MathUtils.lerp(
-    qualityConfig.shadows ? 140 : 85,
-    qualityConfig.shadows ? 52 : 36,
+    qualityConfig.shadows ? 160 : 125,
+    qualityConfig.shadows ? 110 : 90,
     effectiveProgress
   )
 
@@ -267,15 +267,15 @@ export default function WorldEnvironment() {
 
       {/* 5. Hemisphere Fill Light (Cool blue sky fill for blue-ish shadows vs warm earth ground bounce) */}
       <hemisphereLight
-        skyColor={effectiveProgress > 0.4 ? '#8D6E63' : '#7CB9E8'}
-        groundColor={effectiveProgress > 0.4 ? '#3E2723' : '#4E342E'}
-        intensity={THREE.MathUtils.lerp(0.66, 0.42, effectiveProgress)}
+        skyColor={effectiveProgress > 0.4 ? '#BCAAA4' : '#7CB9E8'}
+        groundColor={effectiveProgress > 0.4 ? '#6D4C41' : '#4E342E'}
+        intensity={THREE.MathUtils.lerp(0.66, 0.52, effectiveProgress)}
       />
 
-      {/* 6. Subtle Ambient Fill Light (Soft cool fill, eliminating muddy yellow wash) */}
+      {/* 6. Subtle Ambient Fill Light (Soft cool fill, eliminating muddy wash) */}
       <ambientLight
-        intensity={THREE.MathUtils.lerp(0.48, 0.35, effectiveProgress)}
-        color={effectiveProgress > 0.4 ? '#EFEBE9' : '#E3F2FD'}
+        intensity={THREE.MathUtils.lerp(0.52, 0.42, effectiveProgress)}
+        color={effectiveProgress > 0.4 ? '#FFF8E1' : '#E3F2FD'}
       />
 
       {/* 7. Golden-Hour Directional Sun with Soft PCF Shadows */}

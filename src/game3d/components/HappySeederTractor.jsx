@@ -7,26 +7,43 @@ import ModelWithFallback from '../assets/ModelLoader'
 function ProceduralTractorBody({ isHigh }) {
   return (
     <group position={[0, 0, 0]}>
+      {/* Engine Hood (Front) - Classic farm green */}
       <mesh position={[0, 1.1, 0.8]} castShadow={isHigh}>
         <boxGeometry args={[1.5, 1.1, 2.2]} />
-        <meshStandardMaterial color="#2E7D32" roughness={0.35} metalness={0.4} />
+        <meshStandardMaterial color="#2E7D32" roughness={0.6} metalness={0.05} />
       </mesh>
+
+      {/* Front Radiator Grille & Yellow Trim */}
       <mesh position={[0, 1.0, 1.91]}>
         <planeGeometry args={[1.2, 0.8]} />
         <meshStandardMaterial color="#212121" roughness={0.9} />
       </mesh>
+      <mesh position={[0, 1.45, 1.91]}>
+        <planeGeometry args={[1.3, 0.12]} />
+        <meshStandardMaterial color="#FBC02D" roughness={0.4} metalness={0.1} />
+      </mesh>
+      <mesh position={[0, 1.66, 0.8]}>
+        <boxGeometry args={[0.2, 0.02, 2.18]} />
+        <meshStandardMaterial color="#FBC02D" roughness={0.4} metalness={0.1} />
+      </mesh>
+
+      {/* Driver Platform & Seat */}
       <mesh position={[0, 0.8, -0.7]} castShadow={isHigh}>
         <boxGeometry args={[1.6, 0.6, 1.6]} />
         <meshStandardMaterial color="#37474F" roughness={0.7} />
       </mesh>
       <mesh position={[0, 1.4, -0.9]} castShadow={isHigh}>
         <boxGeometry args={[0.9, 0.6, 0.8]} />
-        <meshStandardMaterial color="#212121" />
+        <meshStandardMaterial color="#212121" roughness={0.9} />
       </mesh>
+
+      {/* Exhaust Pipe */}
       <mesh position={[0.65, 2.1, 1.2]} castShadow={isHigh}>
         <cylinderGeometry args={[0.08, 0.08, 1.6, 6]} />
-        <meshStandardMaterial color="#424242" metalness={0.8} />
+        <meshStandardMaterial color="#424242" metalness={0.8} roughness={0.4} />
       </mesh>
+
+      {/* Big Rear Wheels & Yellow Rims */}
       <mesh position={[-1.0, 1.0, -0.8]} rotation={[0, 0, Math.PI / 2]} castShadow={isHigh}>
         <cylinderGeometry args={[1.0, 1.0, 0.6, 12]} />
         <meshStandardMaterial color="#1A1A1A" roughness={0.95} />
@@ -35,6 +52,16 @@ function ProceduralTractorBody({ isHigh }) {
         <cylinderGeometry args={[1.0, 1.0, 0.6, 12]} />
         <meshStandardMaterial color="#1A1A1A" roughness={0.95} />
       </mesh>
+      <mesh position={[-1.05, 1.0, -0.8]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.5, 0.5, 0.65, 8]} />
+        <meshStandardMaterial color="#FBC02D" metalness={0.4} roughness={0.4} />
+      </mesh>
+      <mesh position={[1.05, 1.0, -0.8]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.5, 0.5, 0.65, 8]} />
+        <meshStandardMaterial color="#FBC02D" metalness={0.4} roughness={0.4} />
+      </mesh>
+
+      {/* Smaller Front Wheels */}
       <mesh position={[-0.85, 0.55, 1.5]} rotation={[0, 0, Math.PI / 2]} castShadow={isHigh}>
         <cylinderGeometry args={[0.55, 0.55, 0.4, 10]} />
         <meshStandardMaterial color="#1A1A1A" roughness={0.95} />

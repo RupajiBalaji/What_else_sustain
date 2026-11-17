@@ -7,6 +7,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { execSync } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '..')
@@ -48,6 +49,14 @@ for (const d of targetDirs) {
 }
 
 console.log(`Linted ${filesChecked} source files across ${targetDirs.join(', ')}.`)
+
+console.log('--- Running ESLint (no-undef & react-hooks) ---')
+try {
+  execSync('npx eslint src/', { stdio: 'inherit' })
+  console.log('✅ ESLint Passed: No undefined identifiers or hook rule violations.')
+} catch (err) {
+  errors.push('ESLint reported syntax, undef, or hook rule violations in src/')
+}
 
 if (errors.length > 0) {
   console.error(`❌ Lint Failed with ${errors.length} errors:`)

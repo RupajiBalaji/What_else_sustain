@@ -205,11 +205,6 @@ export function ManagedOverlay({
   const { isAnyModalOpen, showSeasonReport, showChoiceWheel } = useGame3D()
   const manager = useOverlayManager()
 
-  // Hide village sign, air-station label, and straw labels while choice panel is open
-  if (showChoiceWheel && (id === 'village_sign' || id === 'village_air_station' || id?.startsWith('straw') || id?.startsWith('villager'))) {
-    return null
-  }
-
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isCollapsed, setIsCollapsed] = useState(false)
   const containerRef = useRef(null)
@@ -251,8 +246,11 @@ export function ManagedOverlay({
     return () => window.removeEventListener('resize', handleResize)
   }, [manager])
 
+  // Hide village sign, air-station label, and straw labels while choice panel is open
+  const isHiddenByChoiceWheel = showChoiceWheel && (id === 'village_sign' || id === 'village_air_station' || id?.startsWith('straw') || id?.startsWith('villager'))
+
   // Hide completely while ANY modal is open (modals maintain highest z-index)
-  if (isAnyModalOpen || showSeasonReport || !visible) {
+  if (isAnyModalOpen || showSeasonReport || !visible || isHiddenByChoiceWheel) {
     return null
   }
 

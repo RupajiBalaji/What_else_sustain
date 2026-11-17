@@ -219,7 +219,9 @@ export default function TreesInstanced() {
   const maxCount = qualityConfig.treeCount || 26
   const activeTrees = TREE_POSITIONS.slice(0, maxCount)
 
-  const hasTreeModel = useModelAvailability('/models/tree_1.glb') || useModelAvailability('/models/tree.glb')
+  const hasTree1 = useModelAvailability('/models/tree_1.glb')
+  const hasTreeDefault = useModelAvailability('/models/tree.glb')
+  const hasTreeModel = hasTree1 || hasTreeDefault
 
   if (hasTreeModel) {
     return (

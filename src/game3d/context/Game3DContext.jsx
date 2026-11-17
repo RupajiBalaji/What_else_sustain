@@ -7,6 +7,7 @@ import { useGame } from '../../context/GameContext'
 import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 import { getQualityConfig, autoDetectQualityTier } from '../config/qualityConfig'
 import { GAME_BALANCE, getSeasonEvent } from '../config/gameBalance'
+import { STRAW_PILES_DATA } from '../components/StrawPiles'
 
 const Game3DContext = createContext(null)
 

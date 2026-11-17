@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useCallback } from 'react'
+import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react'
 import { LanguageProvider, useLanguage } from './context/LanguageContext'
 import { GameProvider } from './context/GameContext'
 import ErrorBoundary from './components/ErrorBoundary'

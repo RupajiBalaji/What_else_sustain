@@ -200,6 +200,12 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
     await startQuickPlayBtn.waitFor({ state: 'visible', timeout: 90000 })
     await startQuickPlayBtn.click()
 
+    // If pre-check quiz modal is open, skip it
+    const skipQuizBtn = page.locator('button:has-text("Skip for now"), [data-testid="skip-quiz-button"]').first()
+    if (await skipQuizBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await skipQuizBtn.click()
+    }
+
     const burnOptionBtn = page.locator('[data-testid="choice-option-burn"], button:has-text("Burn")').first()
     await burnOptionBtn.waitFor({ state: 'visible', timeout: 90000 })
     await page.waitForTimeout(500)

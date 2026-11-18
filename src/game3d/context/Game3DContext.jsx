@@ -7,7 +7,7 @@ import { useGame } from '../../context/GameContext'
 import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 import { getQualityConfig, autoDetectQualityTier } from '../config/qualityConfig'
 import { GAME_BALANCE, getSeasonEvent } from '../config/gameBalance'
-import { STRAW_PILES_DATA } from '../components/StrawPiles'
+import { STRAW_PILES_DATA } from '../config/strawData'
 
 const Game3DContext = createContext(null)
 
@@ -544,7 +544,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   }, [triggerToast])
 
   // Fast-forward directly to Decision phase with straw piles and choice panel ready
-  const jumpToDecisionPhase = useCallback(() => {
+  const jumpToDecisionPhase = useCallback((skipQuiz = false) => {
     if (harvestTimerRef.current) clearTimeout(harvestTimerRef.current)
     if (harvestIntervalRef.current) clearInterval(harvestIntervalRef.current)
     sound.stopTractorEngine()
@@ -556,7 +556,10 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setActiveSeasonalEvent(null)
     setInteractionTarget({ id: 'straw_1', x: -3.2, z: 12.5, scale: 1.0, label: 'Nearby Golden Straw Mound' })
     triggerToast('🌾 Paddy harvested! Straw residue ready for decision.')
-  }, [triggerToast])
+    if (!skipQuiz && !persistentState?.preCheckCompleted) {
+      setQuizState({ isOpen: true, mode: 'pre' })
+    }
+  }, [triggerToast, persistentState])
 
   // Step D: Finish Season & Calculate Carry-Over Consequences
   const finishSeason = useCallback((choiceKey) => {
@@ -754,6 +757,16 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       triggerToast('Rewound to harvest! Explore an alternative approach.')
     }, 1350)
   }, [triggerToast])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__WES_SEASON_MACHINE__ = {
+        nextSeason,
+        replaySeason,
+        jumpToDecisionPhase
+      }
+    }
+  }, [nextSeason, replaySeason, jumpToDecisionPhase])
 
   // Start New Game (Reset all progression)
   const resetNewGame = useCallback(() => {

@@ -16,15 +16,24 @@ export function calculateQuizScore(answers, questions) {
   return correctCount
 }
 
-export function evaluateQuizComparison({ preAnswers = {}, postAnswers = {}, questions = [] }) {
-  const preScore = calculateQuizScore(preAnswers, questions)
-  const postScore = calculateQuizScore(postAnswers, questions)
+export function evaluateQuizComparison({ preAnswers = {}, postAnswers = {}, questions = [], preQuestions = null, postQuestions = null }) {
+  const effectivePreQ = preQuestions || questions
+  const effectivePostQ = postQuestions || questions
+
+  const preScore = calculateQuizScore(preAnswers, effectivePreQ)
+  const postScore = calculateQuizScore(postAnswers, effectivePostQ)
+  const preTotal = effectivePreQ.length || 1
+  const postTotal = effectivePostQ.length || 1
+
+  const prePct = Math.round((preScore / preTotal) * 100)
+  const postPct = Math.round((postScore / postTotal) * 100)
   const delta = postScore - preScore
+  const improvementScore = postPct - prePct
 
   const conceptsLearned = []
   const conceptsNeedsReview = []
 
-  for (const q of questions) {
+  for (const q of effectivePostQ) {
     const correctOption = q.options.find((opt) => opt.isCorrect)
     const wasPreCorrect = preAnswers[q.id] === correctOption?.id
     const wasPostCorrect = postAnswers[q.id] === correctOption?.id
@@ -52,7 +61,12 @@ export function evaluateQuizComparison({ preAnswers = {}, postAnswers = {}, ques
 
   return {
     preScore,
+    preTotal,
     postScore,
+    postTotal,
+    prePct,
+    postPct,
+    improvementScore,
     totalQuestions: questions.length,
     delta,
     improved: delta > 0,

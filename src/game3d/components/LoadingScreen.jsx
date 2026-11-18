@@ -6,6 +6,7 @@ import { sound } from '../../game/soundManager'
 import { audioManager } from '../audio/AudioManager'
 import SproutMascot from '../../game/SproutMascot'
 import { safeStorage } from '../../utils/safeStorage'
+import YourFarmModal from './YourFarmModal'
 
 const SUSTAINABILITY_TIPS = [
   '🌱 Mulching with paddy straw retains 15–25% more soil moisture during early crop growth (Source: NPMCR).',
@@ -15,8 +16,9 @@ const SUSTAINABILITY_TIPS = [
   '💨 Open burning destroys essential nitrogen, phosphorus, and friendly earthworms (Source: NPMCR).'
 ]
 
-export default function LoadingScreen({ onStart, onSwitchToLite }) {
+export default function LoadingScreen({ onStart, onSwitchToLite, farmConfig, setFarmConfig }) {
   const { t } = useLanguage()
+  const [showYourFarm, setShowYourFarm] = useState(false)
   const { progress: dreiProgress, active } = useProgress()
   const [tipIndex, setTipIndex] = useState(0)
   const [isTouchDevice, setIsTouchDevice] = useState(false)
@@ -279,6 +281,41 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
               )}
             </div>
 
+            {/* S2. Your Farm Profile Pill */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '6px 12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                borderRadius: '10px',
+                border: '1.5px solid #A1887F',
+                marginBottom: '4px'
+              }}
+            >
+              <div style={{ fontSize: '0.80rem', fontWeight: 800, color: '#3E2723', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🚜</span>
+                <span>{farmConfig?.state || 'Punjab'} • {farmConfig?.acres || 5} Acres {farmConfig?.crop || 'Paddy'}</span>
+              </div>
+              <button
+                type="button"
+                data-testid="open-your-farm-button"
+                onClick={() => setShowYourFarm(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#1B5E20',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  textDecoration: 'underline',
+                  cursor: 'pointer'
+                }}
+              >
+                Change Farm
+              </button>
+            </div>
+
             {/* Primary Default: Quick Play */}
             <button
               data-testid="start-quick-play-button"
@@ -357,6 +394,19 @@ export default function LoadingScreen({ onStart, onSwitchToLite }) {
           </button>
         </div>
       </div>
+
+      {/* S2. Your Farm Configuration Modal */}
+      {showYourFarm && (
+        <YourFarmModal
+          initialProfile={farmConfig}
+          onSave={(newProfile) => {
+            setFarmConfig?.(newProfile)
+            setShowYourFarm(false)
+          }}
+          onClose={() => setShowYourFarm(false)}
+          isSettings={true}
+        />
+      )}
     </div>
   )
 }

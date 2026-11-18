@@ -96,7 +96,8 @@ export default function InWorldChoicePanel() {
     selectedChoiceId,
     setSelectedChoiceId,
     triedChoices = [],
-    seasonPhase
+    seasonPhase,
+    quizState
   } = useGame3D()
 
   const [isMobile, setIsMobile] = useState(
@@ -122,7 +123,8 @@ export default function InWorldChoicePanel() {
     (harvestState === 'harvested' || seasonPhase === 'decision') &&
     burnState === 'idle' &&
     activeAlternative === null &&
-    !hasMadeChoice
+    !hasMadeChoice &&
+    !quizState?.isOpen
 
   const activeOption = selectedId ? CHOICE_OPTIONS.find((o) => o.id === selectedId) : null
 

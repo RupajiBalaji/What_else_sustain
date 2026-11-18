@@ -1,9 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
 import { audioManager } from '../audio/AudioManager'
+import YourFarmModal from './YourFarmModal'
 
 export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
+  const [showFarmModal, setShowFarmModal] = useState(false)
   const { language, setLanguage, t } = useLanguage()
   const {
     quality,
@@ -432,8 +434,33 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
               <option value="Punjab">Punjab</option>
               <option value="Haryana">Haryana</option>
               <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Andhra Pradesh">Andhra Pradesh</option>
             </select>
           </div>
+
+          <button
+            type="button"
+            data-testid="edit-farm-profile-modal-btn"
+            onClick={() => setShowFarmModal(true)}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#E8F5E9',
+              color: '#1B5E20',
+              border: '1px solid #A5D6A7',
+              borderRadius: '8px',
+              fontSize: '0.82rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🚜</span>
+            <span>Open Full Farm Configurator</span>
+          </button>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.80rem', color: '#616161', fontWeight: 700 }}>Residue Crop:</span>
@@ -571,6 +598,18 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
           </button>
         </div>
       </div>
+
+      {showFarmModal && (
+        <YourFarmModal
+          initialProfile={farmConfig}
+          onSave={(newProfile) => {
+            setFarmConfig?.(newProfile)
+            setShowFarmModal(false)
+          }}
+          onClose={() => setShowFarmModal(false)}
+          isSettings={true}
+        />
+      )}
     </div>
   )
 }

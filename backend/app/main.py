@@ -12,6 +12,7 @@ from .routers import (
     advisor_router,
     simulate_router,
     sessions_router,
+    director_router,
 )
 
 
@@ -43,6 +44,7 @@ app.include_router(health_router, prefix="/api")
 app.include_router(advisor_router, prefix="/api")
 app.include_router(simulate_router, prefix="/api")
 app.include_router(sessions_router, prefix="/api")
+app.include_router(director_router, prefix="/api")
 
 # Static frontend serving (dist/) in production if built
 # Root is e:\What else sustain\

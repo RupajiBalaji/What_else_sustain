@@ -37,9 +37,15 @@ export default function QuizModal({
     return {}
   })
 
-  // Shuffle questions once on mount for the mode (using mode as seed for deterministic stability)
+  // Pre-check uses 2 core baseline questions; Post-check uses 3 questions for depth
   const questions = useMemo(() => {
-    return mode === 'post' ? shuffleQuestions(quizQuestions, 101) : quizQuestions
+    if (mode === 'pre') {
+      return quizQuestions.slice(0, 2)
+    }
+    if (mode === 'post') {
+      return quizQuestions.slice(0, 3)
+    }
+    return quizQuestions
   }, [mode])
 
   // Sync viewState when mode prop updates
@@ -219,7 +225,7 @@ export default function QuizModal({
                   Pre-Check
                 </div>
                 <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF' }}>
-                  {evaluation.preScore} / {evaluation.totalQuestions}
+                  {evaluation.preScore} / {evaluation.preTotal || 2}
                 </div>
               </div>
 
@@ -232,22 +238,22 @@ export default function QuizModal({
                   Post-Check
                 </div>
                 <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#A5D6A7' }}>
-                  {evaluation.postScore} / {evaluation.totalQuestions}
+                  {evaluation.postScore} / {evaluation.postTotal || 3}
                 </div>
               </div>
 
               <div
                 style={{
-                  backgroundColor: evaluation.delta > 0 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                  border: `1px solid ${evaluation.delta > 0 ? '#81C784' : 'rgba(255,255,255,0.2)'}`,
+                  backgroundColor: evaluation.improvementScore > 0 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                  border: `1px solid ${evaluation.improvementScore > 0 ? '#81C784' : 'rgba(255,255,255,0.2)'}`,
                   borderRadius: '10px',
                   padding: '6px 12px',
                   fontWeight: 900,
                   fontSize: '0.88rem',
-                  color: evaluation.delta > 0 ? '#A5D6A7' : '#B0BEC5'
+                  color: evaluation.improvementScore > 0 ? '#A5D6A7' : '#B0BEC5'
                 }}
               >
-                {evaluation.delta > 0 ? `+${evaluation.delta} Delta` : `${evaluation.delta} Delta`}
+                {evaluation.improvementScore > 0 ? `+${evaluation.improvementScore}% Gain` : `${evaluation.improvementScore}% Gain`}
               </div>
             </div>
 

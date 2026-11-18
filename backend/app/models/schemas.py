@@ -23,6 +23,26 @@ class AdvisorResponse(BaseModel):
     message: Optional[str] = None
 
 
+# --- AI Scenario Director (Section 7.2) ---
+class ScenarioDirectorRequest(BaseModel):
+    state: str = Field(default="Punjab", description="State name, e.g. Punjab, Haryana, UP, Telangana, Andhra Pradesh")
+    crop: str = Field(default="paddy", description="Crop type, e.g. paddy, wheat")
+    acres: float = Field(default=5.0, ge=1.0, le=20.0, description="Acres cultivated (1-20)")
+    season: int = Field(default=1, ge=1, description="Current season index")
+    language: str = Field(default="en", description="Language code (en, te, hi)")
+    playerHistorySummary: Optional[str] = None
+
+
+class ScenarioDirectorResponse(BaseModel):
+    introStory: str
+    whyPeopleBurnHere: str
+    featuredAlternatives: List[str]
+    localHint: str
+    villageName: str
+    eventSuggestion: str
+    source: str = "offline"
+
+
 # --- Smoke Simulation ---
 class SmokeSimulationRequest(BaseModel):
     acres: float = Field(..., gt=0, description="Field size in acres")

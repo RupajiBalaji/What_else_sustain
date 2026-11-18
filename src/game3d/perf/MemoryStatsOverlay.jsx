@@ -22,15 +22,17 @@ export function MemoryStatsSampler() {
 
   let frameCount = 0
   useFrame(() => {
-    if (!showDevStats) return
     frameCount++
-    if (frameCount % 15 === 0) {
+    if (frameCount % 10 === 0) {
       renderStatsRef.calls = gl.info.render.calls
       renderStatsRef.triangles = gl.info.render.triangles
       renderStatsRef.geometries = gl.info.memory.geometries
       renderStatsRef.textures = gl.info.memory.textures
       renderStatsRef.lines = gl.info.render.lines
       renderStatsRef.points = gl.info.render.points
+      if (typeof window !== 'undefined') {
+        window.__WES_RENDER_STATS__ = { ...renderStatsRef }
+      }
     }
   })
 

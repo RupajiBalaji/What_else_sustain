@@ -31,6 +31,7 @@ import AirSensorPole from './components/AirSensorPole'
 import ConsequenceCallouts from './components/ConsequenceCallouts'
 import InWorldStatusProps from './components/InWorldStatusProps'
 import CinematicCamera from './components/CinematicCamera'
+import DemoDirector3D from './components/DemoDirector3D'
 import PerformanceGovernor from './perf/PerformanceGovernor'
 import MemoryStatsOverlay, { MemoryStatsSampler } from './perf/MemoryStatsOverlay'
 import { OverlayManagerProvider } from './ui/OverlayManager'
@@ -74,8 +75,17 @@ function SceneContent() {
 }
 
 function FarmSceneInner({ onSwitchToLite }) {
-  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover, dprScale, jumpToDecisionPhase } = useGame3D()
-  const [hasStarted, setHasStarted] = useState(false)
+  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover, dprScale, jumpToDecisionPhase, farmConfig, setFarmConfig } = useGame3D()
+  const [isDemoMode, setIsDemoMode] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const params = new URLSearchParams(window.location.search)
+    return params.get('demo') === '1' || params.get('demo') === 'true'
+  })
+  const [hasStarted, setHasStarted] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const params = new URLSearchParams(window.location.search)
+    return params.get('demo') === '1' || params.get('demo') === 'true'
+  })
 
   // Dynamic pixel ratio based on quality tier cap * dynamic resolution scale
   const dpr = useMemo(() => {
@@ -183,6 +193,9 @@ function FarmSceneInner({ onSwitchToLite }) {
         />
       )}
 
+      {/* Scripted 90s Demo Mode Director (?demo=1) */}
+      <DemoDirector3D enabled={isDemoMode && hasStarted} onStopDemo={() => setIsDemoMode(false)} />
+
       {/* Memory & Render Stats Overlay (toggled with G) */}
       <MemoryStatsOverlay />
 
@@ -192,10 +205,12 @@ function FarmSceneInner({ onSwitchToLite }) {
       {/* Initial Loading Screen */}
       {!hasStarted && (
         <LoadingScreen
+          farmConfig={farmConfig}
+          setFarmConfig={setFarmConfig}
           onStart={(mode) => {
             setHasStarted(true)
             if (mode === 'decision') {
-              jumpToDecisionPhase()
+              jumpToDecisionPhase(true)
             }
           }}
           onSwitchToLite={onSwitchToLite}

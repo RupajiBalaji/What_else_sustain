@@ -129,7 +129,7 @@ function FarmSceneInner({ onSwitchToLite }) {
           powerPreference: 'high-performance',
           preserveDrawingBuffer: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 0.94
+          toneMappingExposure: 0.88
         }}
         style={{ width: '100%', height: '100%', display: 'block' }}
       >

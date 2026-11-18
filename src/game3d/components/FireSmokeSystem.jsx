@@ -17,54 +17,54 @@ function createParticleTexture(type) {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   if (type === 'fire') {
-    // Tall flame tongue with wide base, bright core, golden body, and red edges
+    // Slender flame tongue with vivid orange core, amber body, golden-yellow tips, crimson edges (ZERO pure white)
     const grad = ctx.createLinearGradient(64, 250, 64, 10)
-    grad.addColorStop(0, 'rgba(255, 255, 240, 1.0)') // White-hot core at bottom
-    grad.addColorStop(0.2, 'rgba(255, 214, 0, 0.95)') // Bright yellow
-    grad.addColorStop(0.55, 'rgba(255, 109, 0, 0.85)') // Rich vivid orange
-    grad.addColorStop(0.85, 'rgba(213, 0, 0, 0.65)') // Crimson flame edges
-    grad.addColorStop(1.0, 'rgba(183, 28, 28, 0.0)') // Tapered flickering tip
+    grad.addColorStop(0, 'rgba(255, 109, 0, 0.95)') // Deep fiery orange core
+    grad.addColorStop(0.25, 'rgba(255, 152, 0, 0.90)') // Amber fiery orange
+    grad.addColorStop(0.65, 'rgba(255, 193, 7, 0.85)') // Pure golden yellow tips
+    grad.addColorStop(0.90, 'rgba(216, 67, 21, 0.50)') // Crimson red-orange edges
+    grad.addColorStop(1.0, 'rgba(191, 54, 12, 0.0)') // Tapered flickering tip
 
     ctx.fillStyle = grad
     ctx.beginPath()
     ctx.moveTo(64, 10)
-    ctx.bezierCurveTo(95, 80, 115, 170, 105, 245)
-    ctx.quadraticCurveTo(64, 255, 23, 245)
-    ctx.bezierCurveTo(13, 170, 33, 80, 64, 10)
+    ctx.bezierCurveTo(88, 75, 102, 160, 95, 245)
+    ctx.quadraticCurveTo(64, 255, 33, 245)
+    ctx.bezierCurveTo(26, 160, 40, 75, 64, 10)
     ctx.closePath()
     ctx.fill()
 
-    // Inner bright core tongue
-    const coreGrad = ctx.createLinearGradient(64, 250, 64, 60)
-    coreGrad.addColorStop(0, 'rgba(255, 255, 255, 1.0)')
-    coreGrad.addColorStop(0.4, 'rgba(255, 245, 157, 0.9)')
-    coreGrad.addColorStop(1.0, 'rgba(255, 179, 0, 0.0)')
+    // Inner warm amber flame core (strictly capped, no white stops)
+    const coreGrad = ctx.createLinearGradient(64, 250, 64, 70)
+    coreGrad.addColorStop(0, 'rgba(255, 140, 0, 0.92)')
+    coreGrad.addColorStop(0.5, 'rgba(255, 179, 0, 0.80)')
+    coreGrad.addColorStop(1.0, 'rgba(255, 193, 7, 0.0)')
     ctx.fillStyle = coreGrad
     ctx.beginPath()
-    ctx.moveTo(64, 60)
-    ctx.bezierCurveTo(80, 120, 90, 190, 85, 245)
-    ctx.quadraticCurveTo(64, 252, 43, 245)
-    ctx.bezierCurveTo(38, 190, 48, 120, 64, 60)
+    ctx.moveTo(64, 70)
+    ctx.bezierCurveTo(76, 125, 84, 185, 80, 245)
+    ctx.quadraticCurveTo(64, 252, 48, 245)
+    ctx.bezierCurveTo(44, 185, 52, 125, 64, 70)
     ctx.closePath()
     ctx.fill()
   } else if (type === 'ember') {
-    // Sharp glowing spark
+    // Sharp glowing spark (orange-gold)
     const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 48)
-    grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)')
-    grad.addColorStop(0.35, 'rgba(255, 213, 79, 0.9)')
-    grad.addColorStop(0.7, 'rgba(255, 112, 67, 0.4)')
-    grad.addColorStop(1.0, 'rgba(255, 87, 34, 0.0)')
+    grad.addColorStop(0, 'rgba(255, 193, 7, 1.0)')
+    grad.addColorStop(0.35, 'rgba(255, 140, 0, 0.85)')
+    grad.addColorStop(0.7, 'rgba(230, 81, 0, 0.4)')
+    grad.addColorStop(1.0, 'rgba(191, 54, 12, 0.0)')
     ctx.fillStyle = grad
     ctx.beginPath()
     ctx.arc(64, 64, 48, 0, Math.PI * 2)
     ctx.fill()
   } else {
-    // Soft turbulent smoke puff (opaque dark charcoal core fading to dark umber)
+    // Soft turbulent smoke puff (dense dark charcoal core fading to dark umber)
     const grad = ctx.createRadialGradient(64, 64, 4, 64, 64, 60)
-    grad.addColorStop(0, 'rgba(22, 19, 18, 0.96)') // Dense dark charcoal
-    grad.addColorStop(0.35, 'rgba(38, 33, 30, 0.88)') // Dark grey-brown
-    grad.addColorStop(0.7, 'rgba(60, 52, 46, 0.55)') // Smoky umber
-    grad.addColorStop(1.0, 'rgba(60, 52, 46, 0.0)')
+    grad.addColorStop(0, 'rgba(20, 18, 17, 0.96)') // Dense dark charcoal
+    grad.addColorStop(0.35, 'rgba(34, 30, 28, 0.88)') // Dark soot
+    grad.addColorStop(0.7, 'rgba(52, 46, 42, 0.58)') // Smoky umber
+    grad.addColorStop(1.0, 'rgba(52, 46, 42, 0.0)')
     ctx.fillStyle = grad
     ctx.beginPath()
     ctx.arc(64, 64, 60, 0, Math.PI * 2)
@@ -199,19 +199,19 @@ export default function FireSmokeSystem() {
     }
     const hasPiles = activePilesList.length > 0
 
-    // 1. Point Light Flicker
+    // 1. Point Light Flicker (clamped warm amber firelight)
     if (lightRef.current && hasPiles) {
       if (isBurning) {
-        const flicker = Math.sin(elapsed * 22) * 0.3 + Math.cos(elapsed * 37) * 0.2 + 1.2
-        lightRef.current.intensity = flicker * (activePilesList.length * 1.8)
+        const flicker = Math.sin(elapsed * 22) * 0.15 + 0.95
+        lightRef.current.intensity = flicker * 1.15
         const lead = activePilesList[0]
-        lightRef.current.position.set(lead.x, 2.2, lead.z)
+        lightRef.current.position.set(lead.x, 1.4, lead.z)
       } else {
         lightRef.current.intensity = 0
       }
     }
 
-    // 2. Fire Particles (Core, Body, Tips)
+    // 2. Fire Particles (Core, Body, Tips - slender, normal-blended licks)
     if (fireMeshRef.current) {
       fireMeshRef.current.count = maxFire
       if (!isBurning || !hasPiles) {
@@ -229,13 +229,13 @@ export default function FireSmokeSystem() {
             p.pileIndex = i % activePilesList.length
             const pile = activePilesList[p.pileIndex]
             const angle = Math.random() * Math.PI * 2
-            const rad = Math.random() * 0.75
+            const rad = Math.random() * 0.45
             p.x = pile.x + Math.cos(angle) * rad
-            p.y = 0.6 + Math.random() * 0.8
+            p.y = 0.5 + Math.random() * 0.6
             p.z = pile.z + Math.sin(angle) * rad
-            p.vx = (Math.random() - 0.5) * 0.45 + windX * 0.2
-            p.vy = 2.0 + Math.random() * 1.8
-            p.vz = (Math.random() - 0.5) * 0.45 + windZ * 0.2
+            p.vx = (Math.random() - 0.5) * 0.25 + windX * 0.15
+            p.vy = 1.6 + Math.random() * 1.2
+            p.vz = (Math.random() - 0.5) * 0.25 + windZ * 0.15
           }
 
           p.x += p.vx * delta
@@ -243,7 +243,7 @@ export default function FireSmokeSystem() {
           p.z += p.vz * delta
 
           const progress = p.life / p.maxLife
-          const size = Math.max(0.4, Math.sin(progress * Math.PI) * 1.6 + 0.45)
+          const size = Math.max(0.35, Math.sin(progress * Math.PI) * 0.85 + 0.35)
 
           _particleDummy.position.set(p.x, p.y, p.z)
           _particleDummy.quaternion.copy(camera.quaternion)
@@ -272,20 +272,20 @@ export default function FireSmokeSystem() {
             p.life = 0
             p.pileIndex = i % activePilesList.length
             const pile = activePilesList[p.pileIndex]
-            p.x = pile.x + (Math.random() - 0.5) * 1.2
-            p.y = 0.9 + Math.random() * 0.6
-            p.z = pile.z + (Math.random() - 0.5) * 1.2
-            p.vx = (Math.random() - 0.5) * 0.8 + windX * 0.8
-            p.vy = 2.8 + Math.random() * 2.2
-            p.vz = (Math.random() - 0.5) * 0.8 + windZ * 0.8
+            p.x = pile.x + (Math.random() - 0.5) * 0.8
+            p.y = 0.8 + Math.random() * 0.5
+            p.z = pile.z + (Math.random() - 0.5) * 0.8
+            p.vx = (Math.random() - 0.5) * 0.6 + windX * 0.6
+            p.vy = 2.4 + Math.random() * 1.8
+            p.vz = (Math.random() - 0.5) * 0.6 + windZ * 0.6
           }
 
-          p.x += p.vx * delta + Math.sin(elapsed * 8 + i) * 0.02
+          p.x += p.vx * delta + Math.sin(elapsed * 8 + i) * 0.015
           p.y += p.vy * delta
-          p.z += p.vz * delta + Math.cos(elapsed * 8 + i) * 0.02
+          p.z += p.vz * delta + Math.cos(elapsed * 8 + i) * 0.015
 
           const progress = p.life / p.maxLife
-          const size = Math.max(0.12, (1.0 - progress) * 0.38 + 0.1)
+          const size = Math.max(0.08, (1.0 - progress) * 0.28 + 0.08)
 
           _particleDummy.position.set(p.x, p.y, p.z)
           _particleDummy.quaternion.copy(camera.quaternion)
@@ -314,21 +314,21 @@ export default function FireSmokeSystem() {
             p.life = 0
             p.pileIndex = i % activePilesList.length
             const pile = activePilesList[p.pileIndex]
-            p.x = pile.x + (Math.random() - 0.5) * 1.5
-            p.y = 1.3 + Math.random() * 0.7
-            p.z = pile.z + (Math.random() - 0.5) * 1.5
-            p.vx = (Math.random() - 0.5) * 0.4
-            p.vy = 1.4 + Math.random() * 0.95
-            p.vz = (Math.random() - 0.5) * 0.4
+            p.x = pile.x + (Math.random() - 0.5) * 1.0
+            p.y = 1.1 + Math.random() * 0.5
+            p.z = pile.z + (Math.random() - 0.5) * 1.0
+            p.vx = (Math.random() - 0.5) * 0.35
+            p.vy = 1.6 + Math.random() * 0.8
+            p.vz = (Math.random() - 0.5) * 0.35
           }
 
           const progress = p.life / p.maxLife
-          p.x += (p.vx + smokeDriftX * progress * 2.0) * delta
-          p.y += (p.vy * 0.88 + Math.sin(progress * Math.PI) * 0.45) * delta
-          p.z += (p.vz + smokeDriftZ * progress * 2.8) * delta
+          p.x += (p.vx + smokeDriftX * progress * 2.2) * delta
+          p.y += (p.vy * 0.90 + Math.sin(progress * Math.PI) * 0.35) * delta
+          p.z += (p.vz + smokeDriftZ * progress * 3.0) * delta
 
-          // Expands naturally into billowing smoke puffs drifting towards the village
-          const size = Math.max(0.9, 1.2 + progress * 3.5)
+          // Expands naturally into billowing dark smoke puffs drifting towards the village
+          const size = Math.max(1.1, 1.4 + progress * 4.2)
 
           _particleDummy.position.set(p.x, p.y, p.z)
           _particleDummy.quaternion.copy(camera.quaternion)
@@ -354,28 +354,28 @@ export default function FireSmokeSystem() {
 
   return (
     <group name="FireSmokeSystemGroup">
-      {/* 1. Flickering Point Light (rich orange flame illuminating surroundings) */}
+      {/* 1. Flickering Point Light (rich warm amber flame illuminating surroundings) */}
       <pointLight
         ref={lightRef}
-        color="#FF6D00"
+        color="#E65100"
         intensity={0}
-        distance={24}
+        distance={12}
         decay={2}
       />
 
-      {/* 2. Layered Fire Particles with Billboarding */}
+      {/* 2. Layered Fire Particles with Billboarding and Normal Blending (No Additive Blowout) */}
       <instancedMesh
         ref={fireMeshRef}
         args={[undefined, undefined, 320]}
         frustumCulled={false}
         depthWrite={false}
       >
-        <planeGeometry args={[1.2, 2.6]} />
+        <planeGeometry args={[0.55, 1.25]} />
         <meshBasicMaterial
           map={fireTexture}
           transparent
-          blending={THREE.AdditiveBlending}
-          opacity={0.6}
+          blending={THREE.NormalBlending}
+          opacity={0.82}
           depthWrite={false}
           side={THREE.DoubleSide}
         />
@@ -388,7 +388,7 @@ export default function FireSmokeSystem() {
         frustumCulled={false}
         depthWrite={false}
       >
-        <planeGeometry args={[0.5, 0.5]} />
+        <planeGeometry args={[0.25, 0.25]} />
         <meshBasicMaterial
           map={emberTexture}
           transparent
@@ -398,25 +398,24 @@ export default function FireSmokeSystem() {
         />
       </instancedMesh>
 
-      {/* 4. Dense Smoky Plume with Normal Blending and Billboarding */}
+      {/* 4. Dense Smoky Plume with Normal Blending, prominent renderOrder */}
       <instancedMesh
         ref={smokeMeshRef}
         args={[undefined, undefined, 320]}
         frustumCulled={false}
         depthWrite={false}
+        renderOrder={15}
       >
-        <planeGeometry args={[1.6, 1.6]} />
+        <planeGeometry args={[2.0, 2.0]} />
         <meshBasicMaterial
           map={smokeTexture}
           transparent
           blending={THREE.NormalBlending}
-          opacity={0.68}
+          opacity={0.82}
           depthWrite={false}
           side={THREE.DoubleSide}
         />
       </instancedMesh>
-
-
     </group>
   )
 }

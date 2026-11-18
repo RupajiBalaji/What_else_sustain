@@ -12,9 +12,9 @@ export const QUALITY_TIERS = {
     shadowMapSize: 0,
     maxPixelRatio: 1.0,
     // Particle caps
-    fireParticles: 80,
-    smokeParticles: 60,
-    emberParticles: 20,
+    fireParticles: 40,
+    smokeParticles: 80,
+    emberParticles: 18,
     // Instancing density
     cropRows: 8,
     cropCols: 8,
@@ -35,9 +35,9 @@ export const QUALITY_TIERS = {
     shadowMapSize: 512,
     maxPixelRatio: 1.25,
     // Particle caps
-    fireParticles: 180,
-    smokeParticles: 140,
-    emberParticles: 50,
+    fireParticles: 60,
+    smokeParticles: 150,
+    emberParticles: 35,
     // Instancing density
     cropRows: 14,
     cropCols: 14,
@@ -58,9 +58,9 @@ export const QUALITY_TIERS = {
     shadowMapSize: 1024,
     maxPixelRatio: 1.75,
     // Particle caps
-    fireParticles: 320,
+    fireParticles: 90,
     smokeParticles: 240,
-    emberParticles: 90,
+    emberParticles: 60,
     // Instancing density
     cropRows: 20,
     cropCols: 20,

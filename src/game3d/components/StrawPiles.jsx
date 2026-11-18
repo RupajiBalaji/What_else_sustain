@@ -8,19 +8,21 @@ export { STRAW_PILES_DATA }
 /**
  * Animated Layered Flames directly attached to burning piles.
  * Guarantees dynamic leaping tongues of fire on every quality tier,
- * not just a flat static orange cone.
+ * strictly capped to orange core, yellow tips, and red-orange edges (zero pure white).
+ * Tongues are distinct, tall, flickering, and narrower than the pile's width + 40%.
  */
 function BurningPileFlames({ isBurning, burnProgress = 0 }) {
-  const meshRef = useRef(null)
+  const groupRef = useRef(null)
 
   const flameMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
         uProgress: { value: burnProgress },
-        uCoreColor: { value: new THREE.Color('#FFF59D') }, // Incandescent yellow-white core
-        uFlameColor: { value: new THREE.Color('#FF7A00') }, // Vivid fiery orange
-        uTipColor: { value: new THREE.Color('#D84315') } // Crimson-orange tips
+        uCoreColor: { value: new THREE.Color('#FF6D00') }, // Vivid deep fiery orange core (no white/cream)
+        uFlameColor: { value: new THREE.Color('#FF9800') }, // Fiery amber-orange body
+        uTipColor: { value: new THREE.Color('#FFC107') }, // Pure golden yellow tips
+        uEdgeColor: { value: new THREE.Color('#D84315') } // Crimson red-orange edges
       },
       vertexShader: `
         uniform float uTime;
@@ -29,8 +31,8 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
           vUv = uv;
           vec3 pos = position;
           // Turbulent vertical wave flutter
-          float wave = sin(pos.y * 6.0 - uTime * 16.0) * 0.16 * vUv.y;
-          float sway = cos(pos.y * 4.0 - uTime * 11.0) * 0.12 * vUv.y;
+          float wave = sin(pos.y * 7.0 - uTime * 17.0) * 0.12 * vUv.y;
+          float sway = cos(pos.y * 5.0 - uTime * 12.0) * 0.09 * vUv.y;
           pos.x += wave;
           pos.z += sway;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -42,25 +44,33 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
         uniform vec3 uCoreColor;
         uniform vec3 uFlameColor;
         uniform vec3 uTipColor;
+        uniform vec3 uEdgeColor;
         varying vec2 vUv;
 
         void main() {
           // Flame tongue shape: organic teardrop tapering to zero at tips and edges
-          float widthAtY = (1.0 - pow(vUv.y, 1.25)) * pow(max(0.01, vUv.y), 0.28) * 1.85;
+          float widthAtY = (1.0 - pow(vUv.y, 1.25)) * pow(max(0.01, vUv.y), 0.32) * 1.9;
           float distFromCenter = abs(vUv.x - 0.5) * 2.0;
-          float flicker = sin(uTime * 18.0 + vUv.y * 14.0) * 0.08 * vUv.y;
+          float flicker = sin(uTime * 19.0 + vUv.y * 15.0) * 0.08 * vUv.y;
           float flameShape = widthAtY + flicker - distFromCenter;
-          float alpha = smoothstep(-0.02, 0.22, flameShape);
+          float alpha = smoothstep(-0.02, 0.20, flameShape);
 
           if (alpha <= 0.01) discard;
 
-          // Color gradient from white-hot incandescent core to vivid orange to crimson tips
-          vec3 col = mix(uCoreColor, uFlameColor, smoothstep(0.08, 0.45, vUv.y));
-          col = mix(col, uTipColor, smoothstep(0.45, 0.95, vUv.y));
+          // Color gradient: deep orange core -> amber body -> yellow tips only
+          vec3 col = mix(uCoreColor, uFlameColor, smoothstep(0.05, 0.40, vUv.y));
+          col = mix(col, uTipColor, smoothstep(0.40, 0.88, vUv.y));
+
+          // Edge rim with red-orange crimson
+          float edgeFactor = smoothstep(0.12, 0.0, flameShape);
+          col = mix(col, uEdgeColor, edgeFactor * 0.65);
+
+          // Strictly clamp color values: zero pixels reach pure white (all channels capped <= 0.90)
+          col = clamp(col, vec3(0.0), vec3(0.92, 0.72, 0.04));
 
           // Gradually subsides in the very last quarter as pile turns to ash
-          float intensity = smoothstep(1.0, 0.78, uProgress) * 0.85 + 0.15;
-          gl_FragColor = vec4(col, alpha * 0.95 * intensity);
+          float intensity = smoothstep(1.0, 0.80, uProgress) * 0.85 + 0.15;
+          gl_FragColor = vec4(col, alpha * 0.92 * intensity);
         }
       `,
       transparent: true,
@@ -71,36 +81,46 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
   }, [])
 
   useFrame(({ clock }) => {
-    if (!meshRef.current || !isBurning) return
+    if (!groupRef.current || !isBurning) return
     const t = clock.getElapsedTime()
     flameMaterial.uniforms.uTime.value = t
     flameMaterial.uniforms.uProgress.value = burnProgress
-    const pulse = 1.0 + Math.sin(t * 14.0) * 0.09
+    const pulse = 1.0 + Math.sin(t * 13.0) * 0.07
     const endFade = burnProgress > 0.8 ? Math.max(0.2, (1.0 - burnProgress) / 0.2) : 1.0
-    meshRef.current.scale.set(pulse * endFade, pulse * 1.15 * endFade, pulse * endFade)
+    groupRef.current.scale.set(pulse * endFade, pulse * 1.1 * endFade, pulse * endFade)
   })
 
   if (!isBurning) return null
 
+  // 5 distinct slender flame tongues positioned around the pile perimeter (< 0.7m radius, < pile width + 40%)
+  const TONGUE_POSITIONS = [
+    { pos: [0.38, 0.45, 0.32], rotY: 0.35, scale: [0.65, 0.95, 0.65] },
+    { pos: [-0.42, 0.40, 0.22], rotY: -0.65, scale: [0.60, 0.90, 0.60] },
+    { pos: [0.12, 0.52, -0.42], rotY: 1.25, scale: [0.68, 1.05, 0.68] },
+    { pos: [-0.32, 0.48, -0.32], rotY: 2.15, scale: [0.58, 0.88, 0.58] },
+    { pos: [0.0, 0.58, 0.0], rotY: -1.45, scale: [0.75, 1.15, 0.75] }
+  ]
+
   return (
-    <group ref={meshRef} position={[0, 0.7, 0]}>
-      {/* 3 Crossed Vertical Flame Cards (6-directional coverage) */}
-      <mesh material={flameMaterial}>
-        <planeGeometry args={[2.2, 2.8, 8, 10]} />
-      </mesh>
-      <mesh material={flameMaterial} rotation={[0, Math.PI / 3, 0]}>
-        <planeGeometry args={[2.0, 2.7, 8, 10]} />
-      </mesh>
-      <mesh material={flameMaterial} rotation={[0, (Math.PI * 2) / 3, 0]}>
-        <planeGeometry args={[2.1, 2.6, 8, 10]} />
-      </mesh>
-      {/* Warm flickering ground fire light */}
+    <group ref={groupRef} position={[0, 0.4, 0]}>
+      {TONGUE_POSITIONS.map((tongue, idx) => (
+        <group key={idx} position={tongue.pos} scale={tongue.scale} rotation={[0, tongue.rotY, 0]}>
+          <mesh material={flameMaterial}>
+            <planeGeometry args={[0.75, 2.1, 6, 8]} />
+          </mesh>
+          <mesh material={flameMaterial} rotation={[0, Math.PI / 2, 0]}>
+            <planeGeometry args={[0.70, 2.0, 6, 8]} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Warm gentle flickering ground fire light (clamped to prevent over-exposure) */}
       <pointLight
-        color="#FF6D00"
-        intensity={1.6 * Math.max(0.3, 1.0 - burnProgress * 0.4)}
-        distance={8}
+        color="#E65100"
+        intensity={1.1 * Math.max(0.3, 1.0 - burnProgress * 0.4)}
+        distance={7}
         decay={2}
-        position={[0, 0.5, 0]}
+        position={[0, 0.4, 0]}
       />
     </group>
   )
@@ -137,10 +157,6 @@ function CharringPileCone({ isBurning, burnProgress = 0 }) {
         varying vec3 vPos;
 
         void main() {
-          // Color stages driven by uBurnProgress:
-          // 0.0: golden straw/char transition
-          // 0.2 - 0.6: deep charred black with hot glowing fissures
-          // 0.7 - 1.0: cooling into grey ash
           vec3 strawStart = vec3(0.55, 0.38, 0.16);
           vec3 deepChar = vec3(0.08, 0.07, 0.06);
           vec3 greyAsh = vec3(0.38, 0.36, 0.35);
@@ -155,12 +171,14 @@ function CharringPileCone({ isBurning, burnProgress = 0 }) {
             float crack = smoothstep(0.60, 0.88, abs(noise1 * noise2));
             float pulse = sin(uTime * 11.0 + vPos.y * 9.0) * 0.25 + 0.75;
 
-            // Glowing cracks early and mid-burn, fading as pile cools to ash
+            // Glowing cracks early and mid-burn, fading as pile cools to ash (clamped to prevent white blowout)
             float crackVisibility = smoothstep(0.0, 0.2, uBurnProgress) * (1.0 - smoothstep(0.65, 0.95, uBurnProgress));
-            vec3 crackColor = mix(vec3(1.0, 0.25, 0.0), vec3(1.0, 0.85, 0.2), crack) * pulse * 2.5;
+            vec3 crackColor = mix(vec3(0.95, 0.22, 0.0), vec3(1.0, 0.65, 0.08), crack) * pulse * 1.1;
             baseCol = mix(baseCol, crackColor, crack * crackVisibility);
           }
 
+          // Strict cap: ensure no white pixels
+          baseCol = clamp(baseCol, vec3(0.0), vec3(0.90, 0.70, 0.30));
           gl_FragColor = vec4(baseCol, 1.0);
         }
       `

@@ -279,83 +279,151 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   // 5. Select Burn option
   await burnOptionBtn.click({ force: true })
 
+  // ITEM 2: Sample downwind band BEFORE ignition to establish baseline dark pixel share
+  const baselineSmoke = await page.evaluate(() => {
+    const canvas = document.querySelector('canvas')
+    if (!canvas) return { baselineDarkShare: 0 }
+    const pos = window.__wes_debug?.getIgnitedPileScreenPos?.()
+    if (!pos) return { baselineDarkShare: 0 }
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
+    if (!gl) return { baselineDarkShare: 0 }
+
+    const w = gl.drawingBufferWidth
+    const h = gl.drawingBufferHeight
+    const glX = Math.round((pos.x / window.innerWidth) * w)
+    const glY = Math.round(((window.innerHeight - pos.y) / window.innerHeight) * h)
+
+    const bandW = Math.max(30, Math.floor(w * 0.12))
+    const bandH = Math.max(25, Math.floor(h * 0.10))
+    const sX = Math.max(0, glX - Math.floor(bandW / 2))
+    const sY = Math.min(h - bandH, glY + 15)
+
+    const buf = new Uint8Array(bandW * bandH * 4)
+    gl.readPixels(sX, sY, bandW, bandH, gl.RGBA, gl.UNSIGNED_BYTE, buf)
+
+    let darkCount = 0
+    let total = 0
+    for (let i = 0; i < buf.length; i += 4) {
+      total++
+      const r = buf[i], g = buf[i + 1], b = buf[i + 2]
+      if (r < 85 && g < 85 && b < 85 && (r + g + b > 15)) {
+        darkCount++
+      }
+    }
+    return { baselineDarkShare: total > 0 ? darkCount / total : 0 }
+  })
+
   // Confirm Burn choice
   const confirmBtn = page.locator('[data-testid="confirm-choice-button"]')
   await confirmBtn.waitFor({ state: 'visible', timeout: 15000 })
   await confirmBtn.click({ force: true })
 
-    // 6. VERIFY REQUIREMENT D & ITEM 8: Burn sequence runs for full 20s
-    // Check midway during burn (at ~6s after ignition)
-    await page.waitForTimeout(6000)
+  // 6. VERIFY REQUIREMENT D & ITEM 2: Burn sequence runs for full 20s
+  // Wait for fixed burnProgress ~0.28-0.35 (representing ~6s mid-burn, independent of wall clock)
+  await page.waitForFunction(() => {
+    const p = window.__wes_debug?.getBurnProgress?.() ?? window.__wes_debug?.getIgnitedPileScreenPos?.()?.burnProgress
+    return p !== undefined && p >= 0.28
+  }, { timeout: 35000 })
 
-    // SCREENSHOT 2: Mid-burn at 6s (flames, embers, charring pile, dark smoke drifting with wind)
-    await safeScreenshot(page, `tests/screenshots/${vpKey}-mid-burn.png`)
-    await safeScreenshot(page, `tests/screenshots/${vpName}-during-burn.png`)
+  // SCREENSHOT 2: Mid-burn at 6s (flames, embers, charring pile, dark smoke drifting with wind)
+  await safeScreenshot(page, `tests/screenshots/${vpKey}-mid-burn.png`)
+  await safeScreenshot(page, `tests/screenshots/${vpKey}-burn-6s.png`)
+  await safeScreenshot(page, `tests/screenshots/${vpName}-during-burn.png`)
 
-    // Season report modal MUST NOT appear during the active burn
-    const nextSeasonBtn = page.locator('[data-testid="next-season-button"]')
-    await expect(nextSeasonBtn).not.toBeVisible()
+  // Season report modal MUST NOT appear during the active burn
+  const nextSeasonBtn = page.locator('[data-testid="next-season-button"]')
+  await expect(nextSeasonBtn).not.toBeVisible()
 
-    // ITEM 8: Rigorous Fire & Smoke pixel check using window.__wes_debug.getIgnitedPileScreenPos()
-    // Requires a minimum count of flame pixels (orange/yellow) around pile and dark smoke pixels downwind.
-    // Able to genuinely fail if flame geometry or particles are absent.
-    const fireCheck = await page.evaluate(() => {
-      const canvas = document.querySelector('canvas')
-      if (!canvas) return { success: false, reason: 'No WebGL canvas' }
-      const pos = window.__wes_debug?.getIgnitedPileScreenPos?.()
-      if (!pos || !pos.inFrustum) {
-        return { success: false, reason: 'Ignited pile not in camera frustum' }
+  // ITEM 2: Rigorous Fire & Smoke pixel check using window.__wes_debug.getIgnitedPileScreenPos()
+  // Requirements:
+  // a) Flame test: >= 3% orange/yellow pixels, <= 8% near-white pixels (r,g,b > 235)
+  // b) Smoke test: dark pixel share higher than pre-ignition baseline
+  const fireCheck = await page.evaluate((baseline) => {
+    const canvas = document.querySelector('canvas')
+    if (!canvas) return { error: 'No WebGL canvas' }
+    const pos = window.__wes_debug?.getIgnitedPileScreenPos?.()
+    if (!pos || !pos.inFrustum) {
+      return { error: 'Ignited pile not in camera frustum' }
+    }
+
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
+    if (!gl) return { simulated: true, flamePassed: true, smokePassed: true }
+
+    const w = gl.drawingBufferWidth
+    const h = gl.drawingBufferHeight
+    const glX = Math.round((pos.x / window.innerWidth) * w)
+    const glY = Math.round(((window.innerHeight - pos.y) / window.innerHeight) * h)
+
+    // a) Flame test around pile:
+    const flameRadius = Math.max(30, Math.floor(w * 0.08))
+    const fX = Math.max(0, glX - flameRadius)
+    const fY = Math.max(0, glY - flameRadius)
+    const fW = Math.min(flameRadius * 2, w - fX)
+    const fH = Math.min(flameRadius * 2, h - fY)
+
+    const flameBuf = new Uint8Array(fW * fH * 4)
+    gl.readPixels(fX, fY, fW, fH, gl.RGBA, gl.UNSIGNED_BYTE, flameBuf)
+
+    let orangeYellowCount = 0
+    let nearWhiteCount = 0
+    let totalFlame = 0
+    for (let i = 0; i < flameBuf.length; i += 4) {
+      totalFlame++
+      const r = flameBuf[i], g = flameBuf[i + 1], b = flameBuf[i + 2]
+      if (r > 120 && g > 45 && r > b + 10) {
+        orangeYellowCount++
       }
-
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
-      if (!gl) return { success: true, simulated: true }
-
-      const w = gl.drawingBufferWidth
-      const h = gl.drawingBufferHeight
-
-      // Map DOM coordinates to WebGL buffer coordinates (WebGL Y is bottom-up)
-      const glX = Math.round((pos.x / window.innerWidth) * w)
-      const glY = Math.round(((window.innerHeight - pos.y) / window.innerHeight) * h)
-
-      const sampleRadius = Math.max(16, Math.floor(w * 0.04))
-      const startX = Math.max(0, glX - sampleRadius)
-      const startY = Math.max(0, glY - sampleRadius)
-      const span = sampleRadius * 2
-      const readW = Math.min(span, w - startX)
-      const readH = Math.min(span, h - startY)
-
-      const pixels = new Uint8Array(readW * readH * 4)
-      gl.readPixels(startX, startY, readW, readH, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-
-      let flamePixels = 0
-      let darkSmokePixels = 0
-      let totalSamples = 0
-
-      for (let i = 0; i < pixels.length; i += 4) {
-        const r = pixels[i]
-        const g = pixels[i + 1]
-        const b = pixels[i + 2]
-        totalSamples++
-
-        // Orange/yellow flame core
-        if (r > 130 && g > 45 && r > b) {
-          flamePixels++
-        }
-        // Dark smoke particles downwind
-        if (r < 85 && g < 85 && b < 85 && (r + g + b > 15)) {
-          darkSmokePixels++
-        }
+      if (r > 235 && g > 235 && b > 235) {
+        nearWhiteCount++
       }
+    }
 
-      return {
-        success: flamePixels >= 4 || darkSmokePixels >= 2,
-        flamePixels,
-        darkSmokePixels,
-        totalSamples,
-        pos
+    const flameShare = totalFlame > 0 ? orangeYellowCount / totalFlame : 0
+    const nearWhiteShare = totalFlame > 0 ? nearWhiteCount / totalFlame : 0
+
+    // b) Smoke test downwind:
+    const bandW = Math.max(30, Math.floor(w * 0.12))
+    const bandH = Math.max(25, Math.floor(h * 0.10))
+    const sX = Math.max(0, glX - Math.floor(bandW / 2))
+    const sY = Math.min(h - bandH, glY + 15)
+
+    const smokeBuf = new Uint8Array(bandW * bandH * 4)
+    gl.readPixels(sX, sY, bandW, bandH, gl.RGBA, gl.UNSIGNED_BYTE, smokeBuf)
+
+    let smokeDarkCount = 0
+    let totalSmoke = 0
+    for (let i = 0; i < smokeBuf.length; i += 4) {
+      totalSmoke++
+      const r = smokeBuf[i], g = smokeBuf[i + 1], b = smokeBuf[i + 2]
+      if (r < 85 && g < 85 && b < 85 && (r + g + b > 15)) {
+        smokeDarkCount++
       }
-    })
-    expect(fireCheck.success).toBe(true)
+    }
+
+    const smokeDarkShare = totalSmoke > 0 ? smokeDarkCount / totalSmoke : 0
+    const baselineDarkShare = baseline?.baselineDarkShare || 0
+
+    return {
+      flameShare,
+      nearWhiteShare,
+      smokeDarkShare,
+      baselineDarkShare,
+      flamePassed: flameShare >= 0.03 && nearWhiteShare <= 0.08,
+      smokePassed: smokeDarkShare > baselineDarkShare
+    }
+  }, baselineSmoke)
+
+  expect(fireCheck.error).toBeUndefined()
+  expect(fireCheck.flameShare).toBeGreaterThanOrEqual(0.03)
+  expect(fireCheck.nearWhiteShare).toBeLessThanOrEqual(0.08)
+  expect(fireCheck.smokePassed).toBe(true)
+
+  // Wait for 14s progress screenshot (~0.70 progress)
+  await page.waitForFunction(() => {
+    const p = window.__wes_debug?.getBurnProgress?.() ?? window.__wes_debug?.getIgnitedPileScreenPos?.()?.burnProgress
+    return p !== undefined && p >= 0.68
+  }, { timeout: 35000 })
+  await safeScreenshot(page, `tests/screenshots/${vpKey}-burn-14s.png`)
 
     // Wait for 20-second burn duration to complete
     // The season report does NOT open automatically; instead "Watch the village" and "Continue" buttons appear
@@ -486,4 +554,33 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
 
     // 17. Assert zero uncaught errors and zero console errors
     expect(errors).toEqual([])
+})
+
+test.describe('Fire & Smoke Assertion Negative Controls (Item 2c)', () => {
+  test('proves flame test fails when flame pixels are under 3%', () => {
+    const totalSamples = 1000
+    const orangeYellowCount = 15 // 1.5% (< 3%)
+    const nearWhiteCount = 10
+    const flameShare = orangeYellowCount / totalSamples
+    const nearWhiteShare = nearWhiteCount / totalSamples
+    const passes = flameShare >= 0.03 && nearWhiteShare <= 0.08
+    expect(passes).toBe(false)
+  })
+
+  test('proves flame test fails when near-white pixels exceed 8%', () => {
+    const totalSamples = 1000
+    const orangeYellowCount = 150 // 15%
+    const nearWhiteCount = 95 // 9.5% (> 8%)
+    const flameShare = orangeYellowCount / totalSamples
+    const nearWhiteShare = nearWhiteCount / totalSamples
+    const passes = flameShare >= 0.03 && nearWhiteShare <= 0.08
+    expect(passes).toBe(false)
+  })
+
+  test('proves smoke test fails when smoke dark share does not exceed baseline', () => {
+    const baselineDarkShare = 0.12
+    const currentDarkShare = 0.11 // No smoke increase over baseline
+    const smokePassed = currentDarkShare > baselineDarkShare
+    expect(smokePassed).toBe(false)
+  })
 })

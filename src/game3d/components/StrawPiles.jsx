@@ -266,7 +266,7 @@ export default function StrawPiles() {
       if (!window.__wes_debug) window.__wes_debug = {}
       const leadPile = STRAW_PILES_DATA.find((p) => ignitedPiles?.includes(p.id)) || STRAW_PILES_DATA[0]
       window.__wes_debug.getIgnitedPileScreenPos = () => {
-        const v = new THREE.Vector3(leadPile.x, 0.9, leadPile.z)
+        const v = new THREE.Vector3(leadPile.x, 1.8, leadPile.z)
         v.project(camera)
         const x = Math.round(((v.x + 1) * window.innerWidth) / 2)
         const y = Math.round(((-v.y + 1) * window.innerHeight) / 2)
@@ -278,9 +278,10 @@ export default function StrawPiles() {
           pileId: leadPile.id,
           burnState,
           burnProgress,
-          worldPos: { x: leadPile.x, y: 0.9, z: leadPile.z }
+          worldPos: { x: leadPile.x, y: 1.8, z: leadPile.z }
         }
       }
+      window.__wes_debug.getBurnProgress = () => burnProgress
     }
   })
 

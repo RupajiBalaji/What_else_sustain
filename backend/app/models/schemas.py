@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 # --- Health ---
 class HealthResponse(BaseModel):
     status: str = "ok"
+    db_type: str = "sqlite"
+    db_status: str = "connected"
 
 
 # --- Advisor ---

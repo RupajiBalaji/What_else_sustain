@@ -3,6 +3,13 @@
 
 version: "1"
 
+databases:
+  - name: what-else-sustain-db
+    databaseName: what_else_sustain
+    user: sustain_user
+    region: oregon
+    plan: free
+
 services:
   - type: web
     name: what-else-sustain
@@ -23,7 +30,9 @@ services:
       - key: ALLOWED_ORIGINS
         value: "*"
       - key: DATABASE_URL
-        value: "sqlite:///./local.db"
+        fromDatabase:
+          name: what-else-sustain-db
+          property: connectionString
       # Secure secret keys configured in the Render Dashboard modal on launch
       - key: GEMINI_API_KEY
         sync: false

@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     PORT: int = 8000
     DATABASE_URL: str = "sqlite:///./local.db"
 
+    def get_database_url(self) -> str:
+        """Returns normalized database URL with postgresql:// driver scheme and sqlite fallback."""
+        url = (self.DATABASE_URL or "").strip()
+        if not url:
+            return "sqlite:///./local.db"
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        return url
+
     model_config = SettingsConfigDict(
         env_file=(
             str(_BACKEND_DIR / ".env"),

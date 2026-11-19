@@ -124,8 +124,12 @@ async function inspectOverlayCollisions(page) {
       }
     }
 
-    // 3. Count visible active world cards (including cough chips)
-    const activeWorldCards = items.filter((it) => it.isWorldCard && !it.isCollapsed)
+    // 3. Count distinct top-level visible active world cards (including cough chips)
+    const activeWorldCards = items.filter((it) => {
+      if (!it.isWorldCard || it.isCollapsed) return false
+      // Exclude nested child nodes of another item (e.g. cough-chip inside villager_cough)
+      return !items.some((other) => other !== it && other.el.contains(it.el))
+    })
 
     return {
       count: items.length,
@@ -225,6 +229,11 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
   })
 
   test('Check zero overlay collisions across all 4 phases (decision, mid-burn, watch-village, season-report)', async ({ page }) => {
+    page.on('pageerror', (err) => console.log('PAGE_ERROR:', err.message, err.stack))
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') console.log('PAGE_CONSOLE_ERR:', msg.text())
+    })
+
     // Mock APIs
     await page.route('**/api/**', async (route) => {
       const url = route.request().url()
@@ -239,6 +248,10 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
       }
     })
 
+    await page.addInitScript(() => {
+      try { localStorage.clear() } catch {}
+      try { sessionStorage.clear() } catch {}
+    })
     await page.goto('/?noFpsFallback=1')
 
     // 1. Quick Play to Decision
@@ -248,8 +261,11 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
 
     // If pre-check quiz modal is open, skip it
     const skipQuizBtn = page.locator('button:has-text("Skip for now"), [data-testid="skip-quiz-button"]').first()
-    if (await skipQuizBtn.isVisible({ timeout: 4000 }).catch(() => false)) {
+    try {
+      await skipQuizBtn.waitFor({ state: 'visible', timeout: 5000 })
       await skipQuizBtn.click()
+    } catch {
+      // Quiz was not shown or already skipped
     }
 
     const burnOptionBtn = page.locator('[data-testid="choice-option-burn"], button:has-text("Burn")').first()

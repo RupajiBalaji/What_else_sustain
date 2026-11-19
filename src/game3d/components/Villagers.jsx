@@ -239,13 +239,18 @@ export default function Villagers() {
   return (
     <group name="VillagersGroup">
       {VILLAGERS_DATA.map((v, idx) => {
-        const isOneOfTwo = idx === coughRotationIndex || idx === (coughRotationIndex + 1) % VILLAGERS_DATA.length
+        // Keep at most 1 cough chip active to guarantee max 2 world cards alongside village air station
+        const showChip = isCoughing && (
+          isWatchingVillage
+            ? idx === ((coughRotationIndex % (VILLAGERS_DATA.length - 1)) + 1) // picks v2..v6, avoiding v1 right next to air station
+            : idx === coughRotationIndex
+        )
         return (
           <SingleVillager
             key={v.id}
             data={v}
             isCoughing={isCoughing}
-            showCoughChip={isCoughing && isOneOfTwo}
+            showCoughChip={showChip}
             isWaving={isWaving}
             qualityConfig={qualityConfig}
           />

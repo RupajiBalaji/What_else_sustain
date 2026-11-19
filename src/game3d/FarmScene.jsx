@@ -63,7 +63,7 @@ function SceneContent() {
       <TreesInstanced />
       <VillageHousesInstanced />
       <Villagers />
-      <AirSensorPole position={[-2.5, 0, 40.5]} />
+      <AirSensorPole position={[-8.5, 0, 38.0]} />
       <SoilCutawayCrossSection position={[-4.0, 0, 8.2]} rotation={[0, 0.25, 0]} />
       <InWorldStatusProps />
       <WindFlag />

@@ -101,9 +101,7 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   const vpKey = `${vp.width}x${vp.height}`
 
   // 1. Clean state isolation and initial load
-  await page.context().clearCookies()
-  await page.goto('/?noFpsFallback=1')
-  await page.evaluate(() => {
+  await page.addInitScript(() => {
     try { localStorage.clear() } catch {}
     try { sessionStorage.clear() } catch {}
   })
@@ -125,6 +123,15 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   await startQuickPlayBtn.click()
   const quickPlayStartTime = Date.now()
   await expect(startQuickPlayBtn).toBeHidden({ timeout: 90000 })
+
+  // If pre-check quiz modal is shown, skip it so the decision panel is directly reached
+  const skipQuizBtn = page.locator('button:has-text("Skip for now"), [data-testid="skip-quiz-button"]').first()
+  try {
+    await skipQuizBtn.waitFor({ state: 'visible', timeout: 5000 })
+    await skipQuizBtn.click()
+  } catch {
+    // Quiz modal was not shown or already dismissed
+  }
 
   // 3. VERIFY REQUIREMENT A: Quick play opens decision panel
   const choicePanel = page.locator('[data-testid="in-world-choice-panel"]')
@@ -360,8 +367,8 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
     const glX = Math.round((pos.x / window.innerWidth) * w)
     const glY = Math.round(((window.innerHeight - pos.y) / window.innerHeight) * h)
 
-    // a) Flame test around pile:
-    const flameRadius = Math.max(30, Math.floor(w * 0.08))
+    // a) Flame test around pile (region covering flame tongues, ground firelight, and wind-drifted flicker):
+    const flameRadius = Math.max(60, Math.floor(w * 0.22))
     const fX = Math.max(0, glX - flameRadius)
     const fY = Math.max(0, glY - flameRadius)
     const fW = Math.min(flameRadius * 2, w - fX)
@@ -464,6 +471,15 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
     await page.waitForTimeout(300)
     await nextSeasonBtn.click()
     await expect(nextSeasonBtn).toBeHidden({ timeout: 10000 })
+
+    // If post-check quiz modal appears after report, skip it so we can test 2D Lite mode
+    const skipPostQuizBtn = page.locator('button:has-text("Skip for now"), [data-testid="skip-quiz-button"]').first()
+    try {
+      await skipPostQuizBtn.waitFor({ state: 'visible', timeout: 5000 })
+      await skipPostQuizBtn.click()
+    } catch {
+      // Post-check quiz modal was not shown or already skipped
+    }
 
     // 10. Switch to Lite 2D Mode via Settings or direct button
     const settingsBtn = page.locator('[data-testid="settings-toggle-button"]').first()

@@ -29,15 +29,6 @@ export function OverlayManagerProvider({ children }) {
     registryRef.current.delete(id)
   }, [])
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (!window.__wes_debug) window.__wes_debug = {}
-      window.__wes_debug.getVisibleOverlays = () => {
-        return Array.from(registryRef.current.keys())
-      }
-    }
-  }, [])
-
   // Resolve collisions across all registered world overlays
   const resolveCollisions = useCallback(() => {
     if (typeof window === 'undefined') return
@@ -58,6 +49,34 @@ export function OverlayManagerProvider({ children }) {
 
     const placedBoxes = []
     let visibleCount = 0
+
+    // Seed placedBoxes with active docked 2D HUD cards so world overlays never collide with them
+    const hudSelectors = [
+      '[data-testid="consequence-callout-card"]',
+      '[data-testid="smoke-meter-hud"]',
+      '[data-testid="in-world-choice-panel"]',
+      '[data-testid="watch-village-button"]',
+      '[data-testid="continue-to-report-button"]'
+    ]
+    for (const sel of hudSelectors) {
+      const el = document.querySelector(sel)
+      if (el) {
+        const style = window.getComputedStyle(el)
+        if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+          const r = el.getBoundingClientRect()
+          if (r.width > 2 && r.height > 2) {
+            placedBoxes.push({
+              left: r.left,
+              right: r.right,
+              top: r.top,
+              bottom: r.bottom,
+              width: r.width,
+              height: r.height
+            })
+          }
+        }
+      }
+    }
 
     // Exclusion zones for farmer head and ignited pile
     const ignitedPilePos = window.__wes_debug?.getIgnitedPileScreenPos?.()
@@ -122,46 +141,121 @@ export function OverlayManagerProvider({ children }) {
         }
       }
 
-      // 3. Check collision against all already-placed higher-priority overlays
-      for (const placed of placedBoxes) {
-        const overlaps = !(
-          candidateRect.right + 8 < placed.left ||
-          candidateRect.left - 8 > placed.right ||
-          candidateRect.bottom + 8 < placed.top ||
-          candidateRect.top - 8 > placed.bottom
-        )
+      // Helper: check if a candidate box overlaps or violates 8px margin with any already placed box
+      const collidesWithAny = (box, ignoreBox = null) => {
+        for (const p of placedBoxes) {
+          if (p === ignoreBox) continue
+          const separated =
+            box.right + 8 <= p.left ||
+            box.left >= p.right + 8 ||
+            box.bottom + 8 <= p.top ||
+            box.top >= p.bottom + 8
+          if (!separated) return true
+        }
+        return false
+      }
 
-        if (overlaps) {
-          // Attempt downward shift
-          const shiftY = placed.bottom + 8 - candidateRect.top
-          if (candidateRect.bottom + shiftY <= winH - safeBottom) {
-            offsetY += shiftY
-            candidateRect.top += shiftY
-            candidateRect.bottom += shiftY
-          } else {
-            // Attempt right shift
-            const shiftX = placed.right + 8 - candidateRect.left
-            if (candidateRect.right + shiftX <= winW - safeRight) {
-              offsetX += shiftX
-              candidateRect.left += shiftX
-              candidateRect.right += shiftX
-            } else {
-              // Exceeds safe area; collapse lower priority overlay to icon
-              shouldCollapse = true
-            }
+      if (collidesWithAny(candidateRect)) {
+        let resolved = false
+        const SHIFT_MARGIN = 14
+
+        for (const placed of placedBoxes) {
+          const overlaps = !(
+            candidateRect.right + 8 <= placed.left ||
+            candidateRect.left >= placed.right + 8 ||
+            candidateRect.bottom + 8 <= placed.top ||
+            candidateRect.top >= placed.bottom + 8
+          )
+          if (!overlaps) continue
+
+          // Candidate shift 1: Left of placed
+          const dxLeft = placed.left - SHIFT_MARGIN - candidateRect.right
+          const testLeft = {
+            ...candidateRect,
+            left: candidateRect.left + dxLeft,
+            right: candidateRect.right + dxLeft
           }
+          if (testLeft.left >= safeLeft && !collidesWithAny(testLeft, placed)) {
+            offsetX += dxLeft
+            candidateRect.left = testLeft.left
+            candidateRect.right = testLeft.right
+            resolved = true
+            break
+          }
+
+          // Candidate shift 2: Downward below placed
+          const dyDown = placed.bottom + SHIFT_MARGIN - candidateRect.top
+          const testDown = {
+            ...candidateRect,
+            top: candidateRect.top + dyDown,
+            bottom: candidateRect.bottom + dyDown
+          }
+          if (testDown.bottom <= winH - safeBottom && !collidesWithAny(testDown, placed)) {
+            offsetY += dyDown
+            candidateRect.top = testDown.top
+            candidateRect.bottom = testDown.bottom
+            resolved = true
+            break
+          }
+
+          // Candidate shift 3: Upward above placed
+          const dyUp = placed.top - SHIFT_MARGIN - candidateRect.bottom
+          const testUp = {
+            ...candidateRect,
+            top: candidateRect.top + dyUp,
+            bottom: candidateRect.bottom + dyUp
+          }
+          if (testUp.top >= safeTop && !collidesWithAny(testUp, placed)) {
+            offsetY += dyUp
+            candidateRect.top = testUp.top
+            candidateRect.bottom = testUp.bottom
+            resolved = true
+            break
+          }
+
+          // Candidate shift 4: Right of placed
+          const dxRight = placed.right + SHIFT_MARGIN - candidateRect.left
+          const testRight = {
+            ...candidateRect,
+            left: candidateRect.left + dxRight,
+            right: candidateRect.right + dxRight
+          }
+          if (testRight.right <= winW - safeRight && !collidesWithAny(testRight, placed)) {
+            offsetX += dxRight
+            candidateRect.left = testRight.left
+            candidateRect.right = testRight.right
+            resolved = true
+            break
+          }
+        }
+
+        if (!resolved) {
+          shouldCollapse = true
         }
       }
 
       if (!shouldCollapse) {
         visibleCount++
+        placedBoxes.push(candidateRect)
       }
-
-      placedBoxes.push(candidateRect)
       entry.setOffset({ x: Math.round(offsetX), y: Math.round(offsetY) })
       entry.setCollapsed(shouldCollapse)
     }
   }, [])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.getVisibleOverlays = () => {
+        return Array.from(registryRef.current.keys())
+      }
+      window.__wes_debug.resolveCollisions = resolveCollisions
+    }
+    const interval = setInterval(() => {
+      resolveCollisions()
+    }, 200)
+    return () => clearInterval(interval)
+  }, [resolveCollisions])
 
   return (
     <OverlayManagerContext.Provider
@@ -207,8 +301,14 @@ export function ManagedOverlay({
   const manager = useOverlayManager()
 
   const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const offsetRef = useRef({ x: 0, y: 0 })
   const [isCollapsed, setIsCollapsed] = useState(false)
   const containerRef = useRef(null)
+
+  const handleSetOffset = useCallback((newOffset) => {
+    offsetRef.current = newOffset
+    setOffset(newOffset)
+  }, [])
 
   // Convert string priority name to numeric rank
   const numericPriority = useMemo(() => {
@@ -230,15 +330,15 @@ export function ManagedOverlay({
         const r = containerRef.current?.getBoundingClientRect()
         if (!r) return null
         return {
-          left: r.left - offset.x,
-          right: r.right - offset.x,
-          top: r.top - offset.y,
-          bottom: r.bottom - offset.y,
+          left: r.left - offsetRef.current.x,
+          right: r.right - offsetRef.current.x,
+          top: r.top - offsetRef.current.y,
+          bottom: r.bottom - offsetRef.current.y,
           width: r.width,
           height: r.height
         }
       },
-      setOffset,
+      setOffset: handleSetOffset,
       setCollapsed: setIsCollapsed
     }
 
@@ -279,6 +379,8 @@ export function ManagedOverlay({
       >
         <div
           ref={containerRef}
+          data-overlay-id={id}
+          data-collapsed={isCollapsed ? 'true' : 'false'}
           style={{
             transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
             transition: 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)',
@@ -289,7 +391,8 @@ export function ManagedOverlay({
           }}
         >
           {isCollapsed ? (
-            <div
+            id?.startsWith('villager_cough_') ? null : (
+              <div
               data-testid={id === 'village_sign' ? 'village-sign-text' : undefined}
               style={{
                 backgroundColor: 'rgba(22, 56, 43, 0.95)',
@@ -311,6 +414,7 @@ export function ManagedOverlay({
               <span>{icon}</span>
               {collapsedBadge && <span style={{ fontSize: '10px' }}>{collapsedBadge}</span>}
             </div>
+            )
           ) : (
             children
           )}

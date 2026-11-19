@@ -9,7 +9,7 @@ import { ManagedOverlay } from '../ui/OverlayManager'
  * Displays real-time simulated village smoke exposure from /api/simulate/smoke.
  * Labeled "Simulated, game model" with strictly NO unverified AQI numbers.
  */
-export default function AirSensorPole({ position = [-2.5, 0, 40.5] }) {
+export default function AirSensorPole({ position = [-8.5, 0, 38.0] }) {
   const { quality, burnState, burnProgress, smokeData, activeAlternative } = useGame3D()
   const isHigh = quality !== 'low'
 

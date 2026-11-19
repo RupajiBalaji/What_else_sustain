@@ -55,8 +55,11 @@ test.describe('Scenario Director E2E Suite (Item 3)', () => {
 
     // If Pre-Check Quiz appears, skip for now to proceed with director assertions
     const skipQuizBtn = page.locator('[data-testid="skip-quiz-button"]')
-    if (await skipQuizBtn.isVisible({ timeout: 4000 }).catch(() => false)) {
+    try {
+      await skipQuizBtn.waitFor({ state: 'visible', timeout: 5000 })
       await skipQuizBtn.click()
+    } catch {
+      // Quiz was not shown or already skipped
     }
 
     // Verify Village Sign on Arch
@@ -136,6 +139,14 @@ test.describe('Scenario Director E2E Suite (Item 3)', () => {
     const quickPlayBtn = page.locator('[data-testid="start-quick-play-button"]').first()
     await quickPlayBtn.waitFor({ state: 'visible', timeout: 30000 })
     await quickPlayBtn.click()
+
+    const skipQuizBtn = page.locator('[data-testid="skip-quiz-button"]')
+    try {
+      await skipQuizBtn.waitFor({ state: 'visible', timeout: 5000 })
+      await skipQuizBtn.click()
+    } catch {
+      // Quiz was not shown or already skipped
+    }
 
     // Verify village sign defaulted to Meerut (UP fallback)
     const villageSign = page.locator('[data-testid="village-sign-text"]').first()

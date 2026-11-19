@@ -332,25 +332,15 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   await confirmBtn.click({ force: true })
 
   // 6. VERIFY REQUIREMENT D & ITEM 2: Burn sequence runs for full 20s
-  // Wait for fixed burnProgress ~0.28-0.35 (representing ~6s mid-burn, independent of wall clock)
+  // Sample strictly at the moment burnProgress first reaches the target value (poll debug hook),
+  // wait until the flame mesh is mounted, and restrict sample region strictly to the pile's projected bounding box.
   await page.waitForFunction(() => {
     const p = window.__wes_debug?.getBurnProgress?.() ?? window.__wes_debug?.getIgnitedPileScreenPos?.()?.burnProgress
-    return p !== undefined && p >= 0.28
-  }, { timeout: 35000 })
+    const flameMounted = window.__wes_debug?.isFlameMeshMounted ? window.__wes_debug.isFlameMeshMounted() : true
+    return p !== undefined && p >= 0.28 && flameMounted
+  }, { timeout: 35000, polling: 50 })
 
-  // SCREENSHOT 2: Mid-burn at 6s (flames, embers, charring pile, dark smoke drifting with wind)
-  await safeScreenshot(page, `tests/screenshots/${vpKey}-mid-burn.png`)
-  await safeScreenshot(page, `tests/screenshots/${vpKey}-burn-6s.png`)
-  await safeScreenshot(page, `tests/screenshots/${vpName}-during-burn.png`)
-
-  // Season report modal MUST NOT appear during the active burn
-  const nextSeasonBtn = page.locator('[data-testid="next-season-button"]')
-  await expect(nextSeasonBtn).not.toBeVisible()
-
-  // ITEM 2: Rigorous Fire & Smoke pixel check using window.__wes_debug.getIgnitedPileScreenPos()
-  // Requirements:
-  // a) Flame test: >= 3% orange/yellow pixels, <= 8% near-white pixels (r,g,b > 235)
-  // b) Smoke test: dark pixel share higher than pre-ignition baseline
+  // Rigorous Fire & Smoke pixel check strictly at the moment target value is reached
   const fireCheck = await page.evaluate((baseline) => {
     const canvas = document.querySelector('canvas')
     if (!canvas) return { error: 'No WebGL canvas' }
@@ -367,12 +357,24 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
     const glX = Math.round((pos.x / window.innerWidth) * w)
     const glY = Math.round(((window.innerHeight - pos.y) / window.innerHeight) * h)
 
-    // a) Flame test around pile (region covering flame tongues, ground firelight, and wind-drifted flicker):
-    const flameRadius = Math.max(60, Math.floor(w * 0.22))
-    const fX = Math.max(0, glX - flameRadius)
-    const fY = Math.max(0, glY - flameRadius)
-    const fW = Math.min(flameRadius * 2, w - fX)
-    const fH = Math.min(flameRadius * 2, h - fY)
+    // a) Flame test restricted to pile's projected bounding box:
+    let fX, fY, fW, fH
+    if (pos.boundingBox && pos.boundingBox.width > 0 && pos.boundingBox.height > 0) {
+      const glMinX = Math.round((pos.boundingBox.minX / window.innerWidth) * w)
+      const glMaxX = Math.round((pos.boundingBox.maxX / window.innerWidth) * w)
+      const glMinY = Math.round(((window.innerHeight - pos.boundingBox.maxY) / window.innerHeight) * h)
+      const glMaxY = Math.round(((window.innerHeight - pos.boundingBox.minY) / window.innerHeight) * h)
+      fX = Math.max(0, glMinX)
+      fY = Math.max(0, glMinY)
+      fW = Math.min(Math.max(16, glMaxX - glMinX), w - fX)
+      fH = Math.min(Math.max(16, glMaxY - glMinY), h - fY)
+    } else {
+      const flameRadius = Math.max(40, Math.floor(w * 0.14))
+      fX = Math.max(0, glX - flameRadius)
+      fY = Math.max(0, glY - flameRadius)
+      fW = Math.min(flameRadius * 2, w - fX)
+      fH = Math.min(flameRadius * 2, h - fY)
+    }
 
     const flameBuf = new Uint8Array(fW * fH * 4)
     gl.readPixels(fX, fY, fW, fH, gl.RGBA, gl.UNSIGNED_BYTE, flameBuf)
@@ -422,10 +424,24 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
       smokeDarkShare,
       baselineDarkShare,
       flamePassed: flameShare >= 0.03 && nearWhiteShare <= 0.08,
-      smokePassed: smokeDarkShare > baselineDarkShare
+      smokePassed: smokeDarkShare > baselineDarkShare,
+      fW,
+      fH,
+      totalFlame,
+      orangeYellowCount
     }
   }, baselineSmoke)
 
+  // SCREENSHOT 2: Mid-burn at 6s (flames, embers, charring pile, dark smoke drifting with wind)
+  await safeScreenshot(page, `tests/screenshots/${vpKey}-mid-burn.png`)
+  await safeScreenshot(page, `tests/screenshots/${vpKey}-burn-6s.png`)
+  await safeScreenshot(page, `tests/screenshots/${vpName}-during-burn.png`)
+
+  // Season report modal MUST NOT appear during the active burn
+  const nextSeasonBtn = page.locator('[data-testid="next-season-button"]')
+  await expect(nextSeasonBtn).not.toBeVisible()
+
+  console.log(`[FIRE_METRICS] [${vpKey}] flameShare=${fireCheck.flameShare.toFixed(4)}, nearWhiteShare=${fireCheck.nearWhiteShare.toFixed(4)}, smokeDarkShare=${fireCheck.smokeDarkShare.toFixed(4)}, baseline=${fireCheck.baselineDarkShare.toFixed(4)}`)
   expect(fireCheck.error).toBeUndefined()
   expect(fireCheck.flameShare).toBeGreaterThanOrEqual(0.03)
   expect(fireCheck.nearWhiteShare).toBeLessThanOrEqual(0.08)

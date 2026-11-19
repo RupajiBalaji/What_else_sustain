@@ -14,6 +14,18 @@ export { STRAW_PILES_DATA }
 function BurningPileFlames({ isBurning, burnProgress = 0 }) {
   const groupRef = useRef(null)
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.isFlameMeshMounted = () => Boolean(groupRef.current && isBurning)
+    }
+    return () => {
+      if (typeof window !== 'undefined' && window.__wes_debug) {
+        window.__wes_debug.isFlameMeshMounted = () => false
+      }
+    }
+  }, [isBurning])
+
   const flameMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
@@ -81,6 +93,9 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
   }, [])
 
   useFrame(({ clock }) => {
+    if (typeof window !== 'undefined' && window.__wes_debug) {
+      window.__wes_debug.isFlameMeshMounted = () => Boolean(groupRef.current && isBurning)
+    }
     if (!groupRef.current || !isBurning) return
     const t = clock.getElapsedTime()
     flameMaterial.uniforms.uTime.value = t
@@ -90,7 +105,12 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
     groupRef.current.scale.set(pulse * endFade, pulse * 1.1 * endFade, pulse * endFade)
   })
 
-  if (!isBurning) return null
+  if (!isBurning) {
+    if (typeof window !== 'undefined' && window.__wes_debug) {
+      window.__wes_debug.isFlameMeshMounted = () => false
+    }
+    return null
+  }
 
   // 5 distinct slender flame tongues positioned around the pile perimeter (< 0.7m radius, < pile width + 40%)
   const TONGUE_POSITIONS = [
@@ -266,12 +286,35 @@ export default function StrawPiles() {
       if (!window.__wes_debug) window.__wes_debug = {}
       const leadPile = STRAW_PILES_DATA.find((p) => ignitedPiles?.includes(p.id)) || STRAW_PILES_DATA[0]
       window.__wes_debug.getIgnitedPileScreenPos = () => {
-        // Sample screen position at flame tongues center (elevated and offset downwind)
-        const v = new THREE.Vector3(leadPile.x + 0.6, 1.8, leadPile.z)
-        v.project(camera)
-        const x = Math.round(((v.x + 1) * window.innerWidth) / 2)
-        const y = Math.round(((-v.y + 1) * window.innerHeight) / 2)
-        const inFrustum = v.z < 1.0 && v.x >= -1.05 && v.x <= 1.05 && v.y >= -1.05 && v.y <= 1.05
+        const centerV = new THREE.Vector3(leadPile.x, 1.3, leadPile.z)
+        centerV.project(camera)
+        const x = Math.round(((centerV.x + 1) * window.innerWidth) / 2)
+        const y = Math.round(((-centerV.y + 1) * window.innerHeight) / 2)
+        const inFrustum = centerV.z < 1.0 && centerV.x >= -1.05 && centerV.x <= 1.05 && centerV.y >= -1.05 && centerV.y <= 1.05
+
+        // Bounding box enclosing the pile cone and flame tongues (radius ~ 1.35m, height ~ 2.6m)
+        const corners = [
+          new THREE.Vector3(leadPile.x - 1.3, 0.0, leadPile.z - 1.3),
+          new THREE.Vector3(leadPile.x + 1.3, 0.0, leadPile.z - 1.3),
+          new THREE.Vector3(leadPile.x - 1.3, 0.0, leadPile.z + 1.3),
+          new THREE.Vector3(leadPile.x + 1.3, 0.0, leadPile.z + 1.3),
+          new THREE.Vector3(leadPile.x - 1.1, 2.6, leadPile.z - 1.1),
+          new THREE.Vector3(leadPile.x + 1.1, 2.6, leadPile.z - 1.1),
+          new THREE.Vector3(leadPile.x - 1.1, 2.6, leadPile.z + 1.1),
+          new THREE.Vector3(leadPile.x + 1.1, 2.6, leadPile.z + 1.1)
+        ]
+        let minX = Infinity, maxX = -Infinity
+        let minY = Infinity, maxY = -Infinity
+        corners.forEach((c) => {
+          c.project(camera)
+          const sx = ((c.x + 1) * window.innerWidth) / 2
+          const sy = ((-c.y + 1) * window.innerHeight) / 2
+          if (sx < minX) minX = sx
+          if (sx > maxX) maxX = sx
+          if (sy < minY) minY = sy
+          if (sy > maxY) maxY = sy
+        })
+
         return {
           x,
           y,
@@ -279,7 +322,15 @@ export default function StrawPiles() {
           pileId: leadPile.id,
           burnState,
           burnProgress,
-          worldPos: { x: leadPile.x, y: 1.8, z: leadPile.z }
+          worldPos: { x: leadPile.x, y: 1.3, z: leadPile.z },
+          boundingBox: {
+            minX: Math.max(0, Math.floor(minX)),
+            maxX: Math.min(window.innerWidth, Math.ceil(maxX)),
+            minY: Math.max(0, Math.floor(minY)),
+            maxY: Math.min(window.innerHeight, Math.ceil(maxY)),
+            width: Math.max(20, Math.ceil(maxX - minX)),
+            height: Math.max(20, Math.ceil(maxY - minY))
+          }
         }
       }
       window.__wes_debug.getBurnProgress = () => burnProgress

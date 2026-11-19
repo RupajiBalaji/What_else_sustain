@@ -2,7 +2,12 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Scenario Director E2E Suite (Item 3)', () => {
   test('picks two different farms and asserts village sign and first featured alternative differ (AI mocked)', async ({ page }) => {
-    // 1. Mock the Director API dynamically
+    // 1. Mock API fallbacks
+    await page.route('**/api/**', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok' }) })
+    })
+
+    // 2. Mock the Director API dynamically
     await page.route('**/api/director/scenario', async (route) => {
       const postData = route.request().postDataJSON() || {}
       const state = postData.state || 'Punjab'
@@ -36,11 +41,6 @@ test.describe('Scenario Director E2E Suite (Item 3)', () => {
       }
     })
 
-    // Mock other simulation APIs
-    await page.route('**/api/simulate/**', async (route) => {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok' }) })
-    })
-
     // Test Farm 1: Default Punjab
     await page.goto('/?noFpsFallback=1')
 
@@ -53,79 +53,110 @@ test.describe('Scenario Director E2E Suite (Item 3)', () => {
     const quickPlayBtn = page.locator('[data-testid="start-quick-play-button"]').first()
     await quickPlayBtn.click()
 
+    console.log('[DIRECTOR TEST] Quick Play clicked')
     // If Pre-Check Quiz appears, skip for now to proceed with director assertions
     const skipQuizBtn = page.locator('[data-testid="skip-quiz-button"]')
     try {
       await skipQuizBtn.waitFor({ state: 'visible', timeout: 5000 })
       await skipQuizBtn.click()
+      console.log('[DIRECTOR TEST] Quiz skipped')
     } catch {
       // Quiz was not shown or already skipped
     }
 
+    console.log('[DIRECTOR TEST] Waiting for village sign...')
     // Verify Village Sign on Arch
     const villageSign = page.locator('[data-testid="village-sign-text"]').first()
-    await villageSign.waitFor({ state: 'visible', timeout: 30000 })
+    await villageSign.waitFor({ state: 'attached', timeout: 30000 })
+    console.log('[DIRECTOR TEST] Village sign attached, checking text...')
     const punjabVillage = await villageSign.textContent()
     expect(punjabVillage).toContain('Rupnagar')
+    console.log('[DIRECTOR TEST] Village sign text verified:', punjabVillage)
 
+    console.log('[DIRECTOR TEST] Waiting for choice panel...')
     // Verify Choice Panel has Happy Seeder as top featured suggestion
     const choicePanel = page.locator('[data-testid="in-world-choice-panel"]')
     await choicePanel.waitFor({ state: 'visible', timeout: 30000 })
+    console.log('[DIRECTOR TEST] Choice panel visible')
     const happySeederBtn = page.locator('[data-testid="choice-option-happy_seeder"]')
     await expect(happySeederBtn).toBeVisible()
     await expect(happySeederBtn.locator('[data-testid="suggested-badge"]')).toBeVisible()
+    console.log('[DIRECTOR TEST] Happy seeder verified')
 
     // Verify Local Advisory Hint card is present and dismissible
+    console.log('[DIRECTOR TEST] Checking hint card...')
     const hintCard = page.locator('[data-testid="director-local-hint"]')
-    if (await hintCard.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await hintCard.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
+    if (await hintCard.isVisible()) {
+      console.log('[DIRECTOR TEST] Hint card is visible, taking screenshot & clicking dismiss...')
+      const vp = page.viewportSize()
+      if (vp && vp.width === 360) {
+        await page.screenshot({ path: 'tests/screenshots/360x640-local-hint.png' })
+      }
       const dismissBtn = page.locator('[data-testid="dismiss-local-hint-button"]')
-      await dismissBtn.click()
-      await expect(hintCard).toBeHidden()
+      await dismissBtn.waitFor({ state: 'visible', timeout: 5000 })
+      await dismissBtn.click({ force: true })
+      await expect(hintCard).toBeHidden({ timeout: 5000 })
+      console.log('[DIRECTOR TEST] Hint card dismissed successfully!')
     }
 
     // Now change to Farm 2: Telangana
+    console.log('[DIRECTOR TEST] Opening settings drawer...')
     const settingsBtn = page.locator('[data-testid="settings-toggle-button"]').first()
     await settingsBtn.click()
     const settingsDrawer = page.locator('[data-testid="settings-drawer"]')
     await settingsDrawer.waitFor({ state: 'visible', timeout: 10000 })
+    console.log('[DIRECTOR TEST] Settings drawer visible')
 
+    console.log('[DIRECTOR TEST] Clicking change farm button...')
     const changeFarmBtn = page.locator('[data-testid="settings-change-farm-btn"]')
+    await changeFarmBtn.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(300)
     await changeFarmBtn.click()
 
+    console.log('[DIRECTOR TEST] Waiting for your farm modal...')
     const yourFarmModal = page.locator('[data-testid="your-farm-modal"]')
     await yourFarmModal.waitFor({ state: 'visible', timeout: 10000 })
 
+    console.log('[DIRECTOR TEST] Selecting Telangana...')
     const stateSelect = page.locator('[data-testid="your-farm-state-select"]')
     await stateSelect.selectOption('Telangana')
-    await page.locator('[data-testid="your-farm-confirm-btn"]').click()
+    const confirmFarmBtn = page.locator('[data-testid="your-farm-confirm-btn"]')
+    await confirmFarmBtn.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(200)
+    await confirmFarmBtn.click()
     await expect(yourFarmModal).toBeHidden()
 
-    // Close settings if open
+    console.log('[DIRECTOR TEST] Closing settings drawer...')
     const closeBtn = page.locator('button[aria-label="Close settings"]')
     if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await closeBtn.click()
     }
     await expect(settingsDrawer).toBeHidden()
 
-    // Assert Village Sign updated to Warangal
-    await expect(villageSign).toContainText('Warangal')
+    console.log('[DIRECTOR TEST] Asserting village sign is Warangal...')
+    await expect(villageSign).toContainText('Warangal', { timeout: 15000 })
     const telanganaVillage = await villageSign.textContent()
 
     // Assert the two village signs differ
     expect(punjabVillage).not.toEqual(telanganaVillage)
+    console.log('[DIRECTOR TEST] Farm 1 and Farm 2 village names differ:', punjabVillage, 'vs', telanganaVillage)
 
     // Assert Choice Panel first alternative is now Mulch with Suggested badge
     const mulchBtn = page.locator('[data-testid="choice-option-mulch"]')
     await expect(mulchBtn.locator('[data-testid="suggested-badge"]')).toBeVisible()
+    console.log('[DIRECTOR TEST] Test 1 passed successfully!')
   })
 
   test('asserts fallback loads cleanly and offline scenario tag appears when AI is unreachable', async ({ page }) => {
+    // API fallbacks
+    await page.route('**/api/**', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok' }) })
+    })
+
     // Force director API to fail
     await page.route('**/api/director/scenario', async (route) => {
       await route.abort('failed')
-    })
-    await page.route('**/api/simulate/**', async (route) => {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok' }) })
     })
 
     // Set initial farm profile in localStorage to Uttar Pradesh

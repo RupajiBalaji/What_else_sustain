@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { safeStorage } from '../../utils/safeStorage'
 
 const STATES = [
@@ -42,7 +43,7 @@ export default function YourFarmModal({ initialProfile, onSave, onClose, isSetti
     onSave(profile)
   }
 
-  return (
+  const modalContent = (
     <div
       data-testid="your-farm-modal"
       style={{
@@ -61,15 +62,17 @@ export default function YourFarmModal({ initialProfile, onSave, onClose, isSetti
         style={{
           width: '100%',
           maxWidth: '440px',
+          maxHeight: 'calc(100dvh - 32px)',
+          overflowY: 'auto',
           backgroundColor: 'rgba(20, 26, 32, 0.96)',
           color: '#E0E0E0',
           borderRadius: '16px',
           border: '1.5px solid rgba(255, 255, 255, 0.14)',
           boxShadow: '0 16px 40px rgba(0, 0, 0, 0.6)',
-          padding: '24px 20px',
+          padding: '20px 18px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '14px',
           boxSizing: 'border-box'
         }}
       >
@@ -242,4 +245,9 @@ export default function YourFarmModal({ initialProfile, onSave, onClose, isSetti
       </div>
     </div>
   )
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body)
+  }
+  return modalContent
 }

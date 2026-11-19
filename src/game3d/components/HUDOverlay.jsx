@@ -591,16 +591,17 @@ export default function HUDOverlay({ onSwitchToLite }) {
             data-testid="director-local-hint"
             style={{
               position: 'absolute',
-              bottom: isMobile ? 'calc(150px + env(safe-area-inset-bottom, 0px))' : '100px',
-              left: '16px',
-              maxWidth: isMobile ? 'calc(100vw - 32px)' : '320px',
+              top: isMobile ? 'calc(54px + env(safe-area-inset-top, 0px))' : 'auto',
+              bottom: isMobile ? 'auto' : '100px',
+              left: isMobile ? '12px' : '16px',
+              maxWidth: isMobile ? 'calc(100vw - 24px)' : '320px',
               backgroundColor: 'rgba(20, 26, 32, 0.95)',
               border: '1.5px solid #81C784',
               borderRadius: '12px',
               padding: '10px 14px',
               boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
               color: '#FFFFFF',
-              zIndex: 65,
+              zIndex: 100,
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'space-between',
@@ -619,15 +620,23 @@ export default function HUDOverlay({ onSwitchToLite }) {
             <button
               type="button"
               data-testid="dismiss-local-hint-button"
+              aria-label="Dismiss advisory hint"
               onClick={() => setDismissedDirectorHint(true)}
               style={{
                 background: 'none',
                 border: 'none',
                 color: '#B0BEC5',
-                fontSize: '1rem',
+                fontSize: '1.1rem',
                 cursor: 'pointer',
-                padding: '2px 4px',
-                lineHeight: 1
+                padding: '4px 8px',
+                minWidth: '32px',
+                minHeight: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: 1,
+                touchAction: 'manipulation',
+                pointerEvents: 'auto'
               }}
             >
               ✕

@@ -10,7 +10,7 @@ import { ManagedOverlay } from '../ui/OverlayManager'
  * Labeled "Simulated, game model" with strictly NO unverified AQI numbers.
  */
 export default function AirSensorPole({ position = [-8.5, 0, 38.0] }) {
-  const { quality, burnState, burnProgress, smokeData, activeAlternative } = useGame3D()
+  const { quality, burnState, burnProgress, smokeData, activeAlternative, isChoicePanelOpen } = useGame3D()
   const isHigh = quality !== 'low'
 
   const anemometerRef = useRef(null)
@@ -145,8 +145,10 @@ export default function AirSensorPole({ position = [-8.5, 0, 38.0] }) {
         collapsedBadge={isHazardous ? '⚠️ SMOKE' : '🌱 CLEAN'}
         center={false}
         zIndexRange={[12, 0]}
+        visible={!isChoicePanelOpen}
       >
         <div
+          data-testid="village-air-station-card"
           style={{
             backgroundColor: 'rgba(24, 32, 38, 0.96)',
             borderRadius: '16px',

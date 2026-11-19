@@ -358,11 +358,12 @@ export function ManagedOverlay({
     return () => window.removeEventListener('resize', handleResize)
   }, [manager])
 
-  // Hide straw decision labels and soil cutaway plaque while choice panel is open
+  // Hide straw decision labels, soil cutaway plaque, and air station card while choice panel is open
   const isHiddenByChoicePanel = (showChoiceWheel || isChoicePanelOpen) && (
     id === 'straw_decision_label' ||
     id?.startsWith('straw_') ||
-    id === 'soil_cutaway_plaque'
+    id === 'soil_cutaway_plaque' ||
+    id === 'village_air_station'
   )
 
   // Hide completely while ANY modal is open (modals maintain highest z-index)

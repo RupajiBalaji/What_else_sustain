@@ -278,6 +278,10 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
     expect(phase1Result.collisions).toEqual([])
     expect(phase1Result.worldCardCount).toBeLessThanOrEqual(2)
 
+    // Verify air-station card is NOT visible while choice panel is open
+    const airStationOverlay = page.locator('[data-overlay-id="village_air_station"], [data-testid="village-air-station-card"]')
+    await expect(airStationOverlay).toBeHidden()
+
     const vp = page.viewportSize()
     if (vp) {
       await page.screenshot({ path: `tests/screenshots/${vp.width}x${vp.height}-decision-point.png` })
@@ -317,5 +321,38 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
     const phase4Result = await inspectOverlayCollisions(page)
     console.log(`[OVERLAY TEST] Phase 4 (Season Report): ${phase4Result.count} elements checked`)
     expect(phase4Result.collisions).toEqual([])
+  })
+
+  test('asserts air-station card is not visible whenever choice panel is open across all viewports', async ({ page }) => {
+    await page.route('**/api/**', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok' }) })
+    })
+
+    await page.addInitScript(() => {
+      try { localStorage.clear() } catch {}
+      try { sessionStorage.clear() } catch {}
+    })
+    await page.goto('/?noFpsFallback=1')
+
+    const startQuickPlayBtn = page.locator('[data-testid="start-quick-play-button"], [data-testid="start-3d-button"]').first()
+    await startQuickPlayBtn.waitFor({ state: 'visible', timeout: 90000 })
+    await startQuickPlayBtn.click()
+
+    const skipQuizBtn = page.locator('[data-testid="skip-quiz-button"]')
+    try {
+      await skipQuizBtn.waitFor({ state: 'visible', timeout: 5000 })
+      await skipQuizBtn.click()
+    } catch {}
+
+    const choicePanel = page.locator('[data-testid="in-world-choice-panel"]')
+    await choicePanel.waitFor({ state: 'visible', timeout: 90000 })
+
+    const airStation = page.locator('[data-overlay-id="village_air_station"], [data-testid="village-air-station-card"]')
+    await expect(airStation).toBeHidden()
+
+    const vp = page.viewportSize()
+    if (vp) {
+      await page.screenshot({ path: `tests/screenshots/${vp.width}x${vp.height}-decision-point.png` })
+    }
   })
 })

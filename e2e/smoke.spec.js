@@ -100,7 +100,13 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   const vpName = isMobile ? 'mobile' : 'desktop'
   const vpKey = `${vp.width}x${vp.height}`
 
-  // 1. Load app with noFpsFallback query param
+  // 1. Clean state isolation and initial load
+  await page.context().clearCookies()
+  await page.goto('/?noFpsFallback=1')
+  await page.evaluate(() => {
+    try { localStorage.clear() } catch {}
+    try { sessionStorage.clear() } catch {}
+  })
   await page.goto('/?noFpsFallback=1')
 
   // Check no ErrorBoundary failure
@@ -130,10 +136,10 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
 
   // Log measured time to decision in docs/PERFORMANCE.md
   try {
-    const perfLog = `| ${new Date().toISOString()} | ${vpKey} | ${quickPlayDuration.toFixed(2)}s | Note: Measured under software GL (swiftshader) |\n`
+    const perfLog = `| ${new Date().toISOString()} | ${vpKey} | ${quickPlayDuration.toFixed(2)}s | software GL, not representative of player hardware |\n`
     const perfPath = 'docs/PERFORMANCE.md'
     if (!fs.existsSync(perfPath)) {
-      fs.writeFileSync(perfPath, '# Performance Metrics\n\n| Timestamp | Viewport | Time to Decision | Notes |\n| --- | --- | --- | --- |\n' + perfLog)
+      fs.writeFileSync(perfPath, '# Performance Metrics (Automated Test Runner)\n\n| Timestamp | Viewport | Time to Decision | Notes |\n| --- | --- | --- | --- |\n' + perfLog)
     } else {
       fs.appendFileSync(perfPath, perfLog)
     }

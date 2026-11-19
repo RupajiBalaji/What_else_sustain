@@ -38,6 +38,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
     setFarmConfig,
     isOfflineScenario,
     persistentState,
+    windState,
     openQuiz
   } = useGame3D()
 
@@ -140,6 +141,23 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
           >
             ✕
           </button>
+        </div>
+
+        {/* Community Reputation & Wind Status Overview */}
+        <div style={{ backgroundColor: '#F5F5F5', borderRadius: '12px', padding: '10px 12px', display: 'flex', justifyContent: 'space-around', textAlign: 'center', border: '1px solid #E0E0E0' }}>
+          <div>
+            <div style={{ fontSize: '0.68rem', color: '#757575', fontWeight: 800, textTransform: 'uppercase' }}>Community Reputation</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#4A148C', marginTop: '2px' }}>
+              👑 {Math.round(persistentState?.reputation ?? 50)} / 100
+            </div>
+          </div>
+          <div style={{ borderLeft: '1px solid #E0E0E0' }} />
+          <div>
+            <div style={{ fontSize: '0.68rem', color: '#757575', fontWeight: 800, textTransform: 'uppercase' }}>Local Wind</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#01579B', marginTop: '2px' }}>
+              🧭 {windState?.speedMs || 3.8} m/s
+            </div>
+          </div>
         </div>
 
         {/* Secondary Navigation (Lite Mode & Badges) */}

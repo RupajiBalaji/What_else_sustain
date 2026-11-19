@@ -54,7 +54,7 @@ const fallbackMaterials = {
   barnRed: new THREE.MeshStandardMaterial({ color: '#C62828', roughness: 0.85, metalness: 0.0 }),
   tractorGreen: new THREE.MeshStandardMaterial({ color: '#2E7D32', roughness: 0.65, metalness: 0.05 }),
   tractorTrim: new THREE.MeshStandardMaterial({ color: '#FBC02D', roughness: 0.5, metalness: 0.1 }),
-  rubberTire: new THREE.MeshStandardMaterial({ color: '#212121', roughness: 0.95, metalness: 0.0 })
+  rubberTire: new THREE.MeshStandardMaterial({ color: '#262626', roughness: 0.95, metalness: 0.0 })
 }
 
 /**

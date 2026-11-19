@@ -69,11 +69,11 @@ export function ProceduralTractor({ position = [8.5, 0, 14.5], rotation = [0, -0
       {/* 5. Big Rear Wheels */}
       <mesh position={[-1.0, 1.0, -0.8]} rotation={[0, 0, Math.PI / 2]} castShadow={isHigh}>
         <cylinderGeometry args={[1.0, 1.0, 0.6, 12]} />
-        <meshStandardMaterial color="#1A1A1A" roughness={0.95} />
+        <meshStandardMaterial color="#262626" roughness={0.95} />
       </mesh>
       <mesh position={[1.0, 1.0, -0.8]} rotation={[0, 0, Math.PI / 2]} castShadow={isHigh}>
         <cylinderGeometry args={[1.0, 1.0, 0.6, 12]} />
-        <meshStandardMaterial color="#1A1A1A" roughness={0.95} />
+        <meshStandardMaterial color="#262626" roughness={0.95} />
       </mesh>
 
       {/* Rear Yellow Rims */}
@@ -89,11 +89,11 @@ export function ProceduralTractor({ position = [8.5, 0, 14.5], rotation = [0, -0
       {/* 6. Smaller Front Wheels */}
       <mesh position={[-0.85, 0.55, 1.5]} rotation={[0, 0, Math.PI / 2]} castShadow={isHigh}>
         <cylinderGeometry args={[0.55, 0.55, 0.4, 10]} />
-        <meshStandardMaterial color="#1A1A1A" roughness={0.95} />
+        <meshStandardMaterial color="#262626" roughness={0.95} />
       </mesh>
       <mesh position={[0.85, 0.55, 1.5]} rotation={[0, 0, Math.PI / 2]} castShadow={isHigh}>
         <cylinderGeometry args={[0.55, 0.55, 0.4, 10]} />
-        <meshStandardMaterial color="#1A1A1A" roughness={0.95} />
+        <meshStandardMaterial color="#262626" roughness={0.95} />
       </mesh>
     </group>
   )

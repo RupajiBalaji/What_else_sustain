@@ -260,6 +260,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
           >
             {/* Season Badge */}
             <div
+              data-testid="hud-season-chip"
               title={`Season ${persistentState?.seasonIndex || 1}, Year ${persistentState?.yearIndex || 1}`}
               style={{
                 backgroundColor: 'rgba(27, 94, 32, 0.92)',
@@ -282,6 +283,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
 
             {/* Soil Health */}
             <div
+              data-testid="hud-soil-chip"
               title="Soil Health"
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.94)',
@@ -304,6 +306,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
 
             {/* Village Health */}
             <div
+              data-testid="hud-village-chip"
               title="Village Air & Health"
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.94)',
@@ -326,6 +329,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
 
             {/* Money */}
             <div
+              data-testid="hud-money-chip"
               title={`Capital: ₹${(persistentState?.money ?? 12000).toLocaleString('en-IN')}`}
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.94)',
@@ -346,59 +350,65 @@ export default function HUDOverlay({ onSwitchToLite }) {
               <span>₹{Math.round((persistentState?.money ?? 12000) / 1000)}k</span>
             </div>
 
-            {/* Reputation */}
-            <div
-              title="Reputation"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.94)',
-                color: '#4A148C',
-                border: '1.5px solid #BA68C8',
-                borderRadius: '9999px',
-                padding: '3px 6px',
-                fontWeight: 800,
-                fontSize: '0.74rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '3px',
-                flexShrink: 0,
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <span>👑</span>
-              <span>{Math.round(persistentState?.reputation ?? 50)}</span>
-            </div>
-
-            {/* Wind Indicator */}
-            <div
-              style={{
-                padding: '3px 6px',
-                borderRadius: '9999px',
-                backgroundColor: 'rgba(255, 255, 255, 0.94)',
-                border: '1.5px solid #0288D1',
-                color: '#01579B',
-                fontWeight: 800,
-                fontSize: '0.74rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '3px',
-                flexShrink: 0,
-                whiteSpace: 'nowrap'
-              }}
-              title="Current Wind Direction & Speed (affects smoke dispersion)"
-            >
-              <span>🧭</span>
-              <span
+            {/* Reputation (Desktop / Tablet only to prevent mobile row clipping) */}
+            {!isMobile && (
+              <div
+                data-testid="hud-reputation-chip"
+                title="Reputation"
                 style={{
-                  display: 'inline-block',
-                  transform: `rotate(${windState?.directionDeg || 75}deg)`,
-                  fontSize: '0.85rem',
-                  transition: 'transform 0.4s ease'
+                  backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                  color: '#4A148C',
+                  border: '1.5px solid #BA68C8',
+                  borderRadius: '9999px',
+                  padding: '3px 6px',
+                  fontWeight: 800,
+                  fontSize: '0.74rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap'
                 }}
               >
-                ⬆️
-              </span>
-              <span>{windState?.speedMs || 3.8}m/s</span>
-            </div>
+                <span>👑</span>
+                <span>{Math.round(persistentState?.reputation ?? 50)}</span>
+              </div>
+            )}
+
+            {/* Wind Indicator (Desktop / Tablet only to prevent mobile row clipping) */}
+            {!isMobile && (
+              <div
+                data-testid="hud-wind-chip"
+                style={{
+                  padding: '3px 6px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                  border: '1.5px solid #0288D1',
+                  color: '#01579B',
+                  fontWeight: 800,
+                  fontSize: '0.74rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap'
+                }}
+                title="Current Wind Direction & Speed (affects smoke dispersion)"
+              >
+                <span>🧭</span>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    transform: `rotate(${windState?.directionDeg || 75}deg)`,
+                    fontSize: '0.85rem',
+                    transition: 'transform 0.4s ease'
+                  }}
+                >
+                  ⬆️
+                </span>
+                <span>{windState?.speedMs || 3.8}m/s</span>
+              </div>
+            )}
           </div>
 
           {/* Right: Settings Drawer Trigger Button */}

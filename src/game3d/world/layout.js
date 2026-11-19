@@ -105,17 +105,18 @@ export const STRAW_PILES_LAYOUT = [
 ]
 
 // 10 Village houses clustered downwind along north edge (40-60m distance)
+// Scaled to 2.5-3x farmer height with warm off-white / clay walls and terracotta roofs
 export const VILLAGE_HOUSES_LAYOUT = [
-  { id: 'h1', variant: 1, x: -15, z: 42, rot: 0.2, s: 1.6, wallColor: '#E0D7C6', roofColor: '#D35400' },
-  { id: 'h2', variant: 2, x: -8, z: 46, rot: -0.1, s: 1.65, wallColor: '#F5EEF8', roofColor: '#78909C' },
-  { id: 'h3', variant: 3, x: 0, z: 43, rot: 0.4, s: 1.55, wallColor: '#FEF9E7', roofColor: '#D4AC0D' },
-  { id: 'h4', variant: 1, x: 8, z: 48, rot: -0.3, s: 1.7, wallColor: '#EBF5FB', roofColor: '#C0392B' },
-  { id: 'h5', variant: 2, x: 16, z: 44, rot: 0.1, s: 1.6, wallColor: '#EAFAF1', roofColor: '#607D8B' },
-  { id: 'h6', variant: 3, x: 24, z: 47, rot: -0.2, s: 1.65, wallColor: '#FDFEFE', roofColor: '#B7950B' },
-  { id: 'h7', variant: 1, x: -18, z: 52, rot: 0.3, s: 1.65, wallColor: '#FDEDEC', roofColor: '#E65100' },
-  { id: 'h8', variant: 2, x: -4, z: 54, rot: -0.15, s: 1.6, wallColor: '#F4F6F6', roofColor: '#546E7A' },
-  { id: 'h9', variant: 3, x: 10, z: 55, rot: 0.25, s: 1.7, wallColor: '#F9EBEA', roofColor: '#D4AC0D' },
-  { id: 'h10', variant: 1, x: 20, z: 56, rot: -0.4, s: 1.6, wallColor: '#E8F8F5', roofColor: '#C0392B' }
+  { id: 'h1', variant: 1, x: -15, z: 42, rot: 0.2, s: 1.6, wallColor: '#D7CCC8', roofColor: '#C05A3E' },
+  { id: 'h2', variant: 2, x: -8, z: 46, rot: -0.1, s: 1.65, wallColor: '#D4C5B9', roofColor: '#A04028' },
+  { id: 'h3', variant: 3, x: 0, z: 43, rot: 0.4, s: 1.55, wallColor: '#BCAAA4', roofColor: '#BF573F' },
+  { id: 'h4', variant: 1, x: 8, z: 48, rot: -0.3, s: 1.7, wallColor: '#E0D7C6', roofColor: '#B84A30' },
+  { id: 'h5', variant: 2, x: 16, z: 44, rot: 0.1, s: 1.6, wallColor: '#CDBFB5', roofColor: '#C05A3E' },
+  { id: 'h6', variant: 3, x: 24, z: 47, rot: -0.2, s: 1.65, wallColor: '#D4C5B9', roofColor: '#A9442A' },
+  { id: 'h7', variant: 1, x: -18, z: 52, rot: 0.3, s: 1.65, wallColor: '#D7CCC8', roofColor: '#BF573F' },
+  { id: 'h8', variant: 2, x: -4, z: 54, rot: -0.15, s: 1.6, wallColor: '#E4DBD1', roofColor: '#A04028' },
+  { id: 'h9', variant: 3, x: 10, z: 55, rot: 0.25, s: 1.7, wallColor: '#BCAAA4', roofColor: '#B84A30' },
+  { id: 'h10', variant: 1, x: 20, z: 56, rot: -0.4, s: 1.6, wallColor: '#D7CCC8', roofColor: '#C65135' }
 ]
 
 export const VILLAGE_COLLIDERS_LAYOUT = VILLAGE_HOUSES_LAYOUT.map((h) => ({

@@ -707,7 +707,9 @@ export default function HUDOverlay({ onSwitchToLite }) {
         <div
           style={{
             position: 'absolute',
-            bottom: isTouchDevice ? 'calc(150px + env(safe-area-inset-bottom, 0px))' : 'calc(35px + env(safe-area-inset-bottom, 0px))',
+            bottom: isTouchDevice
+              ? 'calc(188px + env(safe-area-inset-bottom, 0px))'
+              : 'calc(76px + env(safe-area-inset-bottom, 0px))',
             left: '50%',
             transform: 'translateX(-50%)',
             pointerEvents: 'auto',

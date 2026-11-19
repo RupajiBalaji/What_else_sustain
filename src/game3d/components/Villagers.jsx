@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
@@ -113,7 +113,7 @@ function ProceduralVillager({ data, isCoughing, isWaving, isHigh }) {
   )
 }
 
-function SingleVillager({ data, isCoughing, isWaving, qualityConfig }) {
+function SingleVillager({ data, isCoughing, showCoughChip, isWaving, qualityConfig }) {
   const isHigh = qualityConfig.shadows
   const currentAnim = isCoughing ? 'cough' : isWaving ? 'wave' : 'idle'
 
@@ -134,11 +134,11 @@ function SingleVillager({ data, isCoughing, isWaving, qualityConfig }) {
         currentAnimation={currentAnim}
       />
 
-      {/* World-space Cough speech bubble */}
-      {isCoughing && (
+      {/* World-space Cough speech bubble (at most 2 rotating inside safe area) */}
+      {showCoughChip && (
         <ManagedOverlay
           id={`villager_cough_${data.id}`}
-          priority="decorative_sign"
+          priority="cough_chip"
           position={[0, 2.3, 0]}
           icon="😷"
           collapsedBadge="Cough"
@@ -146,6 +146,7 @@ function SingleVillager({ data, isCoughing, isWaving, qualityConfig }) {
           zIndexRange={[15, 0]}
         >
           <div
+            data-testid="cough-chip"
             style={{
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
               border: '2px solid #D32F2F',
@@ -214,13 +215,19 @@ export default function Villagers() {
       (burnState === 'burning' && (burnProgress || 0) >= 0.22) ||
       (villageHealth < 45 && burnState !== 'lighting' && burnState !== 'burning'))
 
-  // Play audio cough cue during the smoke plume arrival
+  const [coughRotationIndex, setCoughRotationIndex] = useState(0)
+
+  // Play audio cough cue during the smoke plume arrival & rotate at most 2 cough chips
   useFrame(({ clock }) => {
     if (isCoughing) {
       const now = clock.getElapsedTime()
       if (now - lastCoughAudioRef.current > 3.6) {
         lastCoughAudioRef.current = now
         audioManager.playCoughSound()
+      }
+      const rot = Math.floor(now / 2.4) % VILLAGERS_DATA.length
+      if (rot !== coughRotationIndex) {
+        setCoughRotationIndex(rot)
       }
     }
   })
@@ -231,15 +238,19 @@ export default function Villagers() {
 
   return (
     <group name="VillagersGroup">
-      {VILLAGERS_DATA.map((v) => (
-        <SingleVillager
-          key={v.id}
-          data={v}
-          isCoughing={isCoughing}
-          isWaving={isWaving}
-          qualityConfig={qualityConfig}
-        />
-      ))}
+      {VILLAGERS_DATA.map((v, idx) => {
+        const isOneOfTwo = idx === coughRotationIndex || idx === (coughRotationIndex + 1) % VILLAGERS_DATA.length
+        return (
+          <SingleVillager
+            key={v.id}
+            data={v}
+            isCoughing={isCoughing}
+            showCoughChip={isCoughing && isOneOfTwo}
+            isWaving={isWaving}
+            qualityConfig={qualityConfig}
+          />
+        )
+      })}
     </group>
   )
 }

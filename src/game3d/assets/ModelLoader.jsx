@@ -49,8 +49,8 @@ export function getSharedColormapTexture() {
 const fallbackMaterials = {
   treeFoliage: new THREE.MeshStandardMaterial({ color: '#388E3C', roughness: 0.85, metalness: 0.0 }),
   treeTrunk: new THREE.MeshStandardMaterial({ color: '#5D4037', roughness: 0.9, metalness: 0.0 }),
-  houseWall: new THREE.MeshStandardMaterial({ color: '#E0D7C6', roughness: 0.88, metalness: 0.0 }),
-  houseRoof: new THREE.MeshStandardMaterial({ color: '#D35400', roughness: 0.8, metalness: 0.0 }),
+  houseWall: new THREE.MeshStandardMaterial({ color: '#D7CCC8', roughness: 0.88, metalness: 0.0 }),
+  houseRoof: new THREE.MeshStandardMaterial({ color: '#C05A3E', roughness: 0.8, metalness: 0.0 }),
   barnRed: new THREE.MeshStandardMaterial({ color: '#C62828', roughness: 0.85, metalness: 0.0 }),
   tractorGreen: new THREE.MeshStandardMaterial({ color: '#2E7D32', roughness: 0.65, metalness: 0.05 }),
   tractorTrim: new THREE.MeshStandardMaterial({ color: '#FBC02D', roughness: 0.5, metalness: 0.1 }),

@@ -121,31 +121,31 @@ function ProceduralVillageHouses({ isHigh }) {
       {/* Variant 1 */}
       <instancedMesh ref={wallRef1} args={[undefined, undefined, housesV1.length]} castShadow={isHigh} receiveShadow={isHigh}>
         <boxGeometry args={[4.8, 3.0, 3.8]} />
-        <meshStandardMaterial color="#E0D7C6" roughness={0.88} />
+        <meshStandardMaterial color="#D7CCC8" roughness={0.88} />
       </instancedMesh>
       <instancedMesh ref={roofRef1} args={[undefined, undefined, housesV1.length]} castShadow={isHigh} receiveShadow={isHigh}>
         <coneGeometry args={[3.6, 1.8, 4]} />
-        <meshStandardMaterial color="#D35400" roughness={0.75} />
+        <meshStandardMaterial color="#C05A3E" roughness={0.78} />
       </instancedMesh>
 
       {/* Variant 2 */}
       <instancedMesh ref={wallRef2} args={[undefined, undefined, housesV2.length]} castShadow={isHigh} receiveShadow={isHigh}>
         <boxGeometry args={[5.2, 3.2, 4.2]} />
-        <meshStandardMaterial color="#F5EEF8" roughness={0.85} />
+        <meshStandardMaterial color="#D4C5B9" roughness={0.88} />
       </instancedMesh>
       <instancedMesh ref={roofRef2} args={[undefined, undefined, housesV2.length]} castShadow={isHigh} receiveShadow={isHigh}>
         <boxGeometry args={[5.4, 0.35, 4.4]} />
-        <meshStandardMaterial color="#546E7A" roughness={0.9} />
+        <meshStandardMaterial color="#A04028" roughness={0.8} />
       </instancedMesh>
 
       {/* Variant 3 */}
       <instancedMesh ref={wallRef3} args={[undefined, undefined, housesV3.length]} castShadow={isHigh} receiveShadow={isHigh}>
         <boxGeometry args={[4.4, 2.8, 3.6]} />
-        <meshStandardMaterial color="#FEF9E7" roughness={0.92} />
+        <meshStandardMaterial color="#BCAAA4" roughness={0.88} />
       </instancedMesh>
       <instancedMesh ref={roofRef3} args={[undefined, undefined, housesV3.length]} castShadow={isHigh} receiveShadow={isHigh}>
         <coneGeometry args={[3.8, 1.4, 4]} />
-        <meshStandardMaterial color="#D4AC0D" roughness={0.9} />
+        <meshStandardMaterial color="#BF573F" roughness={0.8} />
       </instancedMesh>
     </group>
   )

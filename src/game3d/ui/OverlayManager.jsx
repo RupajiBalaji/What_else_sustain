@@ -9,7 +9,8 @@ import { useGame3D } from '../context/Game3DContext'
 export const OVERLAY_PRIORITIES = {
   choice_panel: 50,
   consequence_callout: 40,
-  smoke_meter: 30,
+  smoke_meter: 35,
+  cough_chip: 30,
   status_prop: 20,
   decorative_sign: 10
 }
@@ -124,10 +125,10 @@ export function OverlayManagerProvider({ children }) {
       // 3. Check collision against all already-placed higher-priority overlays
       for (const placed of placedBoxes) {
         const overlaps = !(
-          candidateRect.right + 6 < placed.left ||
-          candidateRect.left - 6 > placed.right ||
-          candidateRect.bottom + 6 < placed.top ||
-          candidateRect.top - 6 > placed.bottom
+          candidateRect.right + 8 < placed.left ||
+          candidateRect.left - 8 > placed.right ||
+          candidateRect.bottom + 8 < placed.top ||
+          candidateRect.top - 8 > placed.bottom
         )
 
         if (overlaps) {

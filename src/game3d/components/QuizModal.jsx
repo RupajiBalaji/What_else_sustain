@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import quizQuestions from '../../data/quiz.json'
 import {
+  calculateQuizScore,
   evaluateQuizComparison,
   buildQuizAnalyticsPayload,
   shuffleQuestions
 } from '../../utils/quizAnalytics'
 import { sound } from '../../game/soundManager'
 import { safeStorage } from '../../utils/safeStorage'
+import { offlineQueue } from '../../utils/offlineQueue'
 
 const QUIZ_STORAGE_KEY = 'wes_quiz_sessions_v1'
 
@@ -20,16 +22,15 @@ export default function QuizModal({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedOptionId, setSelectedOptionId] = useState(null)
   const [answers, setAnswers] = useState({})
-  const [startTime] = useState(() => Date.now())
+  const [startTime, setStartTime] = useState(() => Date.now())
   const [viewState, setViewState] = useState(mode) // 'pre' | 'post' | 'results'
 
-  // Load existing pre-answers from local storage if available for comparison
-  const [storedPreAnswers, setStoredPreAnswers] = useState(() => {
+  // Load existing pre & post answers from local storage
+  const [storedData, setStoredData] = useState(() => {
     try {
       const raw = safeStorage.getItem(QUIZ_STORAGE_KEY)
       if (raw) {
-        const parsed = JSON.parse(raw)
-        return parsed?.preAnswers || {}
+        return JSON.parse(raw) || {}
       }
     } catch {
       // safe fallback
@@ -37,16 +38,28 @@ export default function QuizModal({
     return {}
   })
 
-  // Pre-check uses 2 core baseline questions; Post-check uses 3 questions for depth
+  // Shuffled questions for post-check (same 5 questions, shuffled question & option order)
+  const [shuffledPostQuestions, setShuffledPostQuestions] = useState(() => shuffleQuestions(quizQuestions))
+
+  // Questions to display for the active viewState
   const questions = useMemo(() => {
-    if (mode === 'pre') {
-      return quizQuestions.slice(0, 2)
-    }
-    if (mode === 'post') {
-      return quizQuestions.slice(0, 3)
+    if (viewState === 'post') {
+      return shuffledPostQuestions
     }
     return quizQuestions
-  }, [mode])
+  }, [viewState, shuffledPostQuestions])
+
+  // Results View Calculation (must be called unconditionally before any early returns)
+  const evaluation = useMemo(() => {
+    if (viewState !== 'results') return null
+    const preAns = storedData?.preAnswers || {}
+    const postAns = Object.keys(answers).length > 0 ? answers : (storedData?.postAnswers || {})
+    return evaluateQuizComparison({
+      preAnswers: preAns,
+      postAnswers: postAns,
+      questions: quizQuestions
+    })
+  }, [viewState, storedData, answers])
 
   // Sync viewState when mode prop updates
   useEffect(() => {
@@ -54,7 +67,20 @@ export default function QuizModal({
     setCurrentIndex(0)
     setSelectedOptionId(null)
     setAnswers({})
-  }, [mode])
+    setStartTime(Date.now())
+    if (mode === 'post') {
+      setShuffledPostQuestions(shuffleQuestions(quizQuestions))
+    }
+    // Refresh stored data
+    try {
+      const raw = safeStorage.getItem(QUIZ_STORAGE_KEY)
+      if (raw) {
+        setStoredData(JSON.parse(raw) || {})
+      }
+    } catch {
+      // safe fallback
+    }
+  }, [mode, isOpen])
 
   // Keyboard navigation: 1-4 to select option, Enter to proceed
   useEffect(() => {
@@ -66,7 +92,7 @@ export default function QuizModal({
 
       if (['1', '2', '3', '4'].includes(e.key)) {
         const idx = parseInt(e.key, 10) - 1
-        if (currentQ.options[idx]) {
+        if (currentQ.options && currentQ.options[idx]) {
           sound.initAudio()
           sound.playTap()
           setSelectedOptionId(currentQ.options[idx].id)
@@ -80,8 +106,6 @@ export default function QuizModal({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, viewState, currentIndex, selectedOptionId, questions])
-
-  if (!isOpen) return null
 
   const currentQ = questions[currentIndex]
 
@@ -104,37 +128,74 @@ export default function QuizModal({
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((prev) => prev + 1)
     } else {
-      // Finished all 5 questions
+      // Completed all 5 questions
       const durationMs = Date.now() - startTime
+      const score = calculateQuizScore(updatedAnswers, quizQuestions)
+      const sessionId = storedData?.sessionId || `wes_${Date.now()}`
+
       if (viewState === 'pre') {
-        // Save pre-answers to storage
+        const sessionPayload = {
+          ...storedData,
+          sessionId,
+          preAnswers: updatedAnswers,
+          preScore: score,
+          preDurationMs: durationMs,
+          preCompleted: true,
+          updatedAt: new Date().toISOString()
+        }
         try {
-          const sessionPayload = {
-            preAnswers: updatedAnswers,
-            preDurationMs: durationMs,
-            updatedAt: new Date().toISOString()
-          }
           safeStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(sessionPayload))
-          setStoredPreAnswers(updatedAnswers)
-        } catch {
-          // safe fallback
-        }
-        onComplete?.({ mode: 'pre', answers: updatedAnswers, durationMs })
+          setStoredData(sessionPayload)
+        } catch {}
+
+        // Send to backend via offline queue
+        offlineQueue.sendQuizAttempt(sessionId, {
+          stage: 'pre',
+          score,
+          total: 5,
+          duration_ms: durationMs,
+          answers: updatedAnswers
+        }).catch(() => {})
+
+        onComplete?.({ mode: 'pre', answers: updatedAnswers, durationMs, score })
       } else if (viewState === 'post') {
-        // Build comparison and transition to results view
-        try {
-          const raw = safeStorage.getItem(QUIZ_STORAGE_KEY)
-          const existing = raw ? JSON.parse(raw) : {}
-          const preAns = existing?.preAnswers || storedPreAnswers || {}
-          const analyticsPayload = buildQuizAnalyticsPayload({
-            preSession: { answers: preAns, durationMs: existing?.preDurationMs || 0 },
-            postSession: { answers: updatedAnswers, durationMs },
-            questions: quizQuestions
-          })
-          safeStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify({ ...existing, ...analyticsPayload, postAnswers: updatedAnswers }))
-        } catch {
-          // safe fallback
+        const preAns = storedData?.preAnswers || {}
+        const evaluation = evaluateQuizComparison({
+          preAnswers: preAns,
+          postAnswers: updatedAnswers,
+          questions: quizQuestions
+        })
+
+        const analyticsPayload = buildQuizAnalyticsPayload({
+          sessionId,
+          preSession: { answers: preAns, durationMs: storedData?.preDurationMs || 0 },
+          postSession: { answers: updatedAnswers, durationMs },
+          questions: quizQuestions
+        })
+
+        const sessionPayload = {
+          ...storedData,
+          ...analyticsPayload,
+          postAnswers: updatedAnswers,
+          postScore: score,
+          postDurationMs: durationMs,
+          postCompleted: true,
+          updatedAt: new Date().toISOString()
         }
+        try {
+          safeStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(sessionPayload))
+          setStoredData(sessionPayload)
+        } catch {}
+
+        // Send to backend via offline queue
+        offlineQueue.sendQuizAttempt(sessionId, {
+          stage: 'post',
+          score,
+          total: 5,
+          duration_ms: durationMs,
+          answers: updatedAnswers
+        }).catch(() => {})
+
         setViewState('results')
       }
     }
@@ -143,15 +204,55 @@ export default function QuizModal({
   const handleConfirmSkip = () => {
     sound.initAudio()
     sound.playTap()
+    const sessionId = storedData?.sessionId || `wes_${Date.now()}`
+    const durationMs = Date.now() - startTime
+
+    if (viewState === 'pre') {
+      const sessionPayload = {
+        ...storedData,
+        sessionId,
+        preSkipped: true,
+        updatedAt: new Date().toISOString()
+      }
+      try {
+        safeStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(sessionPayload))
+        setStoredData(sessionPayload)
+      } catch {}
+
+      offlineQueue.sendQuizAttempt(sessionId, {
+        stage: 'pre',
+        score: 0,
+        total: 5,
+        duration_ms: durationMs,
+        skipped: true,
+        answers: {}
+      }).catch(() => {})
+    } else if (viewState === 'post') {
+      const sessionPayload = {
+        ...storedData,
+        sessionId,
+        postSkipped: true,
+        updatedAt: new Date().toISOString()
+      }
+      try {
+        safeStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(sessionPayload))
+        setStoredData(sessionPayload)
+      } catch {}
+
+      offlineQueue.sendQuizAttempt(sessionId, {
+        stage: 'post',
+        score: 0,
+        total: 5,
+        duration_ms: durationMs,
+        skipped: true,
+        answers: {}
+      }).catch(() => {})
+    }
+
     onSkip?.({ mode: viewState, skipped: true })
   }
 
-  // Results View Calculation
-  const evaluation = viewState === 'results' ? evaluateQuizComparison({
-    preAnswers: storedPreAnswers,
-    postAnswers: answers,
-    questions: quizQuestions
-  }) : null
+  if (!isOpen) return null
 
   return (
     <div
@@ -201,7 +302,7 @@ export default function QuizModal({
                     Learning Impact Results
                   </h2>
                   <div style={{ fontSize: '0.75rem', color: '#B0BEC5', marginTop: '2px' }}>
-                    Comparing before vs after field exploration
+                    Comparing identical 5 questions before vs after field exploration
                   </div>
                 </div>
               </div>
@@ -224,8 +325,8 @@ export default function QuizModal({
                 <div style={{ fontSize: '0.72rem', color: '#90A4AE', textTransform: 'uppercase', fontWeight: 800 }}>
                   Pre-Check
                 </div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF' }}>
-                  {evaluation.preScore} / {evaluation.preTotal || 2}
+                <div data-testid="quiz-pre-score" style={{ fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF' }}>
+                  {evaluation.preScore} / 5
                 </div>
               </div>
 
@@ -237,32 +338,34 @@ export default function QuizModal({
                 <div style={{ fontSize: '0.72rem', color: '#90A4AE', textTransform: 'uppercase', fontWeight: 800 }}>
                   Post-Check
                 </div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#A5D6A7' }}>
-                  {evaluation.postScore} / {evaluation.postTotal || 3}
+                <div data-testid="quiz-post-score" style={{ fontSize: '1.6rem', fontWeight: 900, color: '#A5D6A7' }}>
+                  {evaluation.postScore} / 5
                 </div>
               </div>
 
               <div
+                data-testid="quiz-delta-score"
                 style={{
-                  backgroundColor: evaluation.improvementScore > 0 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                  border: `1px solid ${evaluation.improvementScore > 0 ? '#81C784' : 'rgba(255,255,255,0.2)'}`,
+                  backgroundColor: evaluation.delta > 0 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                  border: `1px solid ${evaluation.delta > 0 ? '#81C784' : 'rgba(255,255,255,0.2)'}`,
                   borderRadius: '10px',
                   padding: '6px 12px',
                   fontWeight: 900,
                   fontSize: '0.88rem',
-                  color: evaluation.improvementScore > 0 ? '#A5D6A7' : '#B0BEC5'
+                  color: evaluation.delta > 0 ? '#A5D6A7' : '#B0BEC5'
                 }}
               >
-                {evaluation.improvementScore > 0 ? `+${evaluation.improvementScore}% Gain` : `${evaluation.improvementScore}% Gain`}
+                {evaluation.delta > 0 ? `+${evaluation.delta} Gain` : `${evaluation.delta} Gain`}
               </div>
             </div>
 
-            {/* Feedback Message */}
+            {/* Feedback Message (Honest, supportive, non-blaming) */}
             <div
+              data-testid="quiz-feedback-message"
               style={{
                 padding: '12px 14px',
-                backgroundColor: 'rgba(46, 125, 50, 0.14)',
-                border: '1px solid rgba(129, 199, 132, 0.3)',
+                backgroundColor: evaluation.delta > 0 ? 'rgba(46, 125, 50, 0.14)' : 'rgba(38, 50, 56, 0.5)',
+                border: `1px solid ${evaluation.delta > 0 ? 'rgba(129, 199, 132, 0.3)' : 'rgba(176, 190, 197, 0.2)'}`,
                 borderRadius: '10px',
                 fontSize: '0.82rem',
                 color: '#E8F5E9',
@@ -273,19 +376,19 @@ export default function QuizModal({
               {evaluation.feedbackMessage}
             </div>
 
-            {/* Concepts Learned List */}
+            {/* Concepts Learned (Learned through exploration) */}
             {evaluation.conceptsLearned.length > 0 && (
-              <div>
-                <div style={{ fontSize: '0.78rem', color: '#A5D6A7', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
-                  Key Concepts Mastered ({evaluation.conceptsLearned.length}):
+              <div data-testid="quiz-concepts-learned">
+                <div style={{ fontSize: '0.78rem', color: '#81C784', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Learned Concepts ({evaluation.conceptsLearned.length}):
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {evaluation.conceptsLearned.map((c) => (
                     <div
                       key={c.id}
                       style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        backgroundColor: 'rgba(76, 175, 80, 0.08)',
+                        border: '1px solid rgba(129, 199, 132, 0.25)',
                         borderRadius: '8px',
                         padding: '8px 12px',
                         fontSize: '0.76rem',
@@ -300,8 +403,63 @@ export default function QuizModal({
               </div>
             )}
 
+            {/* Concepts Already Known */}
+            {evaluation.conceptsKnown.length > 0 && (
+              <div data-testid="quiz-concepts-known">
+                <div style={{ fontSize: '0.78rem', color: '#90CAF9', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Already Understood ({evaluation.conceptsKnown.length}):
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {evaluation.conceptsKnown.map((c) => (
+                    <div
+                      key={c.id}
+                      style={{
+                        backgroundColor: 'rgba(33, 150, 243, 0.08)',
+                        border: '1px solid rgba(144, 202, 249, 0.25)',
+                        borderRadius: '8px',
+                        padding: '8px 12px',
+                        fontSize: '0.76rem',
+                        color: '#CFD8DC',
+                        lineHeight: 1.4
+                      }}
+                    >
+                      <strong style={{ color: '#90CAF9' }}>★ {c.concept.replace(/_/g, ' ')}:</strong> {c.explanation}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Concepts Confused / Needs Review */}
+            {evaluation.conceptsConfused.length > 0 && (
+              <div data-testid="quiz-concepts-confused">
+                <div style={{ fontSize: '0.78rem', color: '#FFB74D', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Needs Further Exploration ({evaluation.conceptsConfused.length}):
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {evaluation.conceptsConfused.map((c) => (
+                    <div
+                      key={c.id}
+                      style={{
+                        backgroundColor: 'rgba(255, 152, 0, 0.08)',
+                        border: '1px solid rgba(255, 183, 77, 0.25)',
+                        borderRadius: '8px',
+                        padding: '8px 12px',
+                        fontSize: '0.76rem',
+                        color: '#CFD8DC',
+                        lineHeight: 1.4
+                      }}
+                    >
+                      <strong style={{ color: '#FFB74D' }}>• {c.concept.replace(/_/g, ' ')}:</strong> {c.explanation}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Action button to finish */}
             <button
+              type="button"
               data-testid="finish-quiz-results-btn"
               onClick={() => onComplete?.({ mode: 'results', evaluation })}
               style={{
@@ -360,7 +518,7 @@ export default function QuizModal({
 
             {/* Options List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {currentQ.options.map((opt, oIdx) => {
+              {currentQ.options?.map((opt, oIdx) => {
                 const isSelected = selectedOptionId === opt.id
                 return (
                   <button
@@ -414,6 +572,7 @@ export default function QuizModal({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
               <button
                 type="button"
+                data-testid="skip-quiz-button"
                 onClick={handleConfirmSkip}
                 style={{
                   background: 'none',

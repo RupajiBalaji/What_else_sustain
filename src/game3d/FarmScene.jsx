@@ -211,7 +211,7 @@ function FarmSceneInner({ onSwitchToLite }) {
           onStart={(mode) => {
             setHasStarted(true)
             if (mode === 'decision') {
-              jumpToDecisionPhase(true)
+              jumpToDecisionPhase(false)
             }
           }}
           onSwitchToLite={onSwitchToLite}

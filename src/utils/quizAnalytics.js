@@ -8,7 +8,7 @@ export function calculateQuizScore(answers, questions) {
   let correctCount = 0
   for (const q of questions) {
     const selectedOptionId = answers[q.id]
-    const correctOption = q.options.find((opt) => opt.isCorrect)
+    const correctOption = q.options?.find((opt) => opt.isCorrect)
     if (selectedOptionId && correctOption && selectedOptionId === correctOption.id) {
       correctCount++
     }
@@ -31,33 +31,32 @@ export function evaluateQuizComparison({ preAnswers = {}, postAnswers = {}, ques
   const improvementScore = postPct - prePct
 
   const conceptsLearned = []
-  const conceptsNeedsReview = []
+  const conceptsKnown = []
+  const conceptsConfused = []
 
   for (const q of effectivePostQ) {
-    const correctOption = q.options.find((opt) => opt.isCorrect)
+    const correctOption = q.options?.find((opt) => opt.isCorrect)
     const wasPreCorrect = preAnswers[q.id] === correctOption?.id
     const wasPostCorrect = postAnswers[q.id] === correctOption?.id
 
+    const item = {
+      id: q.id,
+      concept: q.concept,
+      explanation: q.explanation
+    }
+
     if (!wasPreCorrect && wasPostCorrect) {
-      conceptsLearned.push({
-        id: q.id,
-        concept: q.concept,
-        explanation: q.explanation
-      })
+      conceptsLearned.push(item)
+    } else if (wasPreCorrect && wasPostCorrect) {
+      conceptsKnown.push(item)
     } else if (!wasPostCorrect) {
-      conceptsNeedsReview.push({
-        id: q.id,
-        concept: q.concept,
-        explanation: q.explanation
-      })
+      conceptsConfused.push(item)
     }
   }
 
   const feedbackMessage = delta > 0
     ? `Strong progress: +${delta} points gained after exploring real field consequences.`
-    : delta === 0
-      ? 'Consistent understanding across rounds. Try the side-by-side comparison again for deeper insights.'
-      : 'Nothing wrong here, try the comparison again to see how alternatives protect soil biology and village air.'
+    : 'Residue management concepts take time to master — review the season choices above.'
 
   return {
     preScore,
@@ -71,7 +70,9 @@ export function evaluateQuizComparison({ preAnswers = {}, postAnswers = {}, ques
     delta,
     improved: delta > 0,
     conceptsLearned,
-    conceptsNeedsReview,
+    conceptsKnown,
+    conceptsConfused,
+    conceptsNeedsReview: conceptsConfused, // Backwards compatibility alias
     feedbackMessage
   }
 }
@@ -105,32 +106,47 @@ export function buildQuizAnalyticsPayload({
     },
     delta: evaluation.delta,
     conceptsLearned: evaluation.conceptsLearned.map((c) => c.concept),
+    conceptsKnown: evaluation.conceptsKnown.map((c) => c.concept),
+    conceptsConfused: evaluation.conceptsConfused.map((c) => c.concept),
     status: 'complete'
   }
 }
 
+function mulberry32(a) {
+  let s = a >>> 0
+  return function () {
+    let t = (s += 0x6D2B79F5)
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function shuffleArray(arr, seed = null) {
+  const result = [...arr]
+  if (result.length <= 1) return result
+  const rng = seed !== null ? mulberry32(seed) : Math.random
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    const temp = result[i]
+    result[i] = result[j]
+    result[j] = temp
+  }
+  // Guarantee shuffled order differs from original
+  if (result.every((item, idx) => (item.id || item) === (arr[idx].id || arr[idx]))) {
+    result.push(result.shift())
+  }
+  return result
+}
+
 /**
- * Deterministically or randomly shuffle questions without mutating original array
+ * Shuffles question order and option order while preserving question IDs and option structure
  */
 export function shuffleQuestions(questions, seed = null) {
-  const arr = [...questions]
-  if (seed !== null) {
-    // Deterministic pseudo-random shuffle
-    let s = seed
-    for (let i = arr.length - 1; i > 0; i--) {
-      s = (s * 9301 + 49297) % 233280
-      const j = Math.floor((s / 233280) * (i + 1))
-      const temp = arr[i]
-      arr[i] = arr[j]
-      arr[j] = temp
-    }
-  } else {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      const temp = arr[i]
-      arr[i] = arr[j]
-      arr[j] = temp
-    }
-  }
-  return arr
+  if (!Array.isArray(questions)) return []
+  const shuffledQ = shuffleArray(questions, seed)
+  return shuffledQ.map((q, idx) => ({
+    ...q,
+    options: shuffleArray(q.options || [], seed !== null ? seed + (idx + 1) * 37 : null)
+  }))
 }

@@ -53,6 +53,12 @@ test.describe('Scenario Director E2E Suite (Item 3)', () => {
     const quickPlayBtn = page.locator('[data-testid="start-quick-play-button"]').first()
     await quickPlayBtn.click()
 
+    // If Pre-Check Quiz appears, skip for now to proceed with director assertions
+    const skipQuizBtn = page.locator('[data-testid="skip-quiz-button"]')
+    if (await skipQuizBtn.isVisible({ timeout: 4000 }).catch(() => false)) {
+      await skipQuizBtn.click()
+    }
+
     // Verify Village Sign on Arch
     const villageSign = page.locator('[data-testid="village-sign-text"]').first()
     await villageSign.waitFor({ state: 'visible', timeout: 30000 })

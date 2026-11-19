@@ -591,7 +591,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setActiveSeasonalEvent(null)
     setInteractionTarget({ id: 'straw_1', x: -3.2, z: 12.5, scale: 1.0, label: 'Nearby Golden Straw Mound' })
     triggerToast('🌾 Paddy harvested! Straw residue ready for decision.')
-    if (!skipQuiz && !persistentState?.preCheckCompleted) {
+    if (!skipQuiz && !persistentState?.preCheckCompleted && !persistentState?.preCheckSkipped) {
       setQuizState({ isOpen: true, mode: 'pre' })
     }
   }, [triggerToast, persistentState])

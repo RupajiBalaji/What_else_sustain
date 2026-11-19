@@ -58,6 +58,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
     showPledgeModal,
     setShowPledgeModal,
     quizState,
+    setQuizState,
     openQuiz,
     closeQuiz,
     setPersistentState,
@@ -860,9 +861,22 @@ export default function HUDOverlay({ onSwitchToLite }) {
           } else if (res.mode === 'results') {
             setPersistentState((prev) => ({ ...prev, postCheckCompleted: true }))
             closeQuiz?.()
+            if (quizState?.triggerNextSeason) {
+              nextSeason?.()
+            }
           }
         }}
-        onSkip={() => closeQuiz?.()}
+        onSkip={(res) => {
+          if (res?.mode === 'pre') {
+            setPersistentState((prev) => ({ ...prev, preCheckSkipped: true }))
+          } else if (res?.mode === 'post') {
+            setPersistentState((prev) => ({ ...prev, postCheckSkipped: true }))
+            if (quizState?.triggerNextSeason) {
+              nextSeason?.()
+            }
+          }
+          closeQuiz?.()
+        }}
       />
 
       {/* BOTTOM TOUCH CONTROLS (for mobile / touchscreens) */}
@@ -1132,7 +1146,14 @@ export default function HUDOverlay({ onSwitchToLite }) {
       {/* COMPREHENSIVE SEASON REPORT SCREEN */}
       {showSeasonReport && (
         <SeasonReportModal
-          onNextSeason={nextSeason}
+          onNextSeason={() => {
+            if (!persistentState?.postCheckCompleted && !persistentState?.postCheckSkipped) {
+              setShowSeasonReport(false)
+              setQuizState({ isOpen: true, mode: 'post', triggerNextSeason: true })
+            } else {
+              nextSeason()
+            }
+          }}
           onRewindSeason={replaySeason}
           onOpenAchievements={() => setShowAchievements(true)}
         />

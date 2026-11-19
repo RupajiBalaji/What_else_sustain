@@ -37,6 +37,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
     farmConfig,
     setFarmConfig,
     isOfflineScenario,
+    persistentState,
     openQuiz
   } = useGame3D()
 
@@ -509,13 +510,23 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
 
         {/* Career Progression & Reset */}
         <div style={{ borderTop: '1px solid #EEEEEE', paddingTop: '14px' }}>
-          {/* Knowledge Check Quiz Button */}
+          {/* Knowledge Check / Review Quiz Button */}
           <button
             type="button"
             data-testid="settings-quiz-button"
             onClick={() => {
               onClose()
-              openQuiz?.('pre')
+              let hasPrevious = false
+              try {
+                const raw = localStorage.getItem('wes_quiz_sessions_v1')
+                const parsed = raw ? JSON.parse(raw) : null
+                if (parsed?.postCompleted || parsed?.preCompleted) hasPrevious = true
+              } catch {}
+              if (persistentState?.postCheckCompleted || persistentState?.preCheckCompleted || hasPrevious) {
+                openQuiz?.('results')
+              } else {
+                openQuiz?.('pre')
+              }
             }}
             style={{
               width: '100%',
@@ -535,7 +546,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
             }}
           >
             <span>📝</span>
-            <span>Knowledge Check Quiz</span>
+            <span>{persistentState?.postCheckCompleted ? 'Review Quiz & Learning' : 'Knowledge Check Quiz'}</span>
           </button>
 
           {/* Teacher Dashboard Link */}

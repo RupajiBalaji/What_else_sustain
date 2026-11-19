@@ -100,11 +100,12 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   const vpName = isMobile ? 'mobile' : 'desktop'
   const vpKey = `${vp.width}x${vp.height}`
 
-  // 1. Clean state isolation and initial load
+  // 1. Clean state isolation and initial load (Navigation Start)
   await page.addInitScript(() => {
     try { localStorage.clear() } catch {}
     try { sessionStorage.clear() } catch {}
   })
+  const navigationStartTime = Date.now()
   await page.goto('/?noFpsFallback=1')
 
   // Check no ErrorBoundary failure
@@ -121,7 +122,6 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   // Click Quick Play (default: jumps straight to straw decision)
   await page.waitForTimeout(400)
   await startQuickPlayBtn.click()
-  const quickPlayStartTime = Date.now()
   await expect(startQuickPlayBtn).toBeHidden({ timeout: 90000 })
 
   // If pre-check quiz modal is shown, skip it so the decision panel is directly reached
@@ -138,16 +138,14 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   const burnOptionBtn = page.locator('[data-testid="choice-option-burn"], button:has-text("Burn")').first()
 
   await burnOptionBtn.waitFor({ state: 'visible', timeout: 90000 })
-  const quickPlayDuration = (Date.now() - quickPlayStartTime) / 1000
-  console.log(`[PERF] Quick Play to Decision Panel duration: ${quickPlayDuration.toFixed(2)}s (${vpKey})`)
+  const timeToDecision = (Date.now() - navigationStartTime) / 1000
+  console.log(`[PERF] Navigation to Decision Panel duration: ${timeToDecision.toFixed(2)}s (${vpKey})`)
 
   // Log measured time to decision in docs/PERFORMANCE.md
   try {
-    const perfLog = `| ${new Date().toISOString()} | ${vpKey} | ${quickPlayDuration.toFixed(2)}s | software GL, not representative of player hardware |\n`
+    const perfLog = `| ${new Date().toISOString()} | ${vpKey} | ${timeToDecision.toFixed(2)}s | software GL, not representative of player hardware |\n`
     const perfPath = 'docs/PERFORMANCE.md'
-    if (!fs.existsSync(perfPath)) {
-      fs.writeFileSync(perfPath, '# Performance Metrics (Automated Test Runner)\n\n| Timestamp | Viewport | Time to Decision | Notes |\n| --- | --- | --- | --- |\n' + perfLog)
-    } else {
+    if (fs.existsSync(perfPath)) {
       fs.appendFileSync(perfPath, perfLog)
     }
   } catch (err) {

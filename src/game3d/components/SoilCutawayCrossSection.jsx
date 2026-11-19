@@ -12,7 +12,7 @@ const _soilDummy = new THREE.Object3D()
  * instanced worms, microbes, and downward heat glow during fires.
  */
 export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rotation = [0, 0.25, 0] }) {
-  const { quality, burnState, burnProgress, activeAlternative, persistentState, isAnyModalOpen } = useGame3D()
+  const { quality, burnState, burnProgress, activeAlternative, persistentState, isAnyModalOpen, isChoicePanelOpen } = useGame3D()
   const isHigh = quality === 'high'
   const soilHealth = persistentState?.soilHealth ?? 70
 
@@ -246,6 +246,7 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
         icon="🔬"
         center
         zIndexRange={[15, 0]}
+        visible={!isChoicePanelOpen}
       >
         <div
           style={{

@@ -278,6 +278,11 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
     expect(phase1Result.collisions).toEqual([])
     expect(phase1Result.worldCardCount).toBeLessThanOrEqual(2)
 
+    const vp = page.viewportSize()
+    if (vp) {
+      await page.screenshot({ path: `tests/screenshots/${vp.width}x${vp.height}-decision-point.png` })
+    }
+
     // PHASE 2: Mid-Burn Phase
     await burnOptionBtn.click({ force: true })
     const confirmBtn = page.locator('[data-testid="confirm-choice-button"]')
@@ -286,7 +291,7 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
 
     await page.waitForTimeout(6000) // ~6s into burn
     const phase2Result = await inspectOverlayCollisions(page)
-    console.log(`[OVERLAY TEST] Phase 2 (Mid-Burn): ${phase2Result.count} elements checked, ${phase2Result.worldCardCount} world cards`)
+    console.log(`[OVERLAY TEST] Phase 2 (Mid-Burn): ${phase2Result.count} elements checked, ${phase2Result.worldCardCount} world cards, cards: ${JSON.stringify(phase2Result.activeWorldCards)}`)
     expect(phase2Result.collisions).toEqual([])
     expect(phase2Result.worldCardCount).toBeLessThanOrEqual(2)
 
@@ -299,7 +304,7 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
     await watchVillageBtn.click({ force: true })
     await page.waitForTimeout(800)
     const phase3Result = await inspectOverlayCollisions(page)
-    console.log(`[OVERLAY TEST] Phase 3 (Watch Village): ${phase3Result.count} elements checked, ${phase3Result.worldCardCount} world cards`)
+    console.log(`[OVERLAY TEST] Phase 3 (Watch Village): ${phase3Result.count} elements checked, ${phase3Result.worldCardCount} world cards, cards: ${JSON.stringify(phase3Result.activeWorldCards)}`)
     expect(phase3Result.collisions).toEqual([])
     expect(phase3Result.worldCardCount).toBeLessThanOrEqual(2)
 

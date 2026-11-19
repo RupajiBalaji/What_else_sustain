@@ -404,6 +404,14 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [showPledgeModal, setShowPledgeModal] = useState(false)
   const [quizState, setQuizState] = useState({ isOpen: false, mode: 'pre' })
 
+  const isChoicePanelOpen =
+    Boolean(useInWorldChoices) &&
+    (harvestState === 'harvested' || seasonPhase === 'decision') &&
+    burnState === 'idle' &&
+    activeAlternative === null &&
+    !hasMadeChoice &&
+    !quizState?.isOpen
+
   // Accessibility & Farm Configuration (Task P4-01 & P4-02)
   const [colorBlindSafe, setColorBlindSafeState] = useState(() => {
     try {
@@ -1218,7 +1226,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         frameTimeMs,
         reportFps,
         handleInteract,
-        onFallbackToLite
+        onFallbackToLite,
+        isChoicePanelOpen
       }}
     >
       {children}

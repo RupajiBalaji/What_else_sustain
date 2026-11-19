@@ -116,7 +116,7 @@ export default function ConsequenceCallouts() {
         position: 'absolute',
         left: isMobile ? '12px' : '20px',
         transform: 'none',
-        top: isMobile ? 'calc(275px + env(safe-area-inset-top, 0px))' : '190px',
+        top: isMobile ? 'calc(138px + env(safe-area-inset-top, 0px))' : '190px',
         bottom: 'auto',
         width: isMobile ? 'min(260px, calc(100vw - 80px))' : '290px',
         zIndex: 75,

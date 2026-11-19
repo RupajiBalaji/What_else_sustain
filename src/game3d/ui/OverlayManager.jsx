@@ -297,7 +297,7 @@ export function ManagedOverlay({
   distanceFactor,
   visible = true
 }) {
-  const { isAnyModalOpen, showSeasonReport, showChoiceWheel } = useGame3D()
+  const { isAnyModalOpen, showSeasonReport, showChoiceWheel, isChoicePanelOpen } = useGame3D()
   const manager = useOverlayManager()
 
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -358,11 +358,15 @@ export function ManagedOverlay({
     return () => window.removeEventListener('resize', handleResize)
   }, [manager])
 
-  // Hide straw decision labels while choice panel is open
-  const isHiddenByChoiceWheel = showChoiceWheel && (id === 'straw_decision_label' || id?.startsWith('straw_'))
+  // Hide straw decision labels and soil cutaway plaque while choice panel is open
+  const isHiddenByChoicePanel = (showChoiceWheel || isChoicePanelOpen) && (
+    id === 'straw_decision_label' ||
+    id?.startsWith('straw_') ||
+    id === 'soil_cutaway_plaque'
+  )
 
   // Hide completely while ANY modal is open (modals maintain highest z-index)
-  if (isAnyModalOpen || showSeasonReport || !visible || isHiddenByChoiceWheel) {
+  if (isAnyModalOpen || showSeasonReport || !visible || isHiddenByChoicePanel) {
     return null
   }
 

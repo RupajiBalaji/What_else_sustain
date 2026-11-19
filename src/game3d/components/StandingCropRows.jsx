@@ -199,6 +199,20 @@ export default function StandingCropRows() {
 
   const geometry = useMemo(() => createCropClusterGeometry(soilHealth), [soilHealth])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.getCropStats = () => ({
+        tier: qualityConfig.tier,
+        count,
+        rows,
+        cols,
+        harvestState,
+        isInstancedMeshMounted: Boolean(meshRef.current)
+      })
+    }
+  }, [qualityConfig.tier, count, rows, cols, harvestState])
+
   // Agricultural Furrows layout with visible 1.1m row spacing
   const cropData = useMemo(() => {
     const items = []
@@ -251,7 +265,7 @@ export default function StandingCropRows() {
     if (meshRef.current.instanceColor) {
       meshRef.current.instanceColor.needsUpdate = true
     }
-  }, [cropData, count])
+  }, [cropData, count, harvestState])
 
   // Wind sway vertex shader
   const material = useMemo(() => {

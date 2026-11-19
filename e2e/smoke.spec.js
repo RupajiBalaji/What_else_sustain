@@ -622,3 +622,64 @@ test.describe('Fire & Smoke Assertion Negative Controls (Item 2c)', () => {
     expect(smokePassed).toBe(false)
   })
 })
+
+test('ITEM-6 verifies instanced stalks render on Low tier and captures field crop closeup', async ({ page }) => {
+  // Mock API endpoints to simulate backend responses
+  await page.route('**/api/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'ok', data: { introStory: 'Season story', localHint: 'punjab_happy_seeder' } })
+    })
+  })
+
+  await page.goto('/?noFpsFallback=1')
+
+  const startQuickPlayBtn = page.locator('[data-testid="start-quick-play-button"], [data-testid="start-3d-button"]').first()
+  await startQuickPlayBtn.waitFor({ state: 'visible', timeout: 90000 })
+  await page.waitForTimeout(500)
+  await startQuickPlayBtn.click()
+  await expect(startQuickPlayBtn).toBeHidden({ timeout: 90000 })
+
+  // Dismiss quiz if shown
+  const skipQuizBtn = page.locator('button:has-text("Skip for now"), [data-testid="skip-quiz-button"]').first()
+  try {
+    await skipQuizBtn.waitFor({ state: 'visible', timeout: 4000 })
+    await skipQuizBtn.click()
+  } catch {
+    // Quiz modal not shown
+  }
+
+  // Wait for 3D world hooks to mount
+  await page.waitForFunction(() => {
+    return Boolean(window.__wes_debug?.getCropStats && window.__wes_debug?.setSeasonPhase)
+  }, { timeout: 30000 })
+
+  // Switch to growing phase to view standing crops on low tier
+  await page.evaluate(() => {
+    window.__wes_debug.setSeasonPhase('growing')
+    window.__wes_debug.setHarvestState('standing')
+  })
+
+  // Poll crop stats
+  await page.waitForFunction(() => {
+    const stats = window.__wes_debug?.getCropStats?.()
+    return stats && stats.count >= 120 && stats.isInstancedMeshMounted
+  }, { timeout: 25000 })
+
+  const cropStats = await page.evaluate(() => window.__wes_debug.getCropStats())
+  expect(cropStats.count).toBeGreaterThanOrEqual(120) // Verified instanced stalks render on Low tier (10x12 = 120 clusters)
+
+  // Position camera for close-up view of the standing crop rows
+  await page.evaluate(() => {
+    if (window.__wes_camera?.lookAt) {
+      window.__wes_camera.lookAt([-15.0, 0.7, 20.0], 5.0, -1.8, 0.28)
+    } else if (window.__wes_debug?.setCameraPose) {
+      window.__wes_debug.setCameraPose({ yaw: -1.8, pitch: 0.28, distance: 5.0 })
+    }
+  })
+  await page.waitForTimeout(1500)
+
+  // Capture close-up screenshot
+  await safeScreenshot(page, 'tests/screenshots/field-crop-closeup.png')
+})

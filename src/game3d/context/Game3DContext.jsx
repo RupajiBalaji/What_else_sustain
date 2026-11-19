@@ -375,6 +375,14 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const harvestTimerRef = useRef(null)
   const harvestIntervalRef = useRef(null)
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.setSeasonPhase = setSeasonPhase
+      window.__wes_debug.setHarvestState = setHarvestState
+    }
+  }, [setSeasonPhase, setHarvestState])
+
   // Burn sequence state: 'idle' | 'lighting' | 'burning' | 'consequence'
   const [burnState, setBurnState] = useState('idle')
   const [burnProgress, setBurnProgress] = useState(0)

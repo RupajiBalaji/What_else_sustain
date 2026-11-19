@@ -73,38 +73,70 @@ const GRASS_PATCHES = [
 ]
 
 function createTuftGeometry() {
-  const g1 = new THREE.PlaneGeometry(0.8, 0.75, 1, 2)
-  g1.translate(0, 0.375, 0)
-  const g2 = new THREE.PlaneGeometry(0.8, 0.75, 1, 2)
-  g2.rotateY(Math.PI / 3)
-  g2.translate(0, 0.375, 0)
-  const g3 = new THREE.PlaneGeometry(0.8, 0.75, 1, 2)
-  g3.rotateY((Math.PI * 2) / 3)
-  g3.translate(0, 0.375, 0)
+  // 5 organic volumetric tapered blades radiating outward (natural field grass tuft, zero flat cards)
+  const g1 = new THREE.ConeGeometry(0.03, 0.45, 4)
+  g1.translate(0, 0.225, 0)
+
+  const g2 = new THREE.ConeGeometry(0.025, 0.38, 4)
+  g2.rotateZ(0.22)
+  g2.rotateY(Math.PI * 0.4)
+  g2.translate(0.06, 0.19, 0.04)
+
+  const g3 = new THREE.ConeGeometry(0.025, 0.40, 4)
+  g3.rotateZ(-0.25)
+  g3.rotateY(-Math.PI * 0.35)
+  g3.translate(-0.06, 0.20, -0.04)
+
+  const g4 = new THREE.ConeGeometry(0.02, 0.32, 4)
+  g4.rotateX(0.2)
+  g4.rotateY(Math.PI * 0.8)
+  g4.translate(0.03, 0.16, 0.06)
+
+  const g5 = new THREE.ConeGeometry(0.02, 0.30, 4)
+  g5.rotateX(-0.22)
+  g5.rotateY(-Math.PI * 0.75)
+  g5.translate(-0.03, 0.15, -0.05)
 
   const merged = new THREE.BufferGeometry()
   const p1 = g1.attributes.position.array
   const p2 = g2.attributes.position.array
   const p3 = g3.attributes.position.array
+  const p4 = g4.attributes.position.array
+  const p5 = g5.attributes.position.array
 
-  const positions = new Float32Array(p1.length + p2.length + p3.length)
+  const positions = new Float32Array(p1.length + p2.length + p3.length + p4.length + p5.length)
   positions.set(p1)
   positions.set(p2, p1.length)
   positions.set(p3, p1.length + p2.length)
+  positions.set(p4, p1.length + p2.length + p3.length)
+  positions.set(p5, p1.length + p2.length + p3.length + p4.length)
 
   const indices = []
   const idx1 = g1.index.array
   const idx2 = g2.index.array
   const idx3 = g3.index.array
+  const idx4 = g4.index.array
+  const idx5 = g5.index.array
   for (let i = 0; i < idx1.length; i++) indices.push(idx1[i])
   let off = g1.attributes.position.count
   for (let i = 0; i < idx2.length; i++) indices.push(idx2[i] + off)
   off += g2.attributes.position.count
   for (let i = 0; i < idx3.length; i++) indices.push(idx3[i] + off)
+  off += g3.attributes.position.count
+  for (let i = 0; i < idx4.length; i++) indices.push(idx4[i] + off)
+  off += g4.attributes.position.count
+  for (let i = 0; i < idx5.length; i++) indices.push(idx5[i] + off)
 
   merged.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   merged.setIndex(indices)
   merged.computeVertexNormals()
+
+  g1.dispose()
+  g2.dispose()
+  g3.dispose()
+  g4.dispose()
+  g5.dispose()
+
   return merged
 }
 

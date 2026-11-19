@@ -140,6 +140,20 @@ export default function CinematicCamera() {
         yaw: currentYawRef.current,
         pitch: currentPitchRef.current
       })
+      window.__wes_debug.setCameraPose = ({ yaw, pitch, distance }) => {
+        if (yaw !== undefined) {
+          targetYawRef.current = yaw
+          currentYawRef.current = yaw
+        }
+        if (pitch !== undefined) {
+          targetPitchRef.current = pitch
+          currentPitchRef.current = pitch
+        }
+        if (distance !== undefined) {
+          targetDistanceRef.current = distance
+          currentDistanceRef.current = distance
+        }
+      }
     }
 
     return () => {

@@ -11,8 +11,9 @@ import { ManagedOverlay } from '../ui/OverlayManager'
  * 3. Farmer's Accounting Desk & Coin Chest beside the farmhouse
  */
 export default function InWorldStatusProps() {
-  const { persistentState } = useGame3D()
+  const { persistentState, scenarioData } = useGame3D()
   const villageHealth = persistentState?.villageHealth ?? 75
+  const villageName = scenarioData?.villageName || 'Rupnagar'
   const reputation = persistentState?.reputation ?? 50
   const money = persistentState?.money ?? 12000
 
@@ -63,7 +64,7 @@ export default function InWorldStatusProps() {
           priority="decorative_sign"
           position={[0, 3.4, 0.08]}
           icon="🏡"
-          collapsedBadge="Village"
+          collapsedBadge={`Village ${villageName}`}
           center
         >
           <div
@@ -82,9 +83,11 @@ export default function InWorldStatusProps() {
               pointerEvents: 'none'
             }}
           >
-            <div>{bannerText}</div>
+            <div data-testid="village-sign-text" style={{ fontSize: '13px' }}>
+              🌾 Gram Panchayat {villageName} 🌾
+            </div>
             <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '2px' }}>
-              Village Health: {Math.round(villageHealth)}/100
+              {bannerText} • Health: {Math.round(villageHealth)}/100
             </div>
           </div>
         </ManagedOverlay>

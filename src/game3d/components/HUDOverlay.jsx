@@ -18,9 +18,10 @@ import GrowingTimeLapse from './GrowingTimeLapse'
 import SeasonalEventModal from './SeasonalEventModal'
 import SeasonReportModal from './SeasonReportModal'
 import AchievementsPanel from './AchievementsPanel'
+import { HINT_TEXTS } from '../../services/directorClient'
 
 export default function HUDOverlay({ onSwitchToLite }) {
-  const { t } = useLanguage()
+  const { t, language = 'en' } = useLanguage()
   const {
     persistentState,
     seasonPhase,
@@ -69,11 +70,14 @@ export default function HUDOverlay({ onSwitchToLite }) {
     showSettings,
     setShowSettings,
     toastNotice,
-    invertLook
+    invertLook,
+    scenarioData
   } = useGame3D()
 
   // Mobile virtual joystick state
   const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 640 : false))
+  const [dismissedDirectorHint, setDismissedDirectorHint] = useState(false)
   const joystickBaseRef = useRef(null)
   const [knobPos, setKnobPos] = useState({ x: 0, y: 0 })
   const isDraggingJoystickRef = useRef(false)
@@ -92,7 +96,12 @@ export default function HUDOverlay({ onSwitchToLite }) {
 
   useEffect(() => {
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0)
+    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
+  useEffect(() => {
     // Keyboard 'E' listener for straw interaction
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
@@ -562,6 +571,56 @@ export default function HUDOverlay({ onSwitchToLite }) {
                 </span>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Local Agronomic Hint from Scenario Director (Dismissible card) */}
+        {!dismissedDirectorHint && scenarioData?.localHint && (seasonPhase === 'decision' || harvestState === 'harvested') && burnState === 'idle' && (
+          <div
+            data-testid="director-local-hint"
+            style={{
+              position: 'absolute',
+              bottom: isMobile ? 'calc(150px + env(safe-area-inset-bottom, 0px))' : '100px',
+              left: '16px',
+              maxWidth: isMobile ? 'calc(100vw - 32px)' : '320px',
+              backgroundColor: 'rgba(20, 26, 32, 0.95)',
+              border: '1.5px solid #81C784',
+              borderRadius: '12px',
+              padding: '10px 14px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+              color: '#FFFFFF',
+              zIndex: 65,
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: '10px',
+              pointerEvents: 'auto'
+            }}
+          >
+            <div>
+              <div style={{ color: '#81C784', fontWeight: 800, fontSize: '0.68rem', textTransform: 'uppercase', marginBottom: '2px' }}>
+                💡 Regional Advisory
+              </div>
+              <div style={{ fontSize: '0.78rem', lineHeight: 1.35 }}>
+                {HINT_TEXTS[scenarioData.localHint]?.[language] || HINT_TEXTS[scenarioData.localHint]?.en || scenarioData.localHint}
+              </div>
+            </div>
+            <button
+              type="button"
+              data-testid="dismiss-local-hint-button"
+              onClick={() => setDismissedDirectorHint(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#B0BEC5',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                padding: '2px 4px',
+                lineHeight: 1
+              }}
+            >
+              ✕
+            </button>
           </div>
         )}
 

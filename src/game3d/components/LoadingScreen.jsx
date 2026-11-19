@@ -16,7 +16,7 @@ const SUSTAINABILITY_TIPS = [
   '💨 Open burning destroys essential nitrogen, phosphorus, and friendly earthworms (Source: NPMCR).'
 ]
 
-export default function LoadingScreen({ onStart, onSwitchToLite, farmConfig, setFarmConfig }) {
+export default function LoadingScreen({ onStart, onSwitchToLite, farmConfig, setFarmConfig, scenarioData }) {
   const { t } = useLanguage()
   const [showYourFarm, setShowYourFarm] = useState(false)
   const { progress: dreiProgress, active } = useProgress()
@@ -315,6 +315,29 @@ export default function LoadingScreen({ onStart, onSwitchToLite, farmConfig, set
                 Change Farm
               </button>
             </div>
+
+            {/* Intro Story from Scenario Director */}
+            {scenarioData?.introStory && (
+              <div
+                data-testid="season-intro-story"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.92)',
+                  border: '1.5px solid #8D6E63',
+                  borderRadius: '10px',
+                  padding: '7px 12px',
+                  margin: '4px 0 8px 0',
+                  fontSize: '0.76rem',
+                  color: '#3E2723',
+                  lineHeight: 1.35,
+                  textAlign: 'left'
+                }}
+              >
+                <div style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: '#5D4037', marginBottom: '2px' }}>
+                  🌾 Season Dispatch • {farmConfig?.state || 'Punjab'}
+                </div>
+                <div>{scenarioData.introStory}</div>
+              </div>
+            )}
 
             {/* Primary Default: Quick Play */}
             <button

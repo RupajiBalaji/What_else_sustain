@@ -8,11 +8,14 @@ import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 import { getQualityConfig, autoDetectQualityTier } from '../config/qualityConfig'
 import { GAME_BALANCE, getSeasonEvent } from '../config/gameBalance'
 import { STRAW_PILES_DATA } from '../config/strawData'
+import { useLanguage } from '../../context/LanguageContext'
+import { fetchScenarioDirector, REGIONAL_DEFAULTS } from '../../services/directorClient'
 
 const Game3DContext = createContext(null)
 
 export function Game3DProvider({ children, onFallbackToLite }) {
   const game = useGame()
+  const { language = 'en' } = useLanguage() || {}
 
   // ==========================================
   // 1. PERSISTENT STATE & STORAGE (Carried over across seasons)
@@ -462,6 +465,38 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       localStorage.setItem('wes_farm_config', JSON.stringify(val))
     } catch {}
   }, [])
+
+  // Scenario Director integration (Section 7.2)
+  const [scenarioData, setScenarioData] = useState(() => {
+    const reg = REGIONAL_DEFAULTS[farmConfig?.state] || REGIONAL_DEFAULTS.Punjab
+    return {
+      villageName: reg.villageName,
+      introStory: reg.introStory[language] || reg.introStory.en,
+      whyPeopleBurnHere: reg.whyPeopleBurnHere,
+      featuredAlternatives: reg.featuredAlternatives,
+      localHint: reg.localHint,
+      eventSuggestion: reg.eventSuggestion
+    }
+  })
+  const [isOfflineScenario, setIsOfflineScenario] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadScenario() {
+      const result = await fetchScenarioDirector({
+        state: farmConfig?.state || 'Punjab',
+        crop: farmConfig?.crop || 'Paddy',
+        acres: farmConfig?.acres || 5,
+        language
+      })
+      if (!cancelled && result?.data) {
+        setScenarioData(result.data)
+        setIsOfflineScenario(Boolean(result.isOffline))
+      }
+    }
+    loadScenario()
+    return () => { cancelled = true }
+  }, [farmConfig?.state, farmConfig?.crop, farmConfig?.acres, language])
 
   const openQuiz = useCallback((mode = 'pre') => {
     setQuizState({ isOpen: true, mode })
@@ -1171,6 +1206,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         setLargeTextEnabled,
         farmConfig,
         setFarmConfig,
+        scenarioData,
+        isOfflineScenario,
         quizState,
         setQuizState,
         openQuiz,

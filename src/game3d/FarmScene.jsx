@@ -75,7 +75,7 @@ function SceneContent() {
 }
 
 function FarmSceneInner({ onSwitchToLite }) {
-  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover, dprScale, jumpToDecisionPhase, farmConfig, setFarmConfig } = useGame3D()
+  const { qualityConfig, startHarvestSequence, isFlyoverActive, skipFlyover, dprScale, jumpToDecisionPhase, farmConfig, setFarmConfig, scenarioData } = useGame3D()
   const [isDemoMode, setIsDemoMode] = useState(() => {
     if (typeof window === 'undefined') return false
     const params = new URLSearchParams(window.location.search)
@@ -207,6 +207,7 @@ function FarmSceneInner({ onSwitchToLite }) {
         <LoadingScreen
           farmConfig={farmConfig}
           setFarmConfig={setFarmConfig}
+          scenarioData={scenarioData}
           onStart={(mode) => {
             setHasStarted(true)
             if (mode === 'decision') {

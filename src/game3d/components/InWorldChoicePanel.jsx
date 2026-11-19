@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
@@ -97,8 +97,31 @@ export default function InWorldChoicePanel() {
     setSelectedChoiceId,
     triedChoices = [],
     seasonPhase,
-    quizState
+    quizState,
+    scenarioData
   } = useGame3D()
+
+  const orderedOptions = useMemo(() => {
+    if (!scenarioData?.featuredAlternatives || scenarioData.featuredAlternatives.length === 0) {
+      return CHOICE_OPTIONS
+    }
+    const burnOpt = CHOICE_OPTIONS.find((o) => o.id === 'burn')
+    const altMap = new Map(CHOICE_OPTIONS.filter((o) => o.id !== 'burn').map((o) => [o.id, o]))
+
+    const sortedAlts = []
+    for (const key of scenarioData.featuredAlternatives) {
+      const mappedKey = key === 'bio_decomposer' ? 'compost' : key
+      if (altMap.has(mappedKey)) {
+        sortedAlts.push(altMap.get(mappedKey))
+        altMap.delete(mappedKey)
+      }
+    }
+    for (const remaining of altMap.values()) {
+      sortedAlts.push(remaining)
+    }
+
+    return [burnOpt, ...sortedAlts].filter(Boolean)
+  }, [scenarioData])
 
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth < 680 : false
@@ -247,13 +270,18 @@ export default function InWorldChoicePanel() {
           width: '100%'
         }}
       >
-        {CHOICE_OPTIONS.map((opt, idx) => {
+        {orderedOptions.map((opt, idx) => {
           const isSelected = selectedId === opt.id
+          const isTopSuggested = !opt.isBurn && (
+            scenarioData?.featuredAlternatives?.[0] === opt.id ||
+            scenarioData?.featuredAlternatives?.[0] === (opt.id === 'compost' ? 'bio_decomposer' : opt.id)
+          )
           return (
             <button
               key={opt.id}
               type="button"
               data-testid={`choice-option-${opt.id}`}
+              data-featured-suggested={isTopSuggested ? 'true' : undefined}
               onClick={() => handleSelectOption(opt)}
               style={{
                 display: 'flex',
@@ -273,10 +301,25 @@ export default function InWorldChoicePanel() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'left' }}>
                 <span style={{ fontSize: '1.2rem' }}>{opt.icon}</span>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '0.84rem', color: isSelected ? opt.color : '#FFFFFF' }}>
-                    {idx + 1}. {opt.label}
+                  <div style={{ fontWeight: 800, fontSize: '0.84rem', color: isSelected ? opt.color : '#FFFFFF', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                    <span>{idx + 1}. {opt.label}</span>
+                    {isTopSuggested && (
+                      <span
+                        data-testid="suggested-badge"
+                        style={{
+                          fontSize: '0.65rem',
+                          color: '#FFFFFF',
+                          backgroundColor: '#2E7D32',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          fontWeight: 800
+                        }}
+                      >
+                        Suggested
+                      </span>
+                    )}
                     {triedChoices.includes(opt.isBurn ? 'burn' : opt.id) && (
-                      <span style={{ marginLeft: '6px', fontSize: '0.65rem', color: '#81C784', backgroundColor: 'rgba(76, 175, 80, 0.15)', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(76, 175, 80, 0.3)' }}>
+                      <span style={{ fontSize: '0.65rem', color: '#81C784', backgroundColor: 'rgba(76, 175, 80, 0.15)', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(76, 175, 80, 0.3)' }}>
                         ✓ Tried
                       </span>
                     )}

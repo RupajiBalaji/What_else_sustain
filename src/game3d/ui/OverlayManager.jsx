@@ -257,8 +257,8 @@ export function ManagedOverlay({
     return () => window.removeEventListener('resize', handleResize)
   }, [manager])
 
-  // Hide village sign, air-station label, and straw labels while choice panel is open
-  const isHiddenByChoiceWheel = showChoiceWheel && (id === 'village_sign' || id === 'village_air_station' || id?.startsWith('straw') || id?.startsWith('villager'))
+  // Hide straw decision labels while choice panel is open
+  const isHiddenByChoiceWheel = showChoiceWheel && (id === 'straw_decision_label' || id?.startsWith('straw_'))
 
   // Hide completely while ANY modal is open (modals maintain highest z-index)
   if (isAnyModalOpen || showSeasonReport || !visible || isHiddenByChoiceWheel) {
@@ -289,6 +289,7 @@ export function ManagedOverlay({
         >
           {isCollapsed ? (
             <div
+              data-testid={id === 'village_sign' ? 'village-sign-text' : undefined}
               style={{
                 backgroundColor: 'rgba(22, 56, 43, 0.95)',
                 color: '#FFFFFF',

@@ -36,6 +36,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
     setLargeTextEnabled,
     farmConfig,
     setFarmConfig,
+    isOfflineScenario,
     openQuiz
   } = useGame3D()
 
@@ -64,6 +65,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
 
   return (
     <div
+      data-testid="settings-drawer"
       style={{
         position: 'fixed',
         inset: 0,
@@ -99,6 +101,23 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
             <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#16382B' }}>
               Game Settings
             </h3>
+            {isOfflineScenario && (
+              <span
+                data-testid="offline-scenario-tag"
+                style={{
+                  fontSize: '0.65rem',
+                  backgroundColor: 'rgba(230, 81, 0, 0.15)',
+                  color: '#E65100',
+                  border: '1px solid #FF9800',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontWeight: 800,
+                  textTransform: 'uppercase'
+                }}
+              >
+                offline scenario
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -441,7 +460,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
 
           <button
             type="button"
-            data-testid="edit-farm-profile-modal-btn"
+            data-testid="settings-change-farm-btn"
             onClick={() => setShowFarmModal(true)}
             style={{
               padding: '8px 12px',

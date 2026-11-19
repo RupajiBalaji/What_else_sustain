@@ -50,7 +50,7 @@ export default function YourFarmModal({ initialProfile, onSave, onClose, isSetti
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.75)',
         backdropFilter: 'blur(6px)',
-        zIndex: 110,
+        zIndex: 140,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

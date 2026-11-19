@@ -112,24 +112,24 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
     return null
   }
 
-  // 5 distinct slender flame tongues positioned around the pile perimeter (< 0.7m radius, < pile width + 40%)
+  // 5 distinct, tall, wider flame tongues positioned around the pile perimeter
   const TONGUE_POSITIONS = [
-    { pos: [0.38, 0.45, 0.32], rotY: 0.35, scale: [0.65, 0.95, 0.65] },
-    { pos: [-0.42, 0.40, 0.22], rotY: -0.65, scale: [0.60, 0.90, 0.60] },
-    { pos: [0.12, 0.52, -0.42], rotY: 1.25, scale: [0.68, 1.05, 0.68] },
-    { pos: [-0.32, 0.48, -0.32], rotY: 2.15, scale: [0.58, 0.88, 0.58] },
-    { pos: [0.0, 0.58, 0.0], rotY: -1.45, scale: [0.75, 1.15, 0.75] }
+    { pos: [0.42, 0.52, 0.35], rotY: 0.35, scale: [0.95, 1.35, 0.95] },
+    { pos: [-0.46, 0.48, 0.24], rotY: -0.65, scale: [0.90, 1.30, 0.90] },
+    { pos: [0.15, 0.60, -0.45], rotY: 1.25, scale: [1.00, 1.45, 1.00] },
+    { pos: [-0.35, 0.54, -0.34], rotY: 2.15, scale: [0.85, 1.25, 0.85] },
+    { pos: [0.0, 0.65, 0.0], rotY: -1.45, scale: [1.10, 1.55, 1.10] }
   ]
 
   return (
-    <group ref={groupRef} position={[0, 0.4, 0]}>
+    <group ref={groupRef} position={[0, 0.45, 0]}>
       {TONGUE_POSITIONS.map((tongue, idx) => (
         <group key={idx} position={tongue.pos} scale={tongue.scale} rotation={[0, tongue.rotY, 0]}>
           <mesh material={flameMaterial}>
-            <planeGeometry args={[0.75, 2.1, 6, 8]} />
+            <planeGeometry args={[1.05, 2.75, 6, 8]} />
           </mesh>
           <mesh material={flameMaterial} rotation={[0, Math.PI / 2, 0]}>
-            <planeGeometry args={[0.70, 2.0, 6, 8]} />
+            <planeGeometry args={[0.95, 2.60, 6, 8]} />
           </mesh>
         </group>
       ))}
@@ -137,10 +137,10 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
       {/* Warm gentle flickering ground fire light (clamped to prevent over-exposure) */}
       <pointLight
         color="#E65100"
-        intensity={1.1 * Math.max(0.3, 1.0 - burnProgress * 0.4)}
-        distance={7}
+        intensity={1.35 * Math.max(0.3, 1.0 - burnProgress * 0.4)}
+        distance={8}
         decay={2}
-        position={[0, 0.4, 0]}
+        position={[0, 0.5, 0]}
       />
     </group>
   )

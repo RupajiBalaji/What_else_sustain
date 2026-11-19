@@ -308,27 +308,31 @@ export default function FireSmokeSystem() {
         }
         smokeMeshRef.current.instanceMatrix.needsUpdate = true
       } else {
+        const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 640
         smokeParticles.slice(0, maxSmoke).forEach((p, i) => {
           p.life += delta
           if (p.life >= p.maxLife) {
             p.life = 0
             p.pileIndex = i % activePilesList.length
             const pile = activePilesList[p.pileIndex]
-            p.x = pile.x + (Math.random() - 0.5) * 1.0
+            p.x = pile.x + (Math.random() - 0.5) * (isMobileScreen ? 0.6 : 1.0)
             p.y = 1.1 + Math.random() * 0.5
             p.z = pile.z + (Math.random() - 0.5) * 1.0
-            p.vx = (Math.random() - 0.5) * 0.35
+            p.vx = (Math.random() - 0.5) * (isMobileScreen ? 0.20 : 0.35)
             p.vy = 1.6 + Math.random() * 0.8
             p.vz = (Math.random() - 0.5) * 0.35
           }
 
           const progress = p.life / p.maxLife
-          p.x += (p.vx + smokeDriftX * progress * 2.2) * delta
+          p.x += (p.vx + smokeDriftX * progress * (isMobileScreen ? 1.4 : 2.2)) * delta
           p.y += (p.vy * 0.90 + Math.sin(progress * Math.PI) * 0.35) * delta
           p.z += (p.vz + smokeDriftZ * progress * 3.0) * delta
 
           // Expands naturally into billowing dark smoke puffs drifting towards the village
-          const size = Math.max(1.1, 1.4 + progress * 4.2)
+          // On mobile, constrain plume width to within about one-third of screen width at 6s
+          const size = isMobileScreen
+            ? Math.max(0.85, 1.1 + progress * 2.3)
+            : Math.max(1.1, 1.4 + progress * 4.2)
 
           _particleDummy.position.set(p.x, p.y, p.z)
           _particleDummy.quaternion.copy(camera.quaternion)

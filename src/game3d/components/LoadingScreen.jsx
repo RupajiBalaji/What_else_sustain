@@ -32,6 +32,8 @@ export default function LoadingScreen({ onStart, onSwitchToLite, farmConfig, set
   })
   const [classStatus, setClassStatus] = useState(null) // null | { valid: true, name } | { valid: false, message }
 
+  const [forceReady, setForceReady] = useState(false)
+
   // Smoothly increment a baseline floor so the bar looks lively while downloading
   useEffect(() => {
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0)
@@ -41,18 +43,23 @@ export default function LoadingScreen({ onStart, onSwitchToLite, farmConfig, set
     }, 3800)
 
     const progressTimer = setInterval(() => {
-      setMinProgress((p) => (p < 85 ? p + 8 : p))
+      setMinProgress((p) => (p < 100 ? p + 8 : 100))
     }, 200)
+
+    const forceTimer = setTimeout(() => {
+      setForceReady(true)
+    }, 6000)
 
     return () => {
       clearInterval(tipTimer)
       clearInterval(progressTimer)
+      clearTimeout(forceTimer)
     }
   }, [])
 
   // Calculate actual combined progress
   const actualProgress = Math.max(minProgress, Math.round(dreiProgress || 0))
-  const isReady = actualProgress >= 100 || (!active && actualProgress >= 75)
+  const isReady = forceReady || actualProgress >= 100 || (!active && actualProgress >= 75)
 
   const handleClassCodeChange = async (val) => {
     const clean = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)

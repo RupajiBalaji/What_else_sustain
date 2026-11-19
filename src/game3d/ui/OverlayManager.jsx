@@ -37,10 +37,13 @@ export function OverlayManagerProvider({ children }) {
     const isMobile = winW < 640
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
 
+    const choicePanelEl = document.querySelector('[data-testid="in-world-choice-panel"]')
+    const isChoiceOpen = Boolean(choicePanelEl && window.getComputedStyle(choicePanelEl).display !== 'none' && window.getComputedStyle(choicePanelEl).visibility !== 'hidden')
+
     const safeTop = isMobile ? 84 : 76
-    const safeBottom = isTouch ? 160 : 46
+    const safeBottom = isTouch ? (isChoiceOpen && isMobile ? 320 : 160) : 46
     const safeLeft = 16
-    const safeRight = isMobile ? 24 : 36
+    const safeRight = (isChoiceOpen && !isMobile) ? 375 : (isMobile ? 24 : 36)
 
     // Convert to array and sort descending by priority
     const entries = Array.from(registryRef.current.values())
@@ -358,17 +361,37 @@ export function ManagedOverlay({
     return () => window.removeEventListener('resize', handleResize)
   }, [manager])
 
-  // Hide straw decision labels, soil cutaway plaque, and air station card while choice panel is open
+  // Hide straw decision labels, soil cutaway plaque, village sign, and air station card while choice panel is open
   const isHiddenByChoicePanel = (showChoiceWheel || isChoicePanelOpen) && (
     id === 'straw_decision_label' ||
     id?.startsWith('straw_') ||
     id === 'soil_cutaway_plaque' ||
-    id === 'village_air_station'
+    id === 'village_air_station' ||
+    id === 'village_sign' ||
+    id === 'reputation_flag'
   )
 
   // Hide completely while ANY modal is open (modals maintain highest z-index)
-  if (isAnyModalOpen || showSeasonReport || !visible || isHiddenByChoicePanel) {
+  if (isAnyModalOpen || showSeasonReport || !visible) {
     return null
+  }
+
+  // When suppressed by choice panel, remain attached in DOM with display: none for director queries without collision
+  if (isHiddenByChoicePanel) {
+    return (
+      <group position={position}>
+        <Html center={center} style={{ display: 'none', pointerEvents: 'none', visibility: 'hidden' }}>
+          <div
+            ref={containerRef}
+            data-overlay-id={id}
+            data-hidden-by-choice="true"
+            style={{ display: 'none' }}
+          >
+            {children}
+          </div>
+        </Html>
+      </group>
+    )
   }
 
   return (

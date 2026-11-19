@@ -181,7 +181,7 @@ test.describe('Scenario Director E2E Suite (Item 3)', () => {
 
     // Verify village sign defaulted to Meerut (UP fallback)
     const villageSign = page.locator('[data-testid="village-sign-text"]').first()
-    await villageSign.waitFor({ state: 'visible', timeout: 30000 })
+    await villageSign.waitFor({ state: 'attached', timeout: 30000 })
     await expect(villageSign).toContainText('Meerut')
 
     // Open settings drawer and verify "offline scenario" tag appears

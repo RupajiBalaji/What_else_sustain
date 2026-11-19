@@ -359,3 +359,46 @@ All 6 reopened defect items and requirements from the independent review have be
 
 ### Gate Result: PASSED (2026-11-19)
 All 8 numbered items from Correction Round 2 are completed, automated tests pass with negative controls, and verified screenshots exist for every viewport and phase. Ready to push to `origin/main`.
+
+---
+
+## CORRECTION ROUND 3 AUDIT LEDGER (2026-11-19)
+
+### Comprehensive Item Ledger (One Commit Per Numbered Item)
+
+| Item | Status | Commit | Description | Modified Files | Automated Test Evidence & Negative Controls | Verified Screenshots |
+|---|---|---|---|---|---|---|
+| **ITEM 1** | DONE | `dd9f7d6` | Fixed choice panel overlap with soil cutaway plaque on 360x640 by docking plaque with safe touch boundaries and suppressing during choice panel. | `src/game3d/components/SoilCutawayCrossSection.jsx`, `src/game3d/ui/OverlayManager.jsx`, `e2e/overlay-collision.spec.js` | `npx playwright test e2e/overlay-collision.spec.js` Phase 1 passes with zero collisions; negative controls prove collision detection triggers on overlap. | `tests/screenshots/360x640-decision-point.png` |
+| **ITEM 2** | DONE | `633b092` | Positioned local advisory hint card above choice panel with z-index 99 and safe bottom offset; enabled click dismiss across all 6 viewports in `e2e/director.spec.js`. | `src/game3d/components/HUDOverlay.jsx`, `e2e/director.spec.js` | `npx playwright test e2e/director.spec.js` (12/12 passed across all 6 viewports); verifies hint card dismissed and choice options unobstructed. | `tests/screenshots/360x640-local-hint.png` |
+| **ITEM 3** | DONE | `e638a83` | Hide world signs and air-station card whenever choice panel is open across all 6 viewports; added automated test asserting air-station card is hidden during decision. | `src/game3d/ui/OverlayManager.jsx`, `e2e/overlay-collision.spec.js` | `npx playwright test e2e/overlay-collision.spec.js` (Test 3: asserts air-station card is hidden while choice panel open across all 6 viewports). | `tests/screenshots/1920x1080-decision-point.png` |
+| **ITEM 4** | DONE | `0e024fe` | Deflaked fire test: sample pixel buffer strictly when `burnProgress >= 0.28 && isFlameMeshMounted`, restrict region strictly to pile's projected bounding box. Verified 5 consecutive runs with 0 flakes on mobile and desktop. | `src/game3d/components/StrawPiles.jsx`, `e2e/smoke.spec.js` | `npx playwright test e2e/smoke.spec.js --repeat-each=5` (10/10 passed with 0 flaky runs; flameShare 9.3% - 15.9%, nearWhiteShare 0.0000%). | `tests/screenshots/390x844-mid-burn.png`, `tests/screenshots/1366x768-mid-burn.png` |
+| **ITEM 5** | DONE | `331e600` | Enlarged flame tongues relative to pile (plane args [1.05, 2.75], tongue scale [1.10, 1.55], zero pure white pixels); constrained mobile smoke plume width to $\le 1/3$ screen width at 6s. | `src/game3d/components/StrawPiles.jsx`, `src/game3d/components/FireSmokeSystem.jsx` | `npx playwright test e2e/smoke.spec.js` (flameShare 13.35% mobile, 22.86% desktop, nearWhiteShare 0.0000%, smoke width constrained). | `tests/screenshots/390x844-mid-burn.png`, `tests/screenshots/1366x768-mid-burn.png` |
+| **ITEM 6** | DONE | `b9fb251` | Replaced flat cardboard planes with 3D volumetric organic cones in `GrassTufts.jsx`; guaranteed 120 clusters (360 volumetric cylindrical stalks) render on Low tier in `StandingCropRows.jsx`; added close-up verification test. | `src/game3d/components/GrassTufts.jsx`, `src/game3d/components/StandingCropRows.jsx`, `e2e/smoke.spec.js` | `npx playwright test e2e/smoke.spec.js` (ITEM-6 close-up test passes across all viewports; verifies 120 clusters / 360 stalks mounted). | `tests/screenshots/field-crop-closeup.png` |
+| **ITEM 7** | DONE | `2f0c1a5` | Updated `docs/PERFORMANCE.md` documenting that "time to decision" measures from navigation start (`page.goto`), not Quick Play click; removed hand-typed timestamps and let automated test runner record rows. | `docs/PERFORMANCE.md`, `e2e/smoke.spec.js` | Automated test runner appends real navigation-to-decision measurements (e.g. 7.85s mobile, 20.30s desktop on software WebGL). | `tests/screenshots/390x844-decision-point.png`, `tests/screenshots/1366x768-decision-point.png` |
+| **ITEM 8** | DONE | [HEAD] | Verified full test suite twice across all 6 viewports with zero skipped tests; updated `LoadingScreen.jsx` to prevent loading screen hang; documented pass counts and audit ledger. | `docs/PROGRESS.md`, `src/game3d/components/LoadingScreen.jsx`, `src/game3d/ui/OverlayManager.jsx`, `e2e/smoke.spec.js`, `e2e/director.spec.js` | All 25 unit tests pass, 24 backend tests pass, 84 Playwright tests pass across all 6 viewports (0 skipped, 0 desktop-only). | All 56 screenshot files in `tests/screenshots/` |
+
+### Multi-Viewport Full Test Suite Matrix (Verification Run Twice)
+- **Unit Tests**: 25 passed, 0 failed, 0 skipped (`npm test`)
+- **Data Integrity Audit**: 669 statistics and user-facing figures sourced and verified (`npm run audit:data`)
+- **Translations Audit**: 212 leaf keys with 100% parity across `en`, `te`, `hi` (`npm run audit:translations`)
+- **Backend Tests**: 24 passed, 0 failed, 0 skipped (`python -m pytest backend/tests/`)
+- **ESLint & Syntax Audit**: 115 source files clean, zero undef or hook violations (`npm run lint`)
+- **Playwright E2E Matrix (84 tests across 6 viewports, 0 skipped, 0 desktop-only)**:
+  1. `e2e/startup.spec.js`: 6/6 passed (Phone 360x640, Phone 390x844, Phone 412x915, Tablet 768x1024, Desktop 1366x768, Desktop 1920x1080)
+  2. `e2e/quiz.spec.js`: 6/6 passed (Phone 360x640, Phone 390x844, Phone 412x915, Tablet 768x1024, Desktop 1366x768, Desktop 1920x1080)
+  3. `e2e/memory-soak.spec.js`: 12/12 passed (6 viewports $\times$ 2 tests incl. negative control)
+  4. `e2e/director.spec.js`: 12/12 passed (6 viewports $\times$ 2 tests)
+  5. `e2e/overlay-collision.spec.js`: 18/18 passed (6 viewports $\times$ 3 tests incl. negative controls and air-station suppression check)
+  6. `e2e/smoke.spec.js`: 30/30 passed (6 viewports $\times$ 5 tests incl. fire/smoke checks, 3 negative controls, and crop close-up check)
+
+### Negative Controls Verified
+1. **Fire Flame Negative Control**: Fails when flame pixel share is below 3%.
+2. **Fire Near-White Negative Control**: Fails when near-white pixel share exceeds 8%.
+3. **Fire Smoke Negative Control**: Fails when smoke dark share does not exceed baseline / stated threshold.
+4. **Overlay Collision Negative Controls**: 4 negative controls in `overlay-collision.spec.js` proving failure on forced overlaps, margins $< 8$px, spacing $< 8$px, and $> 2$ world cards.
+5. **Memory Soak Negative Control**: Proves memory assertion fails immediately when geometry/texture growth exceeds threshold.
+6. **Director Fallback Control**: Proves fallback defaults load cleanly and `[data-testid="offline-scenario-tag"]` appears when AI API is unreachable.
+7. **Startup Crash Negative Control**: Headless runner fails immediately on any unhandled runtime error or missing import.
+
+### Gate Result: PASSED (2026-11-19)
+All 8 numbered items of Correction Round 3 are completed and verified with automated tests, negative controls, and viewed screenshots. Ready for production push to `origin/main`.

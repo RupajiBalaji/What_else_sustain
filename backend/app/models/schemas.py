@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # --- Health ---
@@ -95,6 +95,30 @@ class SessionInitRequest(BaseModel):
     scenario: str = "farm_crop_residue"
     device_class: str = "desktop"
     quality_tier: str = "Medium"
+
+
+class SessionUnifiedRequest(BaseModel):
+    choice: Optional[str] = None
+    scenario: Optional[str] = None
+    session_id: Optional[str] = None
+    class_code: Optional[str] = None
+    device_class: Optional[str] = None
+    quality_tier: Optional[str] = None
+    smoke_index: Optional[float] = None
+    quiz_pre: Optional[List[int]] = None
+    quiz_post: Optional[List[int]] = None
+    language: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_payload(cls, data: Any):
+        if not isinstance(data, dict):
+            raise ValueError("Payload must be a dictionary")
+        if "choice" in data:
+            SessionCreateRequest.model_validate(data)
+        else:
+            SessionInitRequest.model_validate(data)
+        return data
 
 
 class SessionInitResponse(BaseModel):

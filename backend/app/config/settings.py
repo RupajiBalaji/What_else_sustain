@@ -14,8 +14,12 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_API_KEYS: str = ""
 
-    # Stored as str to allow any env format (e.g. "*", '["*"]', or comma-separated domains)
-    ALLOWED_ORIGINS: Union[str, List[str]] = "*"
+    ENVIRONMENT: str = "development"
+
+    # Default to trusted origins; wildcards disallowed when credentials are sent
+    ALLOWED_ORIGINS: Union[str, List[str]] = (
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000,https://what-else-sustain.onrender.com"
+    )
     PORT: int = 8000
     DATABASE_URL: str = "sqlite:///./local.db"
 

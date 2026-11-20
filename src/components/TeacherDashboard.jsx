@@ -77,9 +77,21 @@ export default function TeacherDashboard({ onExitToGame }) {
     if (activeCode && activeToken) {
       fetchDashboard(activeCode, activeToken)
       const interval = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return
         fetchDashboard(activeCode, activeToken)
       }, 10000)
-      return () => clearInterval(interval)
+
+      const handleVisibilityChange = () => {
+        if (typeof document !== 'undefined' && !document.hidden) {
+          fetchDashboard(activeCode, activeToken)
+        }
+      }
+      document.addEventListener('visibilitychange', handleVisibilityChange)
+
+      return () => {
+        clearInterval(interval)
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+      }
     }
   }, [activeCode, activeToken, fetchDashboard])
 

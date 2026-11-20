@@ -6,7 +6,7 @@ import httpx
 
 from ..config.settings import settings
 from ..models.schemas import ScenarioDirectorRequest, ScenarioDirectorResponse
-from .advisor_service import get_rotated_gemini_keys
+from .advisor_service import get_rotated_gemini_keys, record_gemini_call
 
 APPROVED_REASON_IDS = [
     "short_window",
@@ -174,7 +174,7 @@ async def direct_scenario(req: ScenarioDirectorRequest) -> ScenarioDirectorRespo
         return _director_cache[cache_key]
 
     keys = get_rotated_gemini_keys()
-    if not keys:
+    if not keys or not record_gemini_call():
         res = get_deterministic_offline_scenario(req.state, req.crop, req.acres, req.language)
         _director_cache[cache_key] = res
         return res

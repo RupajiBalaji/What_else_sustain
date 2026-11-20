@@ -3,9 +3,11 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
 import { audioManager } from '../audio/AudioManager'
 import YourFarmModal from './YourFarmModal'
+import PrivacyModal from '../../components/PrivacyModal'
 
 export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
   const [showFarmModal, setShowFarmModal] = useState(false)
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const { language, setLanguage, t } = useLanguage()
   const {
     quality,
@@ -584,7 +586,7 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
               fontWeight: 800,
               fontSize: '0.85rem',
               cursor: 'pointer',
-              marginBottom: '12px',
+              marginBottom: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -593,6 +595,31 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
           >
             <span>🎓</span>
             <span>Teacher Class Dashboard</span>
+          </button>
+
+          <button
+            type="button"
+            data-testid="settings-privacy-notice-btn"
+            onClick={() => setShowPrivacyModal(true)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#ECEFF1',
+              color: '#37474F',
+              border: '1.5px solid #B0BEC5',
+              borderRadius: '10px',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              marginBottom: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🔒</span>
+            <span>Privacy & Transparency Notice</span>
           </button>
 
           <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#C62828', marginBottom: '4px' }}>
@@ -657,6 +684,10 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
           onClose={() => setShowFarmModal(false)}
           isSettings={true}
         />
+      )}
+
+      {showPrivacyModal && (
+        <PrivacyModal onClose={() => setShowPrivacyModal(false)} />
       )}
     </div>
   )

@@ -4,11 +4,24 @@ import httpx
 from ..config.settings import settings
 from ..models.schemas import AdvisorResponse
 
-# In-memory rate limiting: max 10 requests per minute per IP
+# Bounded in-memory rate limiting and global ceiling (Checks 6.1 and 8.1)
 RATE_LIMIT_WINDOW_SECONDS = 60
 MAX_REQUESTS_PER_WINDOW = 10
 _rate_limit_map: Dict[str, List[float]] = {}
+_hourly_gemini_calls: List[float] = []
+MAX_GEMINI_CALLS_PER_HOUR = 200
 _key_rotation_index = 0
+
+
+def record_gemini_call() -> bool:
+    """Records a Gemini API call and checks against global hourly ceiling (Check 8.1)."""
+    now = time.time()
+    global _hourly_gemini_calls
+    _hourly_gemini_calls = [t for t in _hourly_gemini_calls if now - t < 3600]
+    if len(_hourly_gemini_calls) >= MAX_GEMINI_CALLS_PER_HOUR:
+        return False
+    _hourly_gemini_calls.append(now)
+    return True
 
 
 def get_rotated_gemini_keys() -> List[str]:
@@ -30,13 +43,18 @@ def get_rotated_gemini_keys() -> List[str]:
     return [keys[(start + i) % n] for i in range(n)]
 
 
-def check_rate_limit(client_ip: str) -> bool:
+def check_rate_limit(client_ip: str, max_requests: int = MAX_REQUESTS_PER_WINDOW) -> bool:
     """Returns True if request is allowed, False if rate limit exceeded."""
     now = time.time()
+    # Memory bound cleanup if map exceeds 500 IPs
+    if len(_rate_limit_map) > 500:
+        stale = [ip for ip, ts in _rate_limit_map.items() if not ts or now - ts[-1] > RATE_LIMIT_WINDOW_SECONDS]
+        for ip in stale:
+            _rate_limit_map.pop(ip, None)
+
     timestamps = _rate_limit_map.get(client_ip, [])
-    # Filter out timestamps older than the window
     recent = [t for t in timestamps if now - t < RATE_LIMIT_WINDOW_SECONDS]
-    if len(recent) >= MAX_REQUESTS_PER_WINDOW:
+    if len(recent) >= max_requests:
         _rate_limit_map[client_ip] = recent
         return False
     recent.append(now)
@@ -280,13 +298,14 @@ async def ask_advisor(prompt: Optional[str], lang: str = "en", client_ip: str = 
             answer=get_offline_fallback_answer(clean_prompt, lang),
         )
 
-    # 3. Check API keys (supports rotational free keys)
+    # 3. Check API keys and hourly ceiling (Check 8.1)
     available_keys = get_rotated_gemini_keys()
-    if not available_keys:
+    if not available_keys or not record_gemini_call():
+        msg = "GEMINI_API_KEY is not configured in environment." if not available_keys else "Hourly AI quota reached; using verified offline knowledge base."
         return AdvisorResponse(
             fallbackNeeded=True,
             source="offline",
-            message="GEMINI_API_KEY is not configured in environment.",
+            message=msg,
             answer=get_offline_fallback_answer(clean_prompt, lang),
         )
 

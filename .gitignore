@@ -37,5 +37,7 @@ ENV/
 *.db
 *.sqlite3
 .pytest_cache/
+# Testing & Audits
 test-results/
 playwright-report/
+AUDIT.md

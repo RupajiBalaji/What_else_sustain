@@ -9,6 +9,7 @@ from ..models.schemas import (
     StatsResponse,
     SessionInitRequest,
     SessionInitResponse,
+    SessionUnifiedRequest,
     SessionEventCreate,
     SessionEventResponse,
     QuizAttemptCreate,
@@ -41,24 +42,17 @@ router = APIRouter(tags=["Sessions & Classes"])
 
 @router.post("/sessions", status_code=status.HTTP_201_CREATED)
 async def create_session(
-    body: Dict[str, Any],
+    body: SessionUnifiedRequest,
     db: Session = Depends(get_db)
 ):
     """
     Initialize a new play session (Task P3-02) or record legacy gameplay result.
     Strictly forbids names, emails, IP addresses, or personal identifiable info.
     """
-    if "choice" in body:
-        try:
-            req = SessionCreateRequest(**body)
-            return save_game_session(db, req)
-        except ValidationError as e:
-            raise HTTPException(status_code=422, detail=e.errors())
-    try:
-        req = SessionInitRequest(**body)
-        return init_or_get_session(db, req)
-    except ValidationError as e:
-        raise HTTPException(status_code=422, detail=e.errors())
+    data = body.model_dump(exclude_unset=True)
+    if body.choice is not None:
+        return save_game_session(db, SessionCreateRequest(**data))
+    return init_or_get_session(db, SessionInitRequest(**data))
 
 
 @router.post("/sessions/{session_id}/events", response_model=SessionEventResponse, status_code=status.HTTP_201_CREATED)

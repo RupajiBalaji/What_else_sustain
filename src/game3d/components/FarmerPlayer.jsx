@@ -77,6 +77,10 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     if (typeof window !== 'undefined') {
       if (!window.__wes_debug) window.__wes_debug = {}
       window.__wes_debug.getPlayerPos = () => [posRef.current.x, posRef.current.y, posRef.current.z]
+      window.__wes_debug.setPlayerPos = (pos) => {
+        posRef.current.set(...pos)
+        if (playerRef.current) playerRef.current.position.set(...pos)
+      }
       window.__wes_debug.getCameraHeading = () => lastHeadingYawRef.current
       window.__wes_debug.driveJoystick = (normX, normY) => {
         playerInput.joystickX = normX

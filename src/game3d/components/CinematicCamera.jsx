@@ -15,6 +15,87 @@ const POLE_COLLIDERS = [
 ]
 
 /**
+ * Ray vs Axis-Aligned Bounding Box (AABB) slab intersection.
+ * Returns entry distance t if ray hits box within maxDist, otherwise Infinity.
+ */
+function rayAABB(p0, dir, maxDist, box, margin = 0.45) {
+  const minX = box.minX - margin
+  const maxX = box.maxX + margin
+  const minY = (box.minY ?? 0.0) - margin
+  const maxY = (box.maxY ?? 5.5) + margin
+  const minZ = box.minZ - margin
+  const maxZ = box.maxZ + margin
+
+  let tMin = 0
+  let tMax = maxDist
+
+  if (Math.abs(dir.x) < 1e-6) {
+    if (p0.x < minX || p0.x > maxX) return Infinity
+  } else {
+    const invD = 1 / dir.x
+    let t1 = (minX - p0.x) * invD
+    let t2 = (maxX - p0.x) * invD
+    if (t1 > t2) { const tmp = t1; t1 = t2; t2 = tmp }
+    tMin = Math.max(tMin, t1)
+    tMax = Math.min(tMax, t2)
+    if (tMin > tMax) return Infinity
+  }
+
+  if (Math.abs(dir.y) < 1e-6) {
+    if (p0.y < minY || p0.y > maxY) return Infinity
+  } else {
+    const invD = 1 / dir.y
+    let t1 = (minY - p0.y) * invD
+    let t2 = (maxY - p0.y) * invD
+    if (t1 > t2) { const tmp = t1; t1 = t2; t2 = tmp }
+    tMin = Math.max(tMin, t1)
+    tMax = Math.min(tMax, t2)
+    if (tMin > tMax) return Infinity
+  }
+
+  if (Math.abs(dir.z) < 1e-6) {
+    if (p0.z < minZ || p0.z > maxZ) return Infinity
+  } else {
+    const invD = 1 / dir.z
+    let t1 = (minZ - p0.z) * invD
+    let t2 = (maxZ - p0.z) * invD
+    if (t1 > t2) { const tmp = t1; t1 = t2; t2 = tmp }
+    tMin = Math.max(tMin, t1)
+    tMax = Math.min(tMax, t2)
+    if (tMin > tMax) return Infinity
+  }
+
+  return tMin > 0 ? tMin : (tMax > 0 ? 0.01 : Infinity)
+}
+
+/**
+ * Ray vs vertical cylinder intersection.
+ * Returns entry distance t if ray hits cylinder within maxDist, otherwise Infinity.
+ */
+function rayCylinder(p0, dir, maxDist, cx, cz, radius, minY = 0, maxY = 5.0) {
+  const dx = p0.x - cx
+  const dz = p0.z - cz
+  const a = dir.x * dir.x + dir.z * dir.z
+  if (a < 1e-6) return Infinity
+
+  const b = dx * dir.x + dz * dir.z
+  const c = dx * dx + dz * dz - radius * radius
+  const disc = b * b - a * c
+  if (disc < 0) return Infinity
+
+  const sqrtDisc = Math.sqrt(disc)
+  let t = (-b - sqrtDisc) / a
+  if (t < 0) {
+    t = (-b + sqrtDisc) / a
+  }
+  if (t < 0 || t > maxDist) return Infinity
+
+  const hitY = p0.y + t * dir.y
+  if (hitY < minY || hitY > maxY) return Infinity
+  return t
+}
+
+/**
  * 360-Degree Free Orbit Camera Controller around the Farmer.
  * 
  * Features:
@@ -53,6 +134,7 @@ export default function CinematicCamera() {
   const currentPitchRef = useRef(0.32)
   const currentDistanceRef = useRef(5.8)
   const currentLookTargetRef = useRef(new THREE.Vector3(-1.2, 1.4, 10.0))
+  const springArmDistRef = useRef(5.8)
 
   // Phase transition easing state (max 1.5s, canceled immediately by user input)
   const isEasingPhaseRef = useRef(false)
@@ -107,6 +189,7 @@ export default function CinematicCamera() {
         targetYawRef.current = 0.0
         targetPitchRef.current = 0.32
         targetDistanceRef.current = 5.8
+        springArmDistRef.current = 5.8
         const p = playerPositionRef?.current
         if (p) {
           currentLookTargetRef.current.set(p.x, p.y + 1.4, p.z)
@@ -126,6 +209,7 @@ export default function CinematicCamera() {
         currentYawRef.current = targetYawRef.current
         currentPitchRef.current = targetPitchRef.current
         currentDistanceRef.current = targetDistanceRef.current
+        springArmDistRef.current = targetDistanceRef.current
         currentLookTargetRef.current.set(-3.5, 2.0, 44.0)
       },
       getYaw: () => currentYawRef.current,
@@ -417,9 +501,119 @@ export default function CinematicCamera() {
     const sinYaw = Math.sin(curYaw)
     const cosYaw = Math.cos(curYaw)
 
-    let camX = _lookTarget.x - sinYaw * cosPitch * curDist
-    let camY = _lookTarget.y + sinPitch * curDist
-    let camZ = _lookTarget.z - cosYaw * cosPitch * curDist
+    // 3. SPRING-ARM COLLISION AVOIDANCE
+    // Direction vector pointing from _lookTarget towards the orbiting camera
+    const rayDir = {
+      x: -sinYaw * cosPitch,
+      y: sinPitch,
+      z: -cosYaw * cosPitch
+    }
+
+    let minHitDist = curDist
+
+    // Ground clearance check (keep y >= 0.65)
+    if (rayDir.y < -1e-4) {
+      const tGround = (_lookTarget.y - 0.65) / (-rayDir.y)
+      if (tGround > 0 && tGround < minHitDist) {
+        minHitDist = Math.max(1.2, tGround)
+      }
+    }
+
+    // Cast against Straw Piles (radius 1.25m + margin)
+    for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
+      const pile = STRAW_PILES_DATA[i]
+      const tHit = rayCylinder(_lookTarget, rayDir, curDist, pile.x, pile.z, 1.45, 0, 3.0)
+      if (tHit < minHitDist) {
+        minHitDist = Math.max(1.2, tHit - 0.25)
+      }
+    }
+
+    // Cast against Trees (radius 1.5m + margin)
+    for (let i = 0; i < TREE_POSITIONS.length; i++) {
+      const tree = TREE_POSITIONS[i]
+      const tHit = rayCylinder(_lookTarget, rayDir, curDist, tree.x, tree.z, 1.5, 0, 10.0)
+      if (tHit < minHitDist) {
+        minHitDist = Math.max(1.2, tHit - 0.25)
+      }
+    }
+
+    // Cast against Farmhouse, Tractor, Village houses, and Poles
+    for (let c = 0; c < colliders.length; c++) {
+      const col = colliders[c]
+      const tHit = rayAABB(_lookTarget, rayDir, curDist, col, 0.45)
+      if (tHit < minHitDist) {
+        minHitDist = Math.max(1.2, tHit - 0.3)
+      }
+    }
+
+    let camX, camY, camZ
+
+    // Support debug negative control to prove tests fail against old teleporting code
+    if (typeof window !== 'undefined' && window.__wes_debug?.useOldCameraCollision) {
+      camX = _lookTarget.x - sinYaw * cosPitch * curDist
+      camY = _lookTarget.y + sinPitch * curDist
+      camZ = _lookTarget.z - cosYaw * cosPitch * curDist
+      if (camY < 0.65) camY = 0.65
+
+      // Old hard snaps for piles
+      for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
+        const pile = STRAW_PILES_DATA[i]
+        const dx = camX - pile.x
+        const dz = camZ - pile.z
+        const distSq = dx * dx + dz * dz
+        const minCamDist = 2.45
+        if (distSq < minCamDist * minCamDist) {
+          const dist = Math.sqrt(distSq) || 1
+          camX = pile.x + (dx / dist) * minCamDist
+          camZ = pile.z + (dz / dist) * minCamDist
+          camY = Math.max(camY, 2.3)
+        }
+      }
+
+      // Old hard snaps for colliders
+      const camMargin = 1.0
+      for (let c = 0; c < colliders.length; c++) {
+        const col = colliders[c]
+        if (
+          camX >= col.minX - camMargin &&
+          camX <= col.maxX + camMargin &&
+          camZ >= col.minZ - camMargin &&
+          camZ <= col.maxZ + camMargin
+        ) {
+          const cx = (col.minX + col.maxX) / 2
+          const cz = (col.minZ + col.maxZ) / 2
+          const dx = camX - cx
+          const dz = camZ - cz
+          const halfW = (col.maxX - col.minX) / 2 + camMargin
+          const halfD = (col.maxZ - col.minZ) / 2 + camMargin
+          if (Math.abs(dx) / halfW > Math.abs(dz) / halfD) {
+            camX = cx + Math.sign(dx || 1) * halfW
+          } else {
+            camZ = cz + Math.sign(dz || 1) * halfD
+          }
+          camY = Math.max(camY, 6.5)
+          break
+        }
+      }
+    } else {
+      // Spring-arm damping: shorten arm quickly over ~0.15s, ease back out when clear over ~0.25s
+      const targetArmDist = Math.min(curDist, minHitDist)
+      if (targetArmDist < springArmDistRef.current) {
+        const shortenAlpha = 1 - Math.exp(-12.0 * clampedDelta)
+        springArmDistRef.current = THREE.MathUtils.lerp(springArmDistRef.current, targetArmDist, shortenAlpha)
+      } else {
+        const extendAlpha = 1 - Math.exp(-6.0 * clampedDelta)
+        springArmDistRef.current = THREE.MathUtils.lerp(springArmDistRef.current, targetArmDist, extendAlpha)
+      }
+
+      const actualDist = springArmDistRef.current
+      camX = _lookTarget.x + rayDir.x * actualDist
+      camY = _lookTarget.y + rayDir.y * actualDist
+      camZ = _lookTarget.z + rayDir.z * actualDist
+
+      // Ground safety clamp: camera must never end inside ground (keep y >= 0.65)
+      if (camY < 0.65) camY = 0.65
+    }
 
     // Subtle camera shake during active fire
     if (burnState === 'burning' && !reducedMotion) {
@@ -427,65 +621,6 @@ export default function CinematicCamera() {
       camX += Math.sin(elapsed * 34) * shakeAmt
       camY += Math.cos(elapsed * 28) * shakeAmt
       camZ += Math.sin(elapsed * 42) * shakeAmt * 0.5
-    }
-
-    // 3. COLLISION AVOIDANCE
-    // Floor clamp
-    if (camY < 0.65) camY = 0.65
-
-    // Collision against Straw Piles (radius 1.25m, minCamDist 2.45m ensures zero clipping)
-    for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
-      const pile = STRAW_PILES_DATA[i]
-      const dx = camX - pile.x
-      const dz = camZ - pile.z
-      const distSq = dx * dx + dz * dz
-      const minCamDist = 2.45
-      if (distSq < minCamDist * minCamDist) {
-        const dist = Math.sqrt(distSq) || 1
-        camX = pile.x + (dx / dist) * minCamDist
-        camZ = pile.z + (dz / dist) * minCamDist
-        camY = Math.max(camY, 2.3)
-      }
-    }
-
-    // Collision against Trees
-    for (let i = 0; i < TREE_POSITIONS.length; i++) {
-      const tree = TREE_POSITIONS[i]
-      const dx = camX - tree.x
-      const dz = camZ - tree.z
-      const distSq = dx * dx + dz * dz
-      const minCamDist = 1.6
-      if (distSq < minCamDist * minCamDist) {
-        const dist = Math.sqrt(distSq) || 1
-        camX = tree.x + (dx / dist) * minCamDist
-        camZ = tree.z + (dz / dist) * minCamDist
-      }
-    }
-
-    // Collision against Farmhouse, Tractor, Village houses, and Poles
-    const camMargin = 1.0
-    for (let c = 0; c < colliders.length; c++) {
-      const col = colliders[c]
-      if (
-        camX >= col.minX - camMargin &&
-        camX <= col.maxX + camMargin &&
-        camZ >= col.minZ - camMargin &&
-        camZ <= col.maxZ + camMargin
-      ) {
-        const cx = (col.minX + col.maxX) / 2
-        const cz = (col.minZ + col.maxZ) / 2
-        const dx = camX - cx
-        const dz = camZ - cz
-        const halfW = (col.maxX - col.minX) / 2 + camMargin
-        const halfD = (col.maxZ - col.minZ) / 2 + camMargin
-        if (Math.abs(dx) / halfW > Math.abs(dz) / halfD) {
-          camX = cx + Math.sign(dx || 1) * halfW
-        } else {
-          camZ = cz + Math.sign(dz || 1) * halfD
-        }
-        camY = Math.max(camY, 6.5)
-        break
-      }
     }
 
     // Apply final camera position and orientation

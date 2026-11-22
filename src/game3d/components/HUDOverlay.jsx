@@ -72,7 +72,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
     setShowSettings,
     toastNotice,
     invertLook,
-    scenarioData
+    scenarioData,
+    isAnyModalOpen
   } = useGame3D()
 
   // Mobile virtual joystick state
@@ -149,6 +150,32 @@ export default function HUDOverlay({ onSwitchToLite }) {
       }
     }
   }
+
+  // Reset virtual joystick on blur, visibilitychange (document.hidden), or when modals / choice panel open
+  useEffect(() => {
+    const resetTouchJoystick = () => {
+      isDraggingJoystickRef.current = false
+      joystickTouchIdRef.current = null
+      setKnobPos({ x: 0, y: 0 })
+      playerInput.joystickX = 0
+      playerInput.joystickY = 0
+    }
+
+    if (isAnyModalOpen || isChoicePanelOpen) {
+      resetTouchJoystick()
+    }
+
+    const handleVisibility = () => {
+      if (document.hidden) resetTouchJoystick()
+    }
+
+    window.addEventListener('blur', resetTouchJoystick)
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      window.removeEventListener('blur', resetTouchJoystick)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [isAnyModalOpen, isChoicePanelOpen])
 
   const updateJoystick = (clientX, clientY) => {
     if (!joystickBaseRef.current) return

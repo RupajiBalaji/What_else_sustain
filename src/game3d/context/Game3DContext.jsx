@@ -266,6 +266,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       if (!window.__wes_debug) window.__wes_debug = {}
       window.__wes_debug.getQualityTier = () => quality
       window.__wes_debug.getFps = () => fps
+      window.__wes_debug.setInvertLook = setInvertLook
+      window.__wes_debug.getInvertLook = () => invertLook
     }
   }, [quality, fps])
 

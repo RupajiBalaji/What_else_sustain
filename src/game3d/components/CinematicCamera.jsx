@@ -148,6 +148,7 @@ export default function CinematicCamera() {
 
   // Input drag tracking
   const isDraggingRef = useRef(false)
+  const manualInvertRef = useRef(null)
   const lastPointerRef = useRef({ x: 0, y: 0 })
   const initialPinchDistRef = useRef(null)
 
@@ -214,7 +215,14 @@ export default function CinematicCamera() {
       },
       getYaw: () => currentYawRef.current,
       getPitch: () => currentPitchRef.current,
-      getDistance: () => currentDistanceRef.current
+      getDistance: () => currentDistanceRef.current,
+      getTargetYaw: () => targetYawRef.current,
+      getTargetPitch: () => targetPitchRef.current,
+      getTargetDistance: () => targetDistanceRef.current,
+      setInvertLook: (val) => {
+        manualInvertRef.current = val
+      },
+      getInvertLook: () => (manualInvertRef.current !== null ? manualInvertRef.current : Boolean(invertLook))
     }
 
     if (registerCameraControls) {
@@ -288,8 +296,8 @@ export default function CinematicCamera() {
   // Mouse drag, wheel zoom, touch drag, and R-key listener
   useEffect(() => {
     const handlePointerDown = (e) => {
-      // Don't capture pointer on HUD buttons, drawers, or interactive overlays
-      if (e.target && e.target.closest('button, input, select, textarea, [data-interactive="true"]')) {
+      // Pointer drag for camera orbit must only start if the pointerdown event target is the canvas
+      if (!e.target || e.target.tagName.toLowerCase() !== 'canvas') {
         return
       }
 
@@ -306,10 +314,11 @@ export default function CinematicCamera() {
       const dy = e.clientY - lastPointerRef.current.y
       lastPointerRef.current = { x: e.clientX, y: e.clientY }
 
-      const invert = invertLook ? -1 : 1
+      const isInv = manualInvertRef.current !== null ? manualInvertRef.current : Boolean(invertLook)
+      const invert = isInv ? -1 : 1
       targetYawRef.current -= dx * 0.0055 * invert
-      // Pitch clamp: -10° (-0.1745 rad) to +60° (+1.0472 rad)
-      targetPitchRef.current = Math.max(-0.1745, Math.min(1.0472, targetPitchRef.current + dy * 0.0055))
+      // Pitch clamp: -10° (-0.1745 rad) to +60° (+1.0472 rad) with invertLook applied
+      targetPitchRef.current = Math.max(-0.1745, Math.min(1.0472, targetPitchRef.current + dy * 0.0055 * invert))
     }
 
     const handlePointerUp = () => {
@@ -318,11 +327,13 @@ export default function CinematicCamera() {
 
     const handleWheel = (e) => {
       // Allow wheel zoom unless scrolling inside an open modal
-      if (e.target && e.target.closest('[data-scrollable="true"]')) {
+      if (e.target && typeof e.target.closest === 'function' && e.target.closest('[data-scrollable="true"]')) {
         return
       }
       isEasingPhaseRef.current = false
-      targetDistanceRef.current = Math.max(3.0, Math.min(14.0, targetDistanceRef.current + e.deltaY * 0.006))
+      // Normalise wheel zoom across browsers and mice by clamping delta per event
+      const clampedDeltaY = Math.max(-100, Math.min(100, e.deltaY))
+      targetDistanceRef.current = Math.max(3.0, Math.min(14.0, targetDistanceRef.current + clampedDeltaY * 0.006))
     }
 
     // Touch pinch-to-zoom on mobile
@@ -358,10 +369,16 @@ export default function CinematicCamera() {
       }
     }
 
+    const handleVisibilityChange = () => {
+      if (document.hidden) isDraggingRef.current = false
+    }
+
     window.addEventListener('pointerdown', handlePointerDown)
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
     window.addEventListener('pointercancel', handlePointerUp)
+    window.addEventListener('blur', handlePointerUp)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('wheel', handleWheel, { passive: true })
     window.addEventListener('touchmove', handleTouchMove, { passive: true })
     window.addEventListener('touchend', handleTouchEnd, { passive: true })
@@ -372,6 +389,8 @@ export default function CinematicCamera() {
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
       window.removeEventListener('pointercancel', handlePointerUp)
+      window.removeEventListener('blur', handlePointerUp)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('wheel', handleWheel)
       window.removeEventListener('touchmove', handleTouchMove)
       window.removeEventListener('touchend', handleTouchEnd)
@@ -438,14 +457,14 @@ export default function CinematicCamera() {
     }
 
     // Apply look delta from mobile look pad
+    const isMobileInv = manualInvertRef.current !== null ? manualInvertRef.current : Boolean(invertLook)
+    const mobileInvert = isMobileInv ? -1 : 1
     if (playerInput.lookDeltaX !== 0) {
-      const invert = invertLook ? -1 : 1
-      targetYawRef.current -= playerInput.lookDeltaX * 0.0055 * invert
+      targetYawRef.current -= playerInput.lookDeltaX * 0.0055 * mobileInvert
       playerInput.lookDeltaX = 0
     }
     if (playerInput.lookDeltaY !== 0) {
-      const invert = invertLook ? -1 : 1
-      targetPitchRef.current = Math.max(-0.1745, Math.min(1.0472, targetPitchRef.current + playerInput.lookDeltaY * 0.0055 * invert))
+      targetPitchRef.current = Math.max(-0.1745, Math.min(1.0472, targetPitchRef.current + playerInput.lookDeltaY * 0.0055 * mobileInvert))
       playerInput.lookDeltaY = 0
     }
 

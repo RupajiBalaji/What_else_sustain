@@ -334,10 +334,11 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
           <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
             <div>
               <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3E2723' }}>Invert Look</div>
-              <div style={{ fontSize: '0.74rem', color: '#757575' }}>Inverts horizontal mouse & touch look</div>
+              <div style={{ fontSize: '0.74rem', color: '#757575' }}>Inverts mouse & touch look (yaw and pitch)</div>
             </div>
             <input
               type="checkbox"
+              data-testid="invert-look-checkbox"
               checked={invertLook}
               onChange={(e) => setInvertLook(e.target.checked)}
               style={{ width: '18px', height: '18px', accentColor: '#2E7D32' }}

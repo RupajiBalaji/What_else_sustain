@@ -33,6 +33,20 @@ export const playerInput = {
   lookDeltaY: 0
 }
 
+/**
+ * Reset all player movement inputs (keys & joystick).
+ */
+export function resetPlayerInput() {
+  playerInput.forward = 0
+  playerInput.backward = 0
+  playerInput.left = 0
+  playerInput.right = 0
+  playerInput.joystickX = 0
+  playerInput.joystickY = 0
+  playerInput.lookDeltaX = 0
+  playerInput.lookDeltaY = 0
+}
+
 export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   const {
     quality,
@@ -46,7 +60,9 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     activeAlternative,
     cinematicMode,
     reducedMotion,
-    playerPositionRef
+    playerPositionRef,
+    isAnyModalOpen,
+    isChoicePanelOpen
   } = useGame3D()
   const { camera } = useThree()
 
@@ -86,6 +102,32 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         playerInput.joystickX = normX
         playerInput.joystickY = normY
       }
+      window.__wes_debug.playerInput = playerInput
+      window.__wes_debug.resetPlayerInput = resetPlayerInput
+    }
+  }, [])
+
+  // Reset all movement inputs on blur, visibilitychange (document.hidden), or when modals / choice panel open
+  useEffect(() => {
+    if (isAnyModalOpen || isChoicePanelOpen) {
+      resetPlayerInput()
+    }
+  }, [isAnyModalOpen, isChoicePanelOpen])
+
+  useEffect(() => {
+    const handleBlur = () => {
+      resetPlayerInput()
+    }
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        resetPlayerInput()
+      }
+    }
+    window.addEventListener('blur', handleBlur)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      window.removeEventListener('blur', handleBlur)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 
@@ -95,6 +137,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       posRef.current.set(...initialPosition)
       yawRef.current = 0
       lastHeadingYawRef.current = 0
+      resetPlayerInput()
       if (playerRef.current) {
         playerRef.current.position.set(...initialPosition)
         playerRef.current.rotation.y = 0
@@ -106,6 +149,14 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+
+      // Prevent page scrolling on Arrow keys and Space when game is active
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+        e.preventDefault()
+      }
+
+      if (isAnyModalOpen) return
+
       switch (e.code) {
         case 'KeyW':
         case 'ArrowUp':

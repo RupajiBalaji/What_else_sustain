@@ -11,7 +11,7 @@ import { useModelAvailability } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
 import MoneyFloatingTag from './MoneyFloatingTag'
 import { audioManager } from '../audio/AudioManager'
-import { getMoveVector } from '../utils/movement'
+import { getMoveVector, getOldMoveVector } from '../utils/movement'
 
 // Module-level scratch vectors to prevent GC allocations in useFrame
 const _scratchNextPos = new THREE.Vector3()
@@ -78,6 +78,10 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       if (!window.__wes_debug) window.__wes_debug = {}
       window.__wes_debug.getPlayerPos = () => [posRef.current.x, posRef.current.y, posRef.current.z]
       window.__wes_debug.getCameraHeading = () => lastHeadingYawRef.current
+      window.__wes_debug.driveJoystick = (normX, normY) => {
+        playerInput.joystickX = normX
+        playerInput.joystickY = normY
+      }
     }
   }, [])
 
@@ -229,8 +233,10 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       inputRight += playerInput.joystickX
     }
 
-    // Single source of truth for camera-relative movement
-    const moveVec = getMoveVector(headingYaw, inputForward, inputRight)
+    // Single source of truth for camera-relative movement (supports debug negative control)
+    const moveVec = (typeof window !== 'undefined' && window.__wes_debug?.useOldMovement)
+      ? getOldMoveVector(headingYaw, inputForward, inputRight)
+      : getMoveVector(headingYaw, inputForward, inputRight)
     const hasInput = moveVec.magnitude > 0.08
 
     if (hasInput) {

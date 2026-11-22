@@ -7,6 +7,7 @@ import { TRACTOR_COLLIDER } from './Tractor'
 import { VILLAGE_COLLIDERS } from './VillageHousesInstanced'
 import { STRAW_PILES_DATA } from './StrawPiles'
 import { TREE_POSITIONS } from './TreesInstanced'
+import { playerInput } from './FarmerPlayer'
 
 const POLE_COLLIDERS = [
   { id: 'air_sensor', minX: -13.5, maxX: -11.5, minZ: 31.0, maxZ: 33.0 },
@@ -340,6 +341,18 @@ export default function CinematicCamera() {
         skipFlyover()
       }
       return
+    }
+
+    // Apply look delta from mobile look pad
+    if (playerInput.lookDeltaX !== 0) {
+      const invert = invertLook ? -1 : 1
+      targetYawRef.current -= playerInput.lookDeltaX * 0.0055 * invert
+      playerInput.lookDeltaX = 0
+    }
+    if (playerInput.lookDeltaY !== 0) {
+      const invert = invertLook ? -1 : 1
+      targetPitchRef.current = Math.max(-0.1745, Math.min(1.0472, targetPitchRef.current + playerInput.lookDeltaY * 0.0055 * invert))
+      playerInput.lookDeltaY = 0
     }
 
     // Check if phase easing timer expired

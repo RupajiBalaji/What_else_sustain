@@ -11,11 +11,13 @@ import { useModelAvailability } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
 import MoneyFloatingTag from './MoneyFloatingTag'
 import { audioManager } from '../audio/AudioManager'
+import { getMoveVector } from '../utils/movement'
 
 // Module-level scratch vectors to prevent GC allocations in useFrame
 const _scratchNextPos = new THREE.Vector3()
 const _scratchCamTarget = new THREE.Vector3()
 const _scratchPile = new THREE.Vector3()
+const _scratchCamDir = new THREE.Vector3()
 
 // Global input state for desktop & mobile
 export const playerInput = {
@@ -61,7 +63,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   const currentVelRef = useRef(new THREE.Vector3(0, 0, 0))
   const targetVelRef = useRef(new THREE.Vector3(0, 0, 0))
   const yawRef = useRef(0) // Player orientation angle
-  const camYawRef = useRef(0.08) // Slight offset so camera frames straw piles, tractor, and village
+  const lastHeadingYawRef = useRef(0) // Camera heading angle
   const isMovingRef = useRef(false)
   const walkTimeRef = useRef(0)
   const lastNavUpdateRef = useRef(0)
@@ -70,12 +72,21 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   const isHigh = quality === 'high'
   const hasFarmerModel = useModelAvailability('/models/farmer.glb')
 
+  // Register debug hooks
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.getPlayerPos = () => [posRef.current.x, posRef.current.y, posRef.current.z]
+      window.__wes_debug.getCameraHeading = () => lastHeadingYawRef.current
+    }
+  }, [])
+
   // Reset player position and rotation when rewinding
   useEffect(() => {
     if (playerResetTrigger > 0) {
       posRef.current.set(...initialPosition)
       yawRef.current = 0
-      camYawRef.current = 0
+      lastHeadingYawRef.current = 0
       if (playerRef.current) {
         playerRef.current.position.set(...initialPosition)
         playerRef.current.rotation.y = 0
@@ -140,39 +151,6 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     }
   }, [])
 
-  // Desktop Mouse Drag to Look
-  useEffect(() => {
-    let isMouseDown = false
-    let lastX = 0
-
-    const onMouseDown = (e) => {
-      if (e.button === 0) {
-        isMouseDown = true
-        lastX = e.clientX
-      }
-    }
-
-    const onMouseMove = (e) => {
-      if (!isMouseDown) return
-      const dx = e.clientX - lastX
-      lastX = e.clientX
-      camYawRef.current -= dx * 0.005
-    }
-
-    const onMouseUp = () => {
-      isMouseDown = false
-    }
-
-    window.addEventListener('mousedown', onMouseDown)
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
-    return () => {
-      window.removeEventListener('mousedown', onMouseDown)
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup', onMouseUp)
-    }
-  }, [])
-
   // Collision detection helper
   const checkCollisions = (testPos) => {
     // 1. River boundary: player cannot enter river (X < -37.5)
@@ -230,38 +208,40 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   useFrame((_, delta) => {
     if (!playerRef.current) return
 
-    // Apply look rotation from mobile look delta
-    if (playerInput.lookDeltaX !== 0) {
-      camYawRef.current -= playerInput.lookDeltaX * 0.04
-      playerInput.lookDeltaX = 0
+    // Derive camera heading yaw directly from camera world direction (projected onto ground plane)
+    camera.getWorldDirection(_scratchCamDir)
+    const horizontalMag = Math.hypot(_scratchCamDir.x, _scratchCamDir.z)
+    let headingYaw = lastHeadingYawRef.current
+    if (horizontalMag > 0.05) {
+      headingYaw = Math.atan2(_scratchCamDir.x, _scratchCamDir.z)
+      lastHeadingYawRef.current = headingYaw
     }
 
-    // Determine movement direction vector
-    let moveZ = playerInput.backward - playerInput.forward
-    let moveX = playerInput.right - playerInput.left
+    // Compute user input: forward (+1 for W/ArrowUp), right (+1 for D/ArrowRight)
+    let inputForward = playerInput.forward - playerInput.backward
+    let inputRight = playerInput.right - playerInput.left
 
-    // Blend in mobile virtual joystick
+    // Blend in mobile virtual joystick (joystick up has negative screen Y, so -joystickY is forward)
     if (Math.abs(playerInput.joystickY) > 0.05) {
-      moveZ += playerInput.joystickY
+      inputForward -= playerInput.joystickY
     }
     if (Math.abs(playerInput.joystickX) > 0.05) {
-      moveX += playerInput.joystickX
+      inputRight += playerInput.joystickX
     }
 
-    const inputMag = Math.sqrt(moveX * moveX + moveZ * moveZ)
-    const hasInput = inputMag > 0.08
+    // Single source of truth for camera-relative movement
+    const moveVec = getMoveVector(headingYaw, inputForward, inputRight)
+    const hasInput = moveVec.magnitude > 0.08
 
     if (hasInput) {
-      const normX = moveX / Math.max(inputMag, 1)
-      const normZ = moveZ / Math.max(inputMag, 1)
-      const moveAngle = Math.atan2(normX, normZ) + camYawRef.current
-      yawRef.current = moveAngle
+      // Body faces movement direction
+      yawRef.current = Math.atan2(moveVec.x, moveVec.z)
 
-      const targetSpeed = 5.5 * Math.min(inputMag, 1.0)
+      const targetSpeed = 5.5 * moveVec.magnitude
       targetVelRef.current.set(
-        Math.sin(moveAngle) * targetSpeed,
+        moveVec.x * targetSpeed,
         0,
-        Math.cos(moveAngle) * targetSpeed
+        moveVec.z * targetSpeed
       )
       // Accelerate towards target velocity
       currentVelRef.current.lerp(targetVelRef.current, Math.min(1.0, delta * 14.0))
@@ -351,7 +331,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         const dx = absoluteClosest.x - posRef.current.x
         const dz = absoluteClosest.z - posRef.current.z
         const worldAngle = Math.atan2(dx, dz)
-        const relAngleRad = worldAngle - camYawRef.current
+        const relAngleRad = worldAngle - lastHeadingYawRef.current
         const relAngleDeg = (relAngleRad * 180) / Math.PI
         setNearestPileInfo({
           id: absoluteClosest.id,

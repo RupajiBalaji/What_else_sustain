@@ -136,11 +136,12 @@ export default function CinematicCamera() {
   const currentLookTargetRef = useRef(new THREE.Vector3(-1.2, 1.4, 10.0))
   const springArmDistRef = useRef(5.8)
 
-  // Phase transition easing state (max 1.5s, canceled immediately by user input)
+  // Phase transition transition easing state (max 1.5s, canceled immediately by user input)
   const isEasingPhaseRef = useRef(false)
   const easingEndTimeRef = useRef(0)
-  const lastPhaseRef = useRef(seasonPhase)
-  const lastBurnStateRef = useRef(burnState)
+  const lastPhaseRef = useRef(null)
+  const lastBurnStateRef = useRef(null)
+  const hasUserInteractedRef = useRef(false)
 
   // "Watch the village" timer and state
   const watchVillageEndTimeRef = useRef(0)
@@ -267,19 +268,36 @@ export default function CinematicCamera() {
     if (seasonPhase !== lastPhaseRef.current) {
       lastPhaseRef.current = seasonPhase
       if (seasonPhase === 'decision') {
+        hasUserInteractedRef.current = false
         isEasingPhaseRef.current = true
         easingEndTimeRef.current = performance.now() + 1500
-        targetYawRef.current = 0.22
-        targetPitchRef.current = 0.28
-        targetDistanceRef.current = 5.2
+        const isMobile = size.width < 680
+        if (isMobile) {
+          // Phone viewports (choice panel is at the bottom sheet)
+          targetYawRef.current = -0.25
+          targetPitchRef.current = 0.44
+          targetDistanceRef.current = Math.min(12.5, 6.2 * (0.95 / (size.width / Math.max(1, size.height))))
+        } else if (size.width < 900) {
+          // Tablet portrait (choice panel on right, width 768)
+          targetYawRef.current = 0.0
+          targetPitchRef.current = 0.28
+          targetDistanceRef.current = 5.2
+        } else {
+          // Desktop landscape (choice panel on right)
+          targetYawRef.current = -0.65
+          targetPitchRef.current = 0.28
+          targetDistanceRef.current = 5.6
+        }
       }
     }
-  }, [seasonPhase])
+  }, [seasonPhase, size.width, size.height])
 
   useEffect(() => {
     if (burnState !== lastBurnStateRef.current) {
+      const prevBurn = lastBurnStateRef.current
       lastBurnStateRef.current = burnState
-      if (burnState === 'lighting' || burnState === 'burning') {
+      // Only ease camera when initially entering the burn sequence from non-burn state
+      if ((burnState === 'lighting' || burnState === 'burning') && prevBurn !== 'lighting' && prevBurn !== 'burning') {
         isEasingPhaseRef.current = true
         easingEndTimeRef.current = performance.now() + 2000
         const isPortrait = size.width < size.height
@@ -302,6 +320,7 @@ export default function CinematicCamera() {
       }
 
       isDraggingRef.current = true
+      hasUserInteractedRef.current = true
       lastPointerRef.current = { x: e.clientX, y: e.clientY }
       // User manual interaction cancels any active auto-easing
       isEasingPhaseRef.current = false
@@ -330,6 +349,7 @@ export default function CinematicCamera() {
       if (e.target && typeof e.target.closest === 'function' && e.target.closest('[data-scrollable="true"]')) {
         return
       }
+      hasUserInteractedRef.current = true
       isEasingPhaseRef.current = false
       // Normalise wheel zoom across browsers and mice by clamping delta per event
       const clampedDeltaY = Math.max(-100, Math.min(100, e.deltaY))
@@ -425,6 +445,10 @@ export default function CinematicCamera() {
     const now = performance.now()
     const pPos = playerPositionRef?.current || new THREE.Vector3(-1.2, 0, 10.0)
 
+    if (Math.hypot(pPos.x - (-1.2), pPos.z - 10.0) > 0.6) {
+      hasUserInteractedRef.current = true
+    }
+
     // 1. OPENING FLYOVER (Skippable 6-second intro sweep)
     if (isFlyoverActive && cinematicMode === 'flyover') {
       if (flyoverStartTimeRef.current === null) {
@@ -504,6 +528,16 @@ export default function CinematicCamera() {
         1.3,
         leadPile.z * pileBias + pPos.z * (1 - pileBias)
       )
+    } else if (seasonPhase === 'decision' && !hasUserInteractedRef.current) {
+      // During decision phase initial framing, adjust look target to frame both straw pile and choice panel cleanly
+      const isMobile = size.width < 680
+      if (isMobile) {
+        _lookTarget.set(-2.2, -1.6, 11.5)
+      } else if (size.width < 900) {
+        _lookTarget.set(-5.2, 1.4, 10.0)
+      } else {
+        _lookTarget.set(-1.2, 1.4, 10.0)
+      }
     } else {
       _lookTarget.set(pPos.x, pPos.y + 1.4, pPos.z)
     }
@@ -618,10 +652,10 @@ export default function CinematicCamera() {
       // Spring-arm damping: shorten arm quickly over ~0.15s, ease back out when clear over ~0.25s
       const targetArmDist = Math.min(curDist, minHitDist)
       if (targetArmDist < springArmDistRef.current) {
-        const shortenAlpha = 1 - Math.exp(-12.0 * clampedDelta)
+        const shortenAlpha = 1 - Math.exp(-8.5 * clampedDelta)
         springArmDistRef.current = THREE.MathUtils.lerp(springArmDistRef.current, targetArmDist, shortenAlpha)
       } else {
-        const extendAlpha = 1 - Math.exp(-6.0 * clampedDelta)
+        const extendAlpha = 1 - Math.exp(-5.0 * clampedDelta)
         springArmDistRef.current = THREE.MathUtils.lerp(springArmDistRef.current, targetArmDist, extendAlpha)
       }
 

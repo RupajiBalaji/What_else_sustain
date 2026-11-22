@@ -52,6 +52,7 @@ export default function CinematicCamera() {
   const currentYawRef = useRef(0.0)
   const currentPitchRef = useRef(0.32)
   const currentDistanceRef = useRef(5.8)
+  const currentLookTargetRef = useRef(new THREE.Vector3(-1.2, 1.4, 10.0))
 
   // Phase transition easing state (max 1.5s, canceled immediately by user input)
   const isEasingPhaseRef = useRef(false)
@@ -106,6 +107,10 @@ export default function CinematicCamera() {
         targetYawRef.current = 0.0
         targetPitchRef.current = 0.32
         targetDistanceRef.current = 5.8
+        const p = playerPositionRef?.current
+        if (p) {
+          currentLookTargetRef.current.set(p.x, p.y + 1.4, p.z)
+        }
       },
       watchVillage: () => {
         isEasingPhaseRef.current = false
@@ -121,6 +126,7 @@ export default function CinematicCamera() {
         currentYawRef.current = targetYawRef.current
         currentPitchRef.current = targetPitchRef.current
         currentDistanceRef.current = targetDistanceRef.current
+        currentLookTargetRef.current.set(-3.5, 2.0, 44.0)
       },
       getYaw: () => currentYawRef.current,
       getPitch: () => currentPitchRef.current,
@@ -261,6 +267,10 @@ export default function CinematicCamera() {
         targetYawRef.current = 0.0
         targetPitchRef.current = 0.32
         targetDistanceRef.current = 5.8
+        const p = playerPositionRef?.current
+        if (p) {
+          currentLookTargetRef.current.set(p.x, p.y + 1.4, p.z)
+        }
       }
     }
 
@@ -365,11 +375,13 @@ export default function CinematicCamera() {
       watchVillageEndTimeRef.current = 0
     }
 
-    // 2. SMOOTH ORBIT CAMERA DAMPING
-    const dampSpeed = Math.min(1.0, delta * 9.5)
-    currentYawRef.current = THREE.MathUtils.lerp(currentYawRef.current, targetYawRef.current, dampSpeed)
-    currentPitchRef.current = THREE.MathUtils.lerp(currentPitchRef.current, targetPitchRef.current, dampSpeed)
-    currentDistanceRef.current = THREE.MathUtils.lerp(currentDistanceRef.current, targetDistanceRef.current, dampSpeed)
+    // 2. SMOOTH ORBIT CAMERA DAMPING (Frame-rate independent damping)
+    const clampedDelta = Math.min(delta, 0.05)
+    const dampK = 9.5
+    const alpha = 1 - Math.exp(-dampK * clampedDelta)
+    currentYawRef.current = THREE.MathUtils.lerp(currentYawRef.current, targetYawRef.current, alpha)
+    currentPitchRef.current = THREE.MathUtils.lerp(currentPitchRef.current, targetPitchRef.current, alpha)
+    currentDistanceRef.current = THREE.MathUtils.lerp(currentDistanceRef.current, targetDistanceRef.current, alpha)
 
     const curYaw = currentYawRef.current
     const curPitch = currentPitchRef.current
@@ -392,6 +404,12 @@ export default function CinematicCamera() {
     } else {
       _lookTarget.set(pPos.x, pPos.y + 1.4, pPos.z)
     }
+
+    // Smooth the look target (damped follow, ~0.1 s) so footstep bobbing and speed changes do not shake the view
+    const lookK = 10.0 // time constant 1/10 = 0.1s
+    const lookAlpha = 1 - Math.exp(-lookK * clampedDelta)
+    currentLookTargetRef.current.lerp(_lookTarget, lookAlpha)
+    _lookTarget.copy(currentLookTargetRef.current)
 
     // Compute spherical orbit offset around _lookTarget
     const cosPitch = Math.cos(curPitch)

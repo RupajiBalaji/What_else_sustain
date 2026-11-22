@@ -43,7 +43,6 @@ function SceneContent() {
     <OverlayManagerProvider>
       <PerformanceGovernor />
       <MemoryStatsSampler />
-      <CinematicCamera />
       <WorldEnvironment />
       <BirdsFlying />
       <FarmField />
@@ -68,6 +67,8 @@ function SceneContent() {
       <InWorldStatusProps />
       <WindFlag />
       <FarmerPlayer initialPosition={[-1.2, 0, 10.0]} />
+      {/* Render camera after FarmerPlayer to guarantee camera reads post-movement player position in same frame */}
+      <CinematicCamera />
       <FireSmokeSystem />
       <FpsMonitor />
     </OverlayManagerProvider>

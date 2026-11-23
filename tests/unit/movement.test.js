@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert'
-import { getMoveVector, getOldMoveVector } from '../../src/game3d/utils/movement.js'
+import { getMoveVector, getOldMoveVector, integratePlayerPosition } from '../../src/game3d/utils/movement.js'
 
 describe('Camera-Relative Movement (getMoveVector)', () => {
   const headingAngles = [0, 0.5, Math.PI / 2, Math.PI, -2, 3.7]
@@ -80,6 +80,49 @@ describe('Camera-Relative Movement (getMoveVector)', () => {
       // Old formula gave dot = -1.0 (moving left)
       assert.ok(dot < 0, `Old formula moved left: dot was ${dot}`)
       assert.strictEqual(dot > 0.99, false, 'Old formula correctly fails the rightward test')
+    })
+  })
+
+  describe('Delta Clamping & Sub-Stepped Position Integration (Item 4)', () => {
+    test('Simulating a 0.4 s frame asserts farmer moves no more than 0.3 m', () => {
+      const curPos = { x: 0, y: 0, z: 0 }
+      const velocity = { x: 0, y: 0, z: 5.5 } // max player speed 5.5 m/s
+      const noCollisions = () => false
+
+      const result = integratePlayerPosition(curPos, velocity, 0.4, noCollisions)
+
+      // Clamped delta = 0.05s -> max displacement = 5.5 * 0.05 = 0.275 m
+      assert.ok(result.displacement <= 0.3, `Farmer moved ${result.displacement}m, expected <= 0.3m`)
+      assert.ok(result.displacement >= 0.25, `Farmer moved ${result.displacement}m, expected >= 0.25m`)
+      assert.strictEqual(result.clampedDelta, 0.05, `Clamped delta was ${result.clampedDelta}, expected 0.05`)
+    })
+
+    test('Simulating a 0.4 s frame towards a collider asserts farmer never enters collider', () => {
+      const curPos = { x: 0, y: 0, z: 0 }
+      const velocity = { x: 0, y: 0, z: 5.5 }
+      // Obstacle starts at z = 0.15m
+      const colliderCheck = (p) => p.z >= 0.15
+
+      const result = integratePlayerPosition(curPos, velocity, 0.4, colliderCheck)
+
+      // Farmer must stop before z = 0.15 and never enter collider
+      assert.ok(result.newPos.z < 0.15, `Farmer entered collider at z = ${result.newPos.z}`)
+      assert.strictEqual(colliderCheck(result.newPos), false, 'Farmer position must not be inside collider')
+    })
+
+    test('Negative control: Unclamped 0.4 s integration moves 2.2 m and jumps collider', () => {
+      const curPos = { x: 0, y: 0, z: 0 }
+      const velocity = { x: 0, y: 0, z: 5.5 }
+      const colliderCheck = (p) => p.z >= 0.15 && p.z <= 0.50
+
+      // Unclamped integration (old code behavior)
+      const unclampedDisplacement = velocity.z * 0.4 // 2.2 m
+      const nextZ = curPos.z + unclampedDisplacement
+      const hitCollider = colliderCheck({ x: 0, y: 0, z: nextZ })
+
+      // Old single step jumped right through/over the collider (0.15 to 0.50) landing at 2.2m
+      assert.ok(unclampedDisplacement > 0.3, `Unclamped moved ${unclampedDisplacement}m > 0.3m`)
+      assert.strictEqual(hitCollider, false, 'Unclamped single step skipped over thin collider boundary')
     })
   })
 })

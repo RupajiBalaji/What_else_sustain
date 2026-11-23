@@ -56,3 +56,42 @@ export function getOldMoveVector(camYaw, inputForward, inputRight) {
     magnitude: Math.min(mag, 1.0)
   }
 }
+
+/**
+ * Integrates player position over delta with delta clamping and sub-stepped collision detection.
+ * Prevents long frames (e.g. lag spikes of 0.4s) from teleporting the farmer or skipping colliders.
+ * 
+ * @param {{ x: number, y: number, z: number }} curPos - Current mutable player position object
+ * @param {{ x: number, y: number, z: number }} velocity - Current player velocity (m/s)
+ * @param {number} delta - Frame delta time in seconds
+ * @param {function({ x: number, y: number, z: number }): boolean} checkCollisions - Collision test returning true if colliding
+ * @param {number} [maxDelta=0.05] - Maximum delta clamp for position integration
+ * @param {number} [subSteps=3] - Number of sub-steps for collision checking
+ * @returns {{ newPos: { x: number, y: number, z: number }, displacement: number, clampedDelta: number }}
+ */
+export function integratePlayerPosition(curPos, velocity, delta, checkCollisions, maxDelta = 0.05, subSteps = 3) {
+  const clampedDelta = Math.min(delta, maxDelta)
+  const subDelta = clampedDelta / Math.max(1, subSteps)
+  const subVx = velocity.x * subDelta
+  const subVz = velocity.z * subDelta
+
+  const startX = curPos.x
+  const startZ = curPos.z
+
+  for (let s = 0; s < subSteps; s++) {
+    // Separate X and Z sliding collisions
+    if (!checkCollisions({ x: curPos.x + subVx, y: curPos.y, z: curPos.z })) {
+      curPos.x += subVx
+    }
+    if (!checkCollisions({ x: curPos.x, y: curPos.y, z: curPos.z + subVz })) {
+      curPos.z += subVz
+    }
+  }
+
+  const displacement = Math.hypot(curPos.x - startX, curPos.z - startZ)
+  return {
+    newPos: curPos,
+    displacement,
+    clampedDelta
+  }
+}

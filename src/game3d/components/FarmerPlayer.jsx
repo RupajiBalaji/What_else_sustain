@@ -11,7 +11,7 @@ import { useModelAvailability } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
 import MoneyFloatingTag from './MoneyFloatingTag'
 import { audioManager } from '../audio/AudioManager'
-import { getMoveVector, getOldMoveVector } from '../utils/movement'
+import { getMoveVector, getOldMoveVector, integratePlayerPosition } from '../utils/movement'
 
 // Module-level scratch vectors to prevent GC allocations in useFrame
 const _scratchNextPos = new THREE.Vector3()
@@ -104,6 +104,24 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       }
       window.__wes_debug.playerInput = playerInput
       window.__wes_debug.resetPlayerInput = resetPlayerInput
+      window.__wes_debug.stepMovement = (simDelta) => {
+        const curPos = posRef.current
+        return integratePlayerPosition(
+          curPos,
+          currentVelRef.current,
+          simDelta,
+          (testPos) => {
+            _scratchNextPos.set(testPos.x, testPos.y, testPos.z)
+            return checkCollisions(_scratchNextPos)
+          },
+          0.05,
+          3
+        )
+      }
+      window.__wes_debug.checkCollisions = (pos) => {
+        _scratchNextPos.set(pos[0], pos[1] || 0, pos[2])
+        return checkCollisions(_scratchNextPos)
+      }
       window.__wes_debug.isFarmerInView = () => {
         const p = posRef.current
         const v = new THREE.Vector3(p.x, p.y + 1.0, p.z)
@@ -332,20 +350,20 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
 
     if (isMoving) {
       const curPos = posRef.current
-      const vx = currentVelRef.current.x * delta
-      const vz = currentVelRef.current.z * delta
+      // Clamp delta used for position integration (Math.min(delta, 0.05)) and sub-step collision checks
+      integratePlayerPosition(
+        curPos,
+        currentVelRef.current,
+        delta,
+        (testPos) => {
+          _scratchNextPos.set(testPos.x, testPos.y, testPos.z)
+          return checkCollisions(_scratchNextPos)
+        },
+        0.05,
+        3
+      )
 
-      // Separate X and Z sliding collisions using module scratch vector
-      _scratchNextPos.set(curPos.x + vx, curPos.y, curPos.z)
-      if (!checkCollisions(_scratchNextPos)) {
-        curPos.x += vx
-      }
-      _scratchNextPos.set(curPos.x, curPos.y, curPos.z + vz)
-      if (!checkCollisions(_scratchNextPos)) {
-        curPos.z += vz
-      }
-
-      walkTimeRef.current += delta * (currentSpeed * 1.65)
+      walkTimeRef.current += Math.min(delta, 0.05) * (currentSpeed * 1.65)
 
       // Surface detection for footsteps: dirt (field), grass (border/canal), road (gravel/stone)
       let surface = 'dirt'

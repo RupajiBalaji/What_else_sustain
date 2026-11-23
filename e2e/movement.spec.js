@@ -117,8 +117,17 @@ test.describe('Camera-Relative Movement & End-to-End Direction Test', () => {
     expect(resA1.dotRight).toBeLessThan(-0.8)
 
     // 3. ROTATE CAMERA 90 DEGREES (~PI/2 rad) via camera controller
+    // Begin 90-degree test from an open position (no obstacle within 4 m) so sliding does not lower the measured dot
+    await page.evaluate(() => {
+      window.__wes_debug.setPlayerPos([-10.0, 0, 6.0])
+    })
+    await page.waitForTimeout(100)
     await page.evaluate(() => window.__wes_camera.rotate(Math.PI / 2))
-    await page.waitForTimeout(400)
+    await page.waitForFunction(() => {
+      const diff = Math.abs(window.__wes_camera.getYaw() - window.__wes_camera.getTargetYaw())
+      return diff < 0.02
+    }, { timeout: 4000 }).catch(() => {})
+    await page.waitForTimeout(200)
 
     const resW2 = await testMove('W')
     console.log(`[Rotated 90°] W: dotFwd=${resW2.dotFwd.toFixed(3)}, dist=${resW2.dist.toFixed(3)}`)
@@ -141,6 +150,10 @@ test.describe('Camera-Relative Movement & End-to-End Direction Test', () => {
     expect(resA2.dotRight).toBeLessThan(-0.8)
 
     // 4. ROTATE CAMERA 180 DEGREES (~PI rad) via pointer dragging across 3D canvas
+    await page.evaluate(() => {
+      window.__wes_debug.setPlayerPos([-10.0, 0, 6.0])
+    })
+    await page.waitForTimeout(100)
     const canvas = page.locator('canvas')
     const box = await canvas.boundingBox()
     if (box) {

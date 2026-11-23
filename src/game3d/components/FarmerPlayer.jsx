@@ -104,8 +104,20 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       }
       window.__wes_debug.playerInput = playerInput
       window.__wes_debug.resetPlayerInput = resetPlayerInput
+      window.__wes_debug.isFarmerInView = () => {
+        const p = posRef.current
+        const v = new THREE.Vector3(p.x, p.y + 1.0, p.z)
+        v.project(camera)
+        return v.z < 1.0 && Math.abs(v.x) <= 0.98 && Math.abs(v.y) <= 0.98
+      }
+
+      return () => {
+        if (typeof window !== 'undefined' && window.__wes_debug) {
+          delete window.__wes_debug.isFarmerInView
+        }
+      }
     }
-  }, [])
+  }, [camera])
 
   // Reset all movement inputs on blur, visibilitychange (document.hidden), or when modals / choice panel open
   useEffect(() => {

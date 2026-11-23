@@ -303,10 +303,11 @@ export default function CinematicCamera() {
         const isPortrait = size.width < size.height
         const aspectVal = size.width / Math.max(1, size.height)
         targetYawRef.current = 0.28
-        targetPitchRef.current = isPortrait ? 0.20 : 0.24
-        const baseDist = 5.8
-        const distMult = isPortrait ? Math.min(1.75, 0.94 / Math.max(0.42, aspectVal)) : 1.0
+        targetPitchRef.current = isPortrait ? 0.20 : 0.22
+        const baseDist = 11.5
+        const distMult = isPortrait ? Math.min(1.22, 0.85 / Math.max(0.42, aspectVal)) : 1.0
         targetDistanceRef.current = baseDist * distMult
+        springArmDistRef.current = targetDistanceRef.current
       }
     }
   }, [burnState, size.width, size.height])
@@ -563,21 +564,27 @@ export default function CinematicCamera() {
     }
 
     let minHitDist = curDist
+    // During burn or near piles, ensure arm never collapses below 3.5m or 60% of target distance
+    const minAllowedArm = isBurnActive ? Math.max(3.5, curDist * 0.60) : 1.2
 
     // Ground clearance check (keep y >= 0.65)
     if (rayDir.y < -1e-4) {
       const tGround = (_lookTarget.y - 0.65) / (-rayDir.y)
       if (tGround > 0 && tGround < minHitDist) {
-        minHitDist = Math.max(1.2, tGround)
+        minHitDist = Math.max(minAllowedArm, tGround)
       }
     }
 
     // Cast against Straw Piles (radius 1.25m + margin)
     for (let i = 0; i < STRAW_PILES_DATA.length; i++) {
       const pile = STRAW_PILES_DATA[i]
+      // Treat ignited pile as a target to frame, not as an obstacle to avoid
+      if (isBurnActive && (ignitedPiles?.includes(pile.id) || pile.id === 'straw_1')) {
+        continue
+      }
       const tHit = rayCylinder(_lookTarget, rayDir, curDist, pile.x, pile.z, 1.45, 0, 3.0)
       if (tHit < minHitDist) {
-        minHitDist = Math.max(1.2, tHit - 0.25)
+        minHitDist = Math.max(minAllowedArm, tHit - 0.25)
       }
     }
 
@@ -586,7 +593,7 @@ export default function CinematicCamera() {
       const tree = TREE_POSITIONS[i]
       const tHit = rayCylinder(_lookTarget, rayDir, curDist, tree.x, tree.z, 1.5, 0, 10.0)
       if (tHit < minHitDist) {
-        minHitDist = Math.max(1.2, tHit - 0.25)
+        minHitDist = Math.max(minAllowedArm, tHit - 0.25)
       }
     }
 
@@ -595,7 +602,7 @@ export default function CinematicCamera() {
       const col = colliders[c]
       const tHit = rayAABB(_lookTarget, rayDir, curDist, col, 0.45)
       if (tHit < minHitDist) {
-        minHitDist = Math.max(1.2, tHit - 0.3)
+        minHitDist = Math.max(minAllowedArm, tHit - 0.3)
       }
     }
 

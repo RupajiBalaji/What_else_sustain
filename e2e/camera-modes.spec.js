@@ -123,11 +123,18 @@ test.describe('Camera Modes Comprehensive Verification', () => {
       const p = window.__wes_debug.getPlayerPos()
       window.__wes_debug.setPlayerPos([p[0], p[1], p[2] + 10])
     })
-    // Give damped look target time to follow
+    // Give damped look target time to follow (supports both 600ms timeout and settle wait)
     await page.waitForTimeout(600)
+    await page.waitForFunction(
+      (pos0) => window.__wes_debug.getCameraPose().position[2] >= pos0 + 9.72,
+      posBeforeFollow[2],
+      { timeout: 5000 }
+    ).catch(() => {})
     const posAfterFollow = await page.evaluate(() => window.__wes_debug.getCameraPose().position)
-    // Camera Z must have followed farmer along Z
-    expect(posAfterFollow[2]).toBeGreaterThan(posBeforeFollow[2] + 5)
+    const displacement = posAfterFollow[2] - posBeforeFollow[2]
+    console.log(`[Follow Camera Displacement] followed: ${displacement.toFixed(2)}m (expected > 9.72m)`)
+    // Camera Z must have followed farmer along Z by more than 9.72 m
+    expect(posAfterFollow[2]).toBeGreaterThan(posBeforeFollow[2] + 9.72)
 
     // Reset player back to straw pile
     await page.evaluate(() => {

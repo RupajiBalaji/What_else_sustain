@@ -543,8 +543,8 @@ export default function CinematicCamera() {
       _lookTarget.set(pPos.x, pPos.y + 1.4, pPos.z)
     }
 
-    // Smooth the look target (damped follow, ~0.1 s) so footstep bobbing and speed changes do not shake the view
-    const lookK = 10.0 // time constant 1/10 = 0.1s
+    // Smooth the look target (damped follow, ~0.05 s) so footstep bobbing and speed changes do not shake the view
+    const lookK = 20.0 // time constant 1/20 = 0.05s (ensures full convergence within 600ms even under low-FPS software GL)
     const lookAlpha = 1 - Math.exp(-lookK * clampedDelta)
     currentLookTargetRef.current.lerp(_lookTarget, lookAlpha)
     _lookTarget.copy(currentLookTargetRef.current)

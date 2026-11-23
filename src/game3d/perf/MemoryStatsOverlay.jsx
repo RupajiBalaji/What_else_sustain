@@ -17,13 +17,20 @@ export const renderStatsRef = {
  * R3F component mounted inside <Canvas> that samples gl.info metrics every 15 frames.
  */
 export function MemoryStatsSampler() {
-  const { gl } = useThree()
-  const { showDevStats } = useGame3D()
+  const { gl, scene } = useThree()
+  const frameCountRef = React.useRef(0)
 
-  let frameCount = 0
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_debug) window.__wes_debug = {}
+      window.__wes_debug.scene = scene
+      window.__wes_debug.gl = gl
+    }
+  }, [scene, gl])
+
   useFrame(() => {
-    frameCount++
-    if (frameCount % 10 === 0) {
+    frameCountRef.current++
+    if (frameCountRef.current % 5 === 0 || typeof window !== 'undefined' && !window.__WES_RENDER_STATS__) {
       renderStatsRef.calls = gl.info.render.calls
       renderStatsRef.triangles = gl.info.render.triangles
       renderStatsRef.geometries = gl.info.memory.geometries

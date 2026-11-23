@@ -144,15 +144,40 @@ function createStubbleGeometry() {
   return merged
 }
 
+const _cropClusterCache = new Map()
+function getCropClusterGeometry(soilHealth = 70) {
+  const key = Math.round(soilHealth)
+  if (!_cropClusterCache.has(key)) {
+    _cropClusterCache.set(key, createCropClusterGeometry(key))
+  }
+  return _cropClusterCache.get(key)
+}
+
+let _cachedStubbleGeo = null
+function getStubbleGeometry() {
+  if (!_cachedStubbleGeo) {
+    _cachedStubbleGeo = createStubbleGeometry()
+  }
+  return _cachedStubbleGeo
+}
+
+let _cachedStubbleMat = null
+function getStubbleMaterial() {
+  if (!_cachedStubbleMat) {
+    _cachedStubbleMat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.9,
+      metalness: 0.0,
+      side: THREE.DoubleSide
+    })
+  }
+  return _cachedStubbleMat
+}
+
 function StubbleField({ cropData, count, isShadows }) {
   const stubbleRef = useRef(null)
-  const geo = useMemo(() => createStubbleGeometry(), [])
-  const mat = useMemo(() => new THREE.MeshStandardMaterial({
-    vertexColors: true,
-    roughness: 0.9,
-    metalness: 0.0,
-    side: THREE.DoubleSide
-  }), [])
+  const geo = useMemo(() => getStubbleGeometry(), [])
+  const mat = useMemo(() => getStubbleMaterial(), [])
 
   useLayoutEffect(() => {
     if (!stubbleRef.current) return
@@ -165,13 +190,6 @@ function StubbleField({ cropData, count, isShadows }) {
     })
     stubbleRef.current.instanceMatrix.needsUpdate = true
   }, [cropData])
-
-  useEffect(() => {
-    return () => {
-      geo.dispose()
-      mat.dispose()
-    }
-  }, [geo, mat])
 
   return (
     <instancedMesh
@@ -197,7 +215,7 @@ export default function StandingCropRows() {
   const cols = qualityConfig.tier === 'high' ? 26 : qualityConfig.tier === 'medium' ? 18 : 12
   const count = rows * cols
 
-  const geometry = useMemo(() => createCropClusterGeometry(soilHealth), [soilHealth])
+  const geometry = useMemo(() => getCropClusterGeometry(soilHealth), [soilHealth])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -342,12 +360,12 @@ export default function StandingCropRows() {
     }
   })
 
+  // Prevent disposing shared geometry on unmount
   useEffect(() => {
     return () => {
-      geometry.dispose()
       material.dispose()
     }
-  }, [geometry, material])
+  }, [material])
 
   if (harvestState === 'harvested') {
     return <StubbleField cropData={cropData} count={count} isShadows={isShadows} />

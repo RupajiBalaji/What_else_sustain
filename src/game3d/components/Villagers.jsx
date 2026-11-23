@@ -15,6 +15,13 @@ const VILLAGERS_DATA = [
   { id: 'v6', assetId: 'villager_2', x: 18, z: 46, rot: 0.15, kurtaColor: '#EF9A9A', dhotiColor: '#FAFAFA' }
 ]
 
+// Reusable static geometries for procedural villager fallback
+const VILLAGER_TORSO_GEO = new THREE.BoxGeometry(0.55, 0.75, 0.35)
+const VILLAGER_HEAD_GEO = new THREE.SphereGeometry(0.22, 10, 10)
+const VILLAGER_TURBAN_GEO = new THREE.CylinderGeometry(0.26, 0.25, 0.18, 8)
+const VILLAGER_ARM_GEO = new THREE.BoxGeometry(0.16, 0.65, 0.16)
+const VILLAGER_LEG_GEO = new THREE.BoxGeometry(0.24, 0.75, 0.3)
+
 function ProceduralVillager({ data, isCoughing, isWaving, isHigh }) {
   const { camera } = useThree()
   const torsoRef = useRef(null)
@@ -72,41 +79,34 @@ function ProceduralVillager({ data, isCoughing, isWaving, isHigh }) {
     <group position={[0, 0, 0]}>
       {/* Torso */}
       <group ref={torsoRef} position={[0, 0.95, 0]}>
-        <mesh castShadow={isHigh} receiveShadow={isHigh}>
-          <boxGeometry args={[0.55, 0.75, 0.35]} />
+        <mesh geometry={VILLAGER_TORSO_GEO} castShadow={isHigh} receiveShadow={isHigh}>
           <meshStandardMaterial color={data.kurtaColor} roughness={0.8} />
         </mesh>
 
         {/* Head */}
-        <mesh ref={headRef} position={[0, 0.58, 0]} castShadow={isHigh}>
-          <sphereGeometry args={[0.22, 10, 10]} />
+        <mesh ref={headRef} position={[0, 0.58, 0]} geometry={VILLAGER_HEAD_GEO} castShadow={isHigh}>
           <meshStandardMaterial color="#8D5524" roughness={0.7} />
         </mesh>
 
         {/* Traditional Turban (Pagri) */}
-        <mesh position={[0, 0.72, 0]} castShadow={isHigh}>
-          <cylinderGeometry args={[0.26, 0.25, 0.18, 8]} />
+        <mesh position={[0, 0.72, 0]} geometry={VILLAGER_TURBAN_GEO} castShadow={isHigh}>
           <meshStandardMaterial color="#E65100" roughness={0.9} />
         </mesh>
       </group>
 
       {/* Arms */}
-      <mesh ref={leftArmRef} position={[-0.38, 1.15, 0]} castShadow={isHigh}>
-        <boxGeometry args={[0.16, 0.65, 0.16]} />
+      <mesh ref={leftArmRef} position={[-0.38, 1.15, 0]} geometry={VILLAGER_ARM_GEO} castShadow={isHigh}>
         <meshStandardMaterial color={data.kurtaColor} roughness={0.8} />
       </mesh>
-      <mesh ref={rightArmRef} position={[0.38, 1.15, 0]} castShadow={isHigh}>
-        <boxGeometry args={[0.16, 0.65, 0.16]} />
+      <mesh ref={rightArmRef} position={[0.38, 1.15, 0]} geometry={VILLAGER_ARM_GEO} castShadow={isHigh}>
         <meshStandardMaterial color={data.kurtaColor} roughness={0.8} />
       </mesh>
 
       {/* Legs (Dhoti) */}
-      <mesh position={[-0.16, 0.38, 0]} castShadow={isHigh}>
-        <boxGeometry args={[0.24, 0.75, 0.3]} />
+      <mesh position={[-0.16, 0.38, 0]} geometry={VILLAGER_LEG_GEO} castShadow={isHigh}>
         <meshStandardMaterial color={data.dhotiColor} roughness={0.9} />
       </mesh>
-      <mesh position={[0.16, 0.38, 0]} castShadow={isHigh}>
-        <boxGeometry args={[0.24, 0.75, 0.3]} />
+      <mesh position={[0.16, 0.38, 0]} geometry={VILLAGER_LEG_GEO} castShadow={isHigh}>
         <meshStandardMaterial color={data.dhotiColor} roughness={0.9} />
       </mesh>
     </group>

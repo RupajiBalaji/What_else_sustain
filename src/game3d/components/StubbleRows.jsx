@@ -2,6 +2,16 @@ import React, { useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useGame3D } from '../context/Game3DContext'
 
+const STUBBLE_ROWS_GEO = new THREE.CylinderGeometry(0.08, 0.12, 1, 4)
+const STUBBLE_ROWS_MAT = new THREE.MeshStandardMaterial({
+  color: '#D4A359',
+  roughness: 0.95
+})
+const STUBBLE_ROWS_BURNT_MAT = new THREE.MeshStandardMaterial({
+  color: '#1C1B1A',
+  roughness: 0.95
+})
+
 export default function StubbleRows() {
   const { quality, isFieldBurnt, harvestState } = useGame3D()
   const meshRef = useRef(null)
@@ -47,15 +57,9 @@ export default function StubbleRows() {
   return (
     <instancedMesh
       ref={meshRef}
-      args={[undefined, undefined, count]}
+      args={[STUBBLE_ROWS_GEO, isFieldBurnt ? STUBBLE_ROWS_BURNT_MAT : STUBBLE_ROWS_MAT, count]}
       castShadow={quality === 'high'}
       receiveShadow={false}
-    >
-      <cylinderGeometry args={[0.08, 0.12, 1, 4]} />
-      <meshStandardMaterial
-        color={isFieldBurnt ? '#1C1B1A' : '#D4A359'} // Charred black ash stubble or golden stalk
-        roughness={0.95}
-      />
-    </instancedMesh>
+    />
   )
 }

@@ -3,6 +3,15 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 
+const SEEDLING_GEO = new THREE.ConeGeometry(0.16, 0.48, 5)
+const SEEDLING_MAT = new THREE.MeshStandardMaterial({
+  color: '#43A047',
+  roughness: 0.55,
+  metalness: 0.08,
+  emissive: '#1B5E20',
+  emissiveIntensity: 0.25
+})
+
 export default function SeedlingsInstanced() {
   const { activeAlternative, alternativeProgress, isFieldBurnt, quality, showComparison } = useGame3D()
   const meshRef = useRef(null)
@@ -58,19 +67,10 @@ export default function SeedlingsInstanced() {
   return (
     <instancedMesh
       ref={meshRef}
-      args={[undefined, undefined, count]}
+      args={[SEEDLING_GEO, SEEDLING_MAT, count]}
       castShadow={isHigh}
       receiveShadow={false}
       name="SeedlingsInstanced"
-    >
-      <coneGeometry args={[0.16, 0.48, 5]} />
-      <meshStandardMaterial
-        color="#43A047"
-        roughness={0.55}
-        metalness={0.08}
-        emissive="#1B5E20"
-        emissiveIntensity={0.25}
-      />
-    </instancedMesh>
+    />
   )
 }

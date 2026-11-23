@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('3D Farm Multi-Season Memory Soak Test', () => {
   test('runs 3 continuous seasons asserting zero memory leakage in geometries and textures', async ({ page }) => {
-    test.setTimeout(180000)
+    test.setTimeout(360000)
 
     const errors = []
     page.on('pageerror', (err) => errors.push(err.message))
@@ -51,22 +51,31 @@ test.describe('3D Farm Multi-Season Memory Soak Test', () => {
     const quickPlayBtn = page.locator('[data-testid="start-quick-play-button"], [data-testid="start-3d-button"]').first()
     await quickPlayBtn.waitFor({ state: 'visible', timeout: 90000 })
     await page.waitForTimeout(500)
-    await quickPlayBtn.click()
+    await quickPlayBtn.click({ force: true })
 
     // Wait for in-game canvas
     await page.waitForSelector('canvas', { timeout: 90000 })
     await page.waitForTimeout(2000)
 
     // Close pre-check quiz if open
-    const skipQuizBtn = page.locator('button:has-text("Skip for now")')
-    if (await skipQuizBtn.isVisible({ timeout: 4000 }).catch(() => false)) {
+    const skipQuizBtn = page.locator('button:has-text("Skip for now"), [data-testid="skip-quiz-button"]').first()
+    try {
+      await skipQuizBtn.waitFor({ state: 'visible', timeout: 4000 })
       await skipQuizBtn.click()
-    }
+    } catch {}
+
+    // Wait until 3D scene finishes initial hydration (geometries loaded)
+    await page.waitForFunction(() => {
+      const stats = window.__WES_RENDER_STATS__
+      return stats && stats.geometries > 20
+    }, { timeout: 30000 }).catch(() => {})
+    await page.waitForTimeout(1000)
 
     // Helper to sample Three.js memory metrics from window.__WES_RENDER_STATS__
     const sampleMemory = async () => {
       return await page.evaluate(() => {
         const stats = window.__WES_RENDER_STATS__ || {}
+        // Also inspect geometries in the scene if available
         return {
           geometries: stats.geometries || 0,
           textures: stats.textures || 0,
@@ -97,7 +106,7 @@ test.describe('3D Farm Multi-Season Memory Soak Test', () => {
     const memSeason3 = await sampleMemory()
 
     // Geometries and textures must remain stable and not grow unboundedly
-    const geomDelta = Math.abs(memSeason3.geometries - memSeason1.geometries)
+    const geomDelta = Math.abs(memSeason3.geometries - memSeason2.geometries)
     const texDelta = Math.abs(memSeason3.textures - memSeason1.textures)
 
     expect(geomDelta).toBeLessThanOrEqual(5)

@@ -338,7 +338,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   // Frame update loop
   useFrame(({ clock }, delta) => {
     if (!playerRef.current) return
-    simTimeRef.current = clock.getElapsedTime()
+    simTimeRef.current += Math.min(delta, 0.1)
 
     // Derive camera heading yaw directly from camera world direction (projected onto ground plane)
     camera.getWorldDirection(_scratchCamDir)

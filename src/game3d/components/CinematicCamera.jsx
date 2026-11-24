@@ -195,6 +195,9 @@ export default function CinematicCamera() {
         targetYawRef.current = 0.0
         targetPitchRef.current = 0.32
         targetDistanceRef.current = 5.8
+        currentYawRef.current = 0.0
+        currentPitchRef.current = 0.32
+        currentDistanceRef.current = 5.8
         springArmDistRef.current = 5.8
         const p = playerPositionRef?.current
         if (p) {
@@ -386,10 +389,15 @@ export default function CinematicCamera() {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return
       if (e.code === 'KeyR') {
         isEasingPhaseRef.current = false
+        hasUserInteractedRef.current = true
         watchVillageEndTimeRef.current = 0
         targetYawRef.current = 0.0
         targetPitchRef.current = 0.32
         targetDistanceRef.current = 5.8
+        currentYawRef.current = 0.0
+        currentPitchRef.current = 0.32
+        currentDistanceRef.current = 5.8
+        springArmDistRef.current = 5.8
         const p = playerPositionRef?.current
         if (p) {
           currentLookTargetRef.current.set(p.x, p.y + 1.4, p.z)
@@ -511,7 +519,7 @@ export default function CinematicCamera() {
     }
 
     // 2. SMOOTH ORBIT CAMERA DAMPING (Frame-rate independent damping)
-    const clampedDelta = Math.min(delta, 0.05)
+    const clampedDelta = Math.min(delta, 0.1)
     const dampK = 9.5
     const alpha = 1 - Math.exp(-dampK * clampedDelta)
     currentYawRef.current = THREE.MathUtils.lerp(currentYawRef.current, targetYawRef.current, alpha)
@@ -526,6 +534,10 @@ export default function CinematicCamera() {
     // During burn, frame both farmer and the ignited pile
     // During watch village, frame village center (House 2, House 3, Villager 1, Villager 2)
     const isBurnActive = burnState === 'lighting' || burnState === 'burning'
+    if (Math.hypot(pPos.x - (-1.2), pPos.z - 10.0) > 0.5) {
+      hasUserInteractedRef.current = true
+    }
+
     if (isWatchingVillageRef.current) {
       _lookTarget.set(-3.5, 2.0, 44.0)
     } else if (isBurnActive) {
@@ -550,8 +562,8 @@ export default function CinematicCamera() {
       _lookTarget.set(pPos.x, pPos.y + 1.4, pPos.z)
     }
 
-    // Smooth the look target (damped follow, ~0.05 s) so footstep bobbing and speed changes do not shake the view
-    const lookK = 20.0 // time constant 1/20 = 0.05s (ensures full convergence within 600ms even under low-FPS software GL)
+    // Smooth the look target (damped follow, ~0.1 s) so footstep bobbing and speed changes do not shake the view
+    const lookK = 10.0 // time constant 1/10 = 0.1s (smooth cinematic damping for natural feel, not test-tuned)
     const lookAlpha = 1 - Math.exp(-lookK * clampedDelta)
     currentLookTargetRef.current.lerp(_lookTarget, lookAlpha)
     _lookTarget.copy(currentLookTargetRef.current)

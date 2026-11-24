@@ -82,7 +82,7 @@ test.describe('Camera Modes Comprehensive Verification', () => {
 
     // MODE 2: RESET VIEW (Button and KeyR)
     console.log('--- Verifying Mode 2: Reset View ---')
-    const resetBtn = page.locator('[data-testid="camera-reset-button"]')
+    const resetBtn = page.locator('[data-testid="camera-reset-button"], [data-testid="cam-reset"]').first()
     if (await resetBtn.isVisible()) {
       await resetBtn.click()
     } else {
@@ -99,8 +99,8 @@ test.describe('Camera Modes Comprehensive Verification', () => {
 
     // MODE 3: ZOOM BUTTONS (+ and - step targetDistance)
     console.log('--- Verifying Mode 3: Zoom Buttons ---')
-    const zoomInBtn = page.locator('[data-testid="camera-zoom-in-button"]')
-    const zoomOutBtn = page.locator('[data-testid="camera-zoom-out-button"]')
+    const zoomInBtn = page.locator('[data-testid="camera-zoom-in-button"], [data-testid="cam-zoom-in"]').first()
+    const zoomOutBtn = page.locator('[data-testid="camera-zoom-out-button"], [data-testid="cam-zoom-out"]').first()
     if (await zoomInBtn.isVisible() && await zoomOutBtn.isVisible()) {
       await zoomInBtn.click()
       const distZoomIn = await page.evaluate(() => window.__wes_camera.getTargetDistance())
@@ -114,27 +114,30 @@ test.describe('Camera Modes Comprehensive Verification', () => {
       // Reset back to standard distance
       await page.evaluate(() => window.__wes_camera.reset())
     }
+    await page.waitForTimeout(200)
 
     // MODE 4: FOLLOW CAMERA (Camera follows farmer displacement)
     console.log('--- Verifying Mode 4: Follow Camera ---')
-    const posBeforeFollow = await page.evaluate(() => window.__wes_debug.getCameraPose().position)
+    const initialFollowData = await page.evaluate(() => ({
+      pos: window.__wes_debug.getCameraPose().position,
+      simTime: window.__wes_debug.getSimTime()
+    }))
     await page.evaluate(() => {
       // Teleport farmer forward by 10 meters
       const p = window.__wes_debug.getPlayerPos()
       window.__wes_debug.setPlayerPos([p[0], p[1], p[2] + 10])
     })
-    // Give damped look target time to follow (supports both 600ms timeout and settle wait)
-    await page.waitForTimeout(600)
+    // Wait until at least 0.6s of simulation time has elapsed so the damped look target converges
     await page.waitForFunction(
-      (pos0) => window.__wes_debug.getCameraPose().position[2] >= pos0 + 9.72,
-      posBeforeFollow[2],
-      { timeout: 5000 }
-    ).catch(() => {})
+      (t0) => (window.__wes_debug.getSimTime() - t0) >= 0.6,
+      initialFollowData.simTime,
+      { timeout: 15000 }
+    )
     const posAfterFollow = await page.evaluate(() => window.__wes_debug.getCameraPose().position)
-    const displacement = posAfterFollow[2] - posBeforeFollow[2]
-    console.log(`[Follow Camera Displacement] followed: ${displacement.toFixed(2)}m (expected > 9.72m)`)
+    const displacement = posAfterFollow[2] - initialFollowData.pos[2]
+    console.log(`[Follow Camera Displacement] followed: ${displacement.toFixed(2)}m in elapsed sim time (expected > 9.72m)`)
     // Camera Z must have followed farmer along Z by more than 9.72 m
-    expect(posAfterFollow[2]).toBeGreaterThan(posBeforeFollow[2] + 9.72)
+    expect(posAfterFollow[2]).toBeGreaterThan(initialFollowData.pos[2] + 9.72)
 
     // Reset player back to straw pile
     await page.evaluate(() => {

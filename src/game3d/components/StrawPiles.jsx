@@ -14,6 +14,18 @@ const FLAME_PLANE_GEO_2 = new THREE.PlaneGeometry(0.95, 2.60, 6, 8)
 const TARGET_RING_OUTER = new THREE.RingGeometry(2.5, 3.2, 32)
 const TARGET_RING_INNER = new THREE.RingGeometry(2.2, 2.5, 32)
 const EMBER_RING_GEO = new THREE.RingGeometry(1.2, 1.6, 16)
+;[
+  STRAW_CONE_GEO,
+  STRAW_CYLINDER_GEO,
+  CHARRING_CONE_GEO,
+  FLAME_PLANE_GEO_1,
+  FLAME_PLANE_GEO_2,
+  TARGET_RING_OUTER,
+  TARGET_RING_INNER,
+  EMBER_RING_GEO
+].forEach((g) => {
+  g.dispose = () => {}
+})
 
 /**
  * Animated Layered Flames directly attached to burning piles.
@@ -135,8 +147,8 @@ function BurningPileFlames({ isBurning, burnProgress = 0 }) {
     <group ref={groupRef} position={[0, 0.45, 0]}>
       {TONGUE_POSITIONS.map((tongue, idx) => (
         <group key={idx} position={tongue.pos} scale={tongue.scale} rotation={[0, tongue.rotY, 0]}>
-          <mesh material={flameMaterial} geometry={FLAME_PLANE_GEO_1} />
-          <mesh material={flameMaterial} geometry={FLAME_PLANE_GEO_2} rotation={[0, Math.PI / 2, 0]} />
+          <mesh dispose={null} material={flameMaterial} geometry={FLAME_PLANE_GEO_1} />
+          <mesh dispose={null} material={flameMaterial} geometry={FLAME_PLANE_GEO_2} rotation={[0, Math.PI / 2, 0]} />
         </group>
       ))}
 
@@ -224,7 +236,7 @@ function CharringPileCone({ isBurning, burnProgress = 0 }) {
   const spreadWidth = 1.0 + burnProgress * 0.15
 
   return (
-    <mesh position={[0, 1.05 * shrinkHeight, 0]} scale={[spreadWidth, shrinkHeight, spreadWidth]} geometry={CHARRING_CONE_GEO}>
+    <mesh dispose={null} position={[0, 1.05 * shrinkHeight, 0]} scale={[spreadWidth, shrinkHeight, spreadWidth]} geometry={CHARRING_CONE_GEO}>
       <primitive object={charShader} ref={materialRef} attach="material" />
     </mesh>
   )
@@ -246,7 +258,7 @@ function PulsingTargetRing({ isSelected }) {
   return (
     <group position={[0, 0.05, 0]}>
       {/* Outer pulsating beacon ring */}
-      <mesh ref={outerRingRef} rotation={[-Math.PI / 2, 0, 0]} geometry={TARGET_RING_OUTER}>
+      <mesh dispose={null} ref={outerRingRef} rotation={[-Math.PI / 2, 0, 0]} geometry={TARGET_RING_OUTER}>
         <meshBasicMaterial
           color={isSelected ? '#FFB300' : '#FFD54F'}
           transparent
@@ -254,7 +266,7 @@ function PulsingTargetRing({ isSelected }) {
         />
       </mesh>
       {/* Inner beacon core ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={TARGET_RING_INNER}>
+      <mesh dispose={null} rotation={[-Math.PI / 2, 0, 0]} geometry={TARGET_RING_INNER}>
         <meshBasicMaterial
           color="#FFA000"
           transparent
@@ -429,7 +441,7 @@ export default function StrawPiles() {
                 burnProgress={burnProgress}
               />
             ) : (
-              <mesh position={[0, 1.05, 0]} geometry={STRAW_CONE_GEO} castShadow={isHigh} receiveShadow={isHigh}>
+              <mesh dispose={null} position={[0, 1.05, 0]} geometry={STRAW_CONE_GEO} castShadow={isHigh} receiveShadow={isHigh}>
                 <meshStandardMaterial
                   color={topColor}
                   roughness={isComposting ? 1.0 : 0.88}
@@ -442,6 +454,7 @@ export default function StrawPiles() {
 
             {/* 2. Base straw skirt ring: shrinks with ash */}
             <mesh
+              dispose={null}
               position={[0, 0.13 * (isBurnt ? Math.max(0.35, 1.0 - burnProgress * 0.65) : 1.0), 0]}
               scale={[
                 isBurnt ? 1.0 + burnProgress * 0.1 : 1.0,
@@ -471,7 +484,7 @@ export default function StrawPiles() {
 
             {/* 5. Smoldering ember ring when burnt */}
             {isBurnt && (
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} geometry={EMBER_RING_GEO}>
+              <mesh dispose={null} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} geometry={EMBER_RING_GEO}>
                 <meshBasicMaterial color={burnProgress > 0.6 ? '#424242' : '#3E2723'} transparent opacity={0.8} />
               </mesh>
             )}

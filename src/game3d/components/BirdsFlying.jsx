@@ -13,6 +13,9 @@ const BIRDS_DATA = [
 
 const BIRD_BODY_GEO = new THREE.ConeGeometry(0.16, 0.7, 4)
 const BIRD_WING_GEO = new THREE.BoxGeometry(0.8, 0.04, 0.35)
+;[BIRD_BODY_GEO, BIRD_WING_GEO].forEach(g => {
+  g.dispose = () => {}
+})
 
 function SingleBird({ config }) {
   const birdRef = useRef(null)
@@ -39,20 +42,20 @@ function SingleBird({ config }) {
   return (
     <group ref={birdRef}>
       {/* Bird Body */}
-      <mesh geometry={BIRD_BODY_GEO}>
+      <mesh dispose={null} geometry={BIRD_BODY_GEO}>
         <meshStandardMaterial color="#37474F" roughness={0.8} />
       </mesh>
 
       {/* Left Wing */}
       <group ref={leftWingRef} position={[-0.1, 0, 0]}>
-        <mesh position={[-0.45, 0, 0]} geometry={BIRD_WING_GEO}>
+        <mesh dispose={null} position={[-0.45, 0, 0]} geometry={BIRD_WING_GEO}>
           <meshStandardMaterial color="#455A64" roughness={0.8} />
         </mesh>
       </group>
 
       {/* Right Wing */}
       <group ref={rightWingRef} position={[0.1, 0, 0]}>
-        <mesh position={[0.45, 0, 0]} geometry={BIRD_WING_GEO}>
+        <mesh dispose={null} position={[0.45, 0, 0]} geometry={BIRD_WING_GEO}>
           <meshStandardMaterial color="#455A64" roughness={0.8} />
         </mesh>
       </group>

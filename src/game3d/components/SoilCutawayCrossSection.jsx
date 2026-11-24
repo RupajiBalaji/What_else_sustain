@@ -15,6 +15,17 @@ const SOIL_HEAT_GLOW_GEO = new THREE.PlaneGeometry(2.18, 0.16)
 const SOIL_STAKE_GEO = new THREE.BoxGeometry(0.06, 1.75, 0.58)
 const SOIL_WORM_GEO = new THREE.CylinderGeometry(0.02, 0.02, 0.22, 5)
 const SOIL_MICROBE_GEO = new THREE.SphereGeometry(0.022, 6, 6)
+;[
+  SOIL_TOPSOIL_GEO,
+  SOIL_SUBSOIL_GEO,
+  SOIL_BEDROCK_GEO,
+  SOIL_HEAT_GLOW_GEO,
+  SOIL_STAKE_GEO,
+  SOIL_WORM_GEO,
+  SOIL_MICROBE_GEO,
+].forEach(g => {
+  g.dispose = () => {}
+})
 
 /**
  * Cutaway cross-section of the field soil showing vertical layers,
@@ -184,22 +195,22 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
     <group position={position} rotation={rotation} name="SoilCutawayCrossSection">
       {/* Soil Pit Trench Frame */}
       {/* 1. Topsoil Layer (0 to -0.45m) */}
-      <mesh ref={topsoilRef} position={[0, -0.22, 0]} geometry={SOIL_TOPSOIL_GEO} receiveShadow={isHigh}>
+      <mesh dispose={null} ref={topsoilRef} position={[0, -0.22, 0]} geometry={SOIL_TOPSOIL_GEO} receiveShadow={isHigh}>
         <meshStandardMaterial color="#4E342E" roughness={0.9} />
       </mesh>
 
       {/* 2. Subsoil Layer (-0.45 to -1.05m) */}
-      <mesh position={[0, -0.75, 0]} geometry={SOIL_SUBSOIL_GEO} receiveShadow={isHigh}>
+      <mesh dispose={null} position={[0, -0.75, 0]} geometry={SOIL_SUBSOIL_GEO} receiveShadow={isHigh}>
         <meshStandardMaterial color="#795548" roughness={0.85} />
       </mesh>
 
       {/* 3. Deep Bedrock / Clay Layer (-1.05 to -1.65m) */}
-      <mesh position={[0, -1.35, 0]} geometry={SOIL_BEDROCK_GEO}>
+      <mesh dispose={null} position={[0, -1.35, 0]} geometry={SOIL_BEDROCK_GEO}>
         <meshStandardMaterial color="#A1887F" roughness={0.95} />
       </mesh>
 
       {/* Heat Glow Penetration Mesh (Downwards during burn) */}
-      <mesh ref={heatGlowRef} position={[0, -0.05, 0.28]} geometry={SOIL_HEAT_GLOW_GEO} visible={false}>
+      <mesh dispose={null} ref={heatGlowRef} position={[0, -0.05, 0.28]} geometry={SOIL_HEAT_GLOW_GEO} visible={false}>
         <meshBasicMaterial
           color="#FF3D00"
           transparent
@@ -209,15 +220,16 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
       </mesh>
 
       {/* Retaining Side Stakes / Ruler Pillars */}
-      <mesh position={[-1.12, -0.85, 0]} geometry={SOIL_STAKE_GEO}>
+      <mesh dispose={null} position={[-1.12, -0.85, 0]} geometry={SOIL_STAKE_GEO}>
         <meshStandardMaterial color="#3E2723" roughness={0.7} />
       </mesh>
-      <mesh position={[1.12, -0.85, 0]} geometry={SOIL_STAKE_GEO}>
+      <mesh dispose={null} position={[1.12, -0.85, 0]} geometry={SOIL_STAKE_GEO}>
         <meshStandardMaterial color="#3E2723" roughness={0.7} />
       </mesh>
 
       {/* Instanced Earthworms */}
       <instancedMesh
+        dispose={null}
         ref={wormsRef}
         args={[SOIL_WORM_GEO, undefined, wormCount]}
         position={[0, 0, 0.28]}
@@ -230,6 +242,7 @@ export default function SoilCutawayCrossSection({ position = [-4.0, 0, 8.2], rot
 
       {/* Instanced Microbes / Bio-fungi */}
       <instancedMesh
+        dispose={null}
         ref={microbesRef}
         args={[SOIL_MICROBE_GEO, undefined, microbeCount]}
         position={[0, 0, 0.28]}

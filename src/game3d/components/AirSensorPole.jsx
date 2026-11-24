@@ -4,6 +4,29 @@ import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 import { ManagedOverlay } from '../ui/OverlayManager'
 
+const SENSOR_BASE_GEO = new THREE.BoxGeometry(1.1, 0.5, 1.1)
+const SENSOR_POLE_GEO = new THREE.CylinderGeometry(0.07, 0.1, 6.8, 8)
+const SENSOR_PANEL_GEO = new THREE.BoxGeometry(0.7, 0.04, 0.5)
+const SENSOR_PANEL_BACK_GEO = new THREE.BoxGeometry(0.74, 0.04, 0.54)
+const SENSOR_ARM_GEO = new THREE.CylinderGeometry(0.03, 0.03, 1.2, 6)
+const SENSOR_INTAKE_GEO = new THREE.CylinderGeometry(0.09, 0.04, 0.35, 8)
+const SENSOR_ANEMOMETER_SHAFT_GEO = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 6)
+const SENSOR_CUP_GEO = new THREE.SphereGeometry(0.045, 6, 6)
+const SENSOR_BEACON_GEO = new THREE.CylinderGeometry(0.08, 0.08, 0.2, 8)
+;[
+  SENSOR_BASE_GEO,
+  SENSOR_POLE_GEO,
+  SENSOR_PANEL_GEO,
+  SENSOR_PANEL_BACK_GEO,
+  SENSOR_ARM_GEO,
+  SENSOR_INTAKE_GEO,
+  SENSOR_ANEMOMETER_SHAFT_GEO,
+  SENSOR_CUP_GEO,
+  SENSOR_BEACON_GEO,
+].forEach(g => {
+  g.dispose = () => {}
+})
+
 /**
  * Tall Air Quality Sensor Station Pole installed beside the village.
  * Displays real-time simulated village smoke exposure from /api/simulate/smoke.
@@ -61,58 +84,48 @@ export default function AirSensorPole({ position = [-8.5, 0, 38.0] }) {
   return (
     <group position={position} name="AirSensorPole">
       {/* 1. Concrete Base Pedestal */}
-      <mesh position={[0, 0.25, 0]} castShadow={isHigh} receiveShadow={isHigh}>
-        <boxGeometry args={[1.1, 0.5, 1.1]} />
+      <mesh position={[0, 0.25, 0]} castShadow={isHigh} receiveShadow={isHigh} geometry={SENSOR_BASE_GEO} dispose={null} frustumCulled={false}>
         <meshStandardMaterial color="#B0BEC5" roughness={0.9} />
       </mesh>
 
       {/* 2. Steel Mast Pole (6.8m tall) */}
-      <mesh position={[0, 3.65, 0]} castShadow={isHigh} receiveShadow={isHigh}>
-        <cylinderGeometry args={[0.07, 0.1, 6.8, 8]} />
+      <mesh position={[0, 3.65, 0]} castShadow={isHigh} receiveShadow={isHigh} geometry={SENSOR_POLE_GEO} dispose={null} frustumCulled={false}>
         <meshStandardMaterial color="#78909C" metalness={0.7} roughness={0.3} />
       </mesh>
 
       {/* 3. Solar Panel Bracket */}
       <group position={[0.3, 4.8, 0]} rotation={[0.4, 0, -0.3]}>
-        <mesh castShadow={isHigh}>
-          <boxGeometry args={[0.7, 0.04, 0.5]} />
+        <mesh castShadow={isHigh} geometry={SENSOR_PANEL_GEO} dispose={null} frustumCulled={false}>
           <meshStandardMaterial color="#0D47A1" roughness={0.2} metalness={0.8} />
         </mesh>
-        <mesh position={[0, -0.06, 0]}>
-          <boxGeometry args={[0.74, 0.04, 0.54]} />
+        <mesh position={[0, -0.06, 0]} geometry={SENSOR_PANEL_BACK_GEO} dispose={null} frustumCulled={false}>
           <meshStandardMaterial color="#37474F" />
         </mesh>
       </group>
 
       {/* 4. Crossbar Arm with Particulate Air Intake */}
       <group position={[0, 6.2, 0]}>
-        <mesh rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.03, 0.03, 1.2, 6]} />
+        <mesh rotation={[0, 0, Math.PI / 2]} geometry={SENSOR_ARM_GEO} dispose={null} frustumCulled={false}>
           <meshStandardMaterial color="#546E7A" metalness={0.7} />
         </mesh>
 
         {/* Air Sample Intake Funnel (Left) */}
-        <mesh position={[-0.6, -0.15, 0]}>
-          <cylinderGeometry args={[0.09, 0.04, 0.35, 8]} />
+        <mesh position={[-0.6, -0.15, 0]} geometry={SENSOR_INTAKE_GEO} dispose={null} frustumCulled={false}>
           <meshStandardMaterial color="#ECEFF1" metalness={0.4} />
         </mesh>
 
         {/* Spinning Anemometer Wind Cups (Right) */}
         <group ref={anemometerRef} position={[0.6, 0.15, 0]}>
-          <mesh position={[0, 0, 0]}>
-            <cylinderGeometry args={[0.02, 0.02, 0.25, 6]} />
+          <mesh position={[0, 0, 0]} geometry={SENSOR_ANEMOMETER_SHAFT_GEO} dispose={null} frustumCulled={false}>
             <meshStandardMaterial color="#37474F" />
           </mesh>
-          <mesh position={[0.1, 0.1, 0]}>
-            <sphereGeometry args={[0.045, 6, 6]} />
+          <mesh position={[0.1, 0.1, 0]} geometry={SENSOR_CUP_GEO} dispose={null} frustumCulled={false}>
             <meshStandardMaterial color="#FFB300" />
           </mesh>
-          <mesh position={[-0.1, 0.1, 0]}>
-            <sphereGeometry args={[0.045, 6, 6]} />
+          <mesh position={[-0.1, 0.1, 0]} geometry={SENSOR_CUP_GEO} dispose={null} frustumCulled={false}>
             <meshStandardMaterial color="#FFB300" />
           </mesh>
-          <mesh position={[0, 0.1, 0.1]}>
-            <sphereGeometry args={[0.045, 6, 6]} />
+          <mesh position={[0, 0.1, 0.1]} geometry={SENSOR_CUP_GEO} dispose={null} frustumCulled={false}>
             <meshStandardMaterial color="#FFB300" />
           </mesh>
         </group>
@@ -120,8 +133,7 @@ export default function AirSensorPole({ position = [-8.5, 0, 38.0] }) {
 
       {/* 5. Warning Beacon Light on Mast Top */}
       <group position={[0, 7.15, 0]}>
-        <mesh ref={beaconMeshRef}>
-          <cylinderGeometry args={[0.08, 0.08, 0.2, 8]} />
+        <mesh ref={beaconMeshRef} geometry={SENSOR_BEACON_GEO} dispose={null} frustumCulled={false}>
           <meshStandardMaterial
             color={isHazardous ? '#FF1744' : '#00E676'}
             emissive={isHazardous ? '#FF1744' : '#00E676'}

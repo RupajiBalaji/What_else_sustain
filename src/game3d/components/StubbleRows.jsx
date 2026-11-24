@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { useGame3D } from '../context/Game3DContext'
 
 const STUBBLE_ROWS_GEO = new THREE.CylinderGeometry(0.08, 0.12, 1, 4)
+STUBBLE_ROWS_GEO.dispose = () => {}
 const STUBBLE_ROWS_MAT = new THREE.MeshStandardMaterial({
   color: '#D4A359',
   roughness: 0.95
@@ -56,6 +57,7 @@ export default function StubbleRows() {
 
   return (
     <instancedMesh
+      dispose={null}
       ref={meshRef}
       args={[STUBBLE_ROWS_GEO, isFieldBurnt ? STUBBLE_ROWS_BURNT_MAT : STUBBLE_ROWS_MAT, count]}
       castShadow={quality === 'high'}

@@ -50,8 +50,9 @@ test.describe('3D Farm Multi-Season Memory Soak Test', () => {
     // Wait for start button on loading screen
     const quickPlayBtn = page.locator('[data-testid="start-quick-play-button"], [data-testid="start-3d-button"]').first()
     await quickPlayBtn.waitFor({ state: 'visible', timeout: 90000 })
-    await page.waitForTimeout(500)
-    await quickPlayBtn.click({ force: true })
+    await page.waitForTimeout(400)
+    await quickPlayBtn.click()
+    await expect(quickPlayBtn).toBeHidden({ timeout: 90000 })
 
     // Wait for in-game canvas
     await page.waitForSelector('canvas', { timeout: 90000 })
@@ -67,15 +68,14 @@ test.describe('3D Farm Multi-Season Memory Soak Test', () => {
     // Wait until 3D scene finishes initial hydration (geometries loaded)
     await page.waitForFunction(() => {
       const stats = window.__WES_RENDER_STATS__
-      return stats && stats.geometries > 20
+      return stats && stats.geometries >= 50
     }, { timeout: 30000 }).catch(() => {})
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(2500)
 
     // Helper to sample Three.js memory metrics from window.__WES_RENDER_STATS__
     const sampleMemory = async () => {
       return await page.evaluate(() => {
         const stats = window.__WES_RENDER_STATS__ || {}
-        // Also inspect geometries in the scene if available
         return {
           geometries: stats.geometries || 0,
           textures: stats.textures || 0,
@@ -86,6 +86,7 @@ test.describe('3D Farm Multi-Season Memory Soak Test', () => {
 
     // Baseline sample (Season 1)
     const memSeason1 = await sampleMemory()
+    console.log(`[soak] Season 1:`, memSeason1)
 
     // Advance Season 1 -> Season 2 via Next Season button or context transition
     await page.evaluate(() => {
@@ -95,6 +96,7 @@ test.describe('3D Farm Multi-Season Memory Soak Test', () => {
     })
     await page.waitForTimeout(1500)
     const memSeason2 = await sampleMemory()
+    console.log(`[soak] Season 2:`, memSeason2)
 
     // Advance Season 2 -> Season 3
     await page.evaluate(() => {
@@ -104,14 +106,17 @@ test.describe('3D Farm Multi-Season Memory Soak Test', () => {
     })
     await page.waitForTimeout(1500)
     const memSeason3 = await sampleMemory()
+    console.log(`[soak] Season 3:`, memSeason3)
 
-    // Geometries and textures must remain stable and not grow unboundedly
-    const geomDelta = Math.abs(memSeason3.geometries - memSeason2.geometries)
+    // Geometries and textures must remain stable and not grow unboundedly across seasons
+    const geomDelta = Math.abs(memSeason3.geometries - memSeason1.geometries)
     const texDelta = Math.abs(memSeason3.textures - memSeason1.textures)
+    console.log(`[soak] geomDelta S3-S1: ${geomDelta}, texDelta: ${texDelta}`)
 
     expect(geomDelta).toBeLessThanOrEqual(5)
     expect(texDelta).toBeLessThanOrEqual(5)
     expect(errors).toHaveLength(0)
+    await page.screenshot({ path: 'test-results/memory-soak-phone390.png' })
   })
 
   test('negative control: memory assertion triggers failure when threshold is violated', () => {

@@ -37,6 +37,27 @@ const FP_SPRAYER_NOZZLE_GEO = new THREE.ConeGeometry(0.045, 0.08, 6)
 const FP_TROWEL_HANDLE_GEO = new THREE.CylinderGeometry(0.02, 0.02, 0.35, 6)
 const FP_TROWEL_BLADE_GEO = new THREE.BoxGeometry(0.08, 0.12, 0.02)
 const FP_TRACTOR_BAR_GEO = new THREE.CylinderGeometry(0.025, 0.025, 0.6, 6)
+;[
+  FP_TORSO_GEO,
+  FP_SASH_GEO,
+  FP_HEAD_GEO,
+  FP_HAT_CROWN_GEO,
+  FP_HAT_BRIM_GEO,
+  FP_BACKPACK_GEO,
+  FP_ARM_GEO,
+  FP_LEG_GEO,
+  FP_FOOT_GEO,
+  FP_TORCH_HANDLE_GEO,
+  FP_TORCH_CUP_GEO,
+  FP_TORCH_FLAME_GEO,
+  FP_SPRAYER_WAND_GEO,
+  FP_SPRAYER_NOZZLE_GEO,
+  FP_TROWEL_HANDLE_GEO,
+  FP_TROWEL_BLADE_GEO,
+  FP_TRACTOR_BAR_GEO,
+].forEach(g => {
+  g.dispose = () => {}
+})
 
 // Global input state for desktop & mobile
 export const playerInput = {
@@ -633,35 +654,35 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         <>
           {/* 1. Torso (Kurta) - Slimmer & Natural */}
           <group ref={torsoRef} position={[0, 1.0, 0]}>
-            <mesh geometry={FP_TORSO_GEO} castShadow={isHigh} receiveShadow={isHigh}>
+            <mesh dispose={null} geometry={FP_TORSO_GEO} castShadow={isHigh} receiveShadow={isHigh}>
               <meshStandardMaterial color="#E0F2F1" roughness={0.8} /> {/* White cotton kurta */}
             </mesh>
 
             {/* Waist Sash (Gamcha) */}
-            <mesh position={[0, -0.24, 0]} geometry={FP_SASH_GEO}>
+            <mesh dispose={null} position={[0, -0.24, 0]} geometry={FP_SASH_GEO}>
               <meshStandardMaterial color="#E65100" /> {/* Saffron gamcha */}
             </mesh>
 
             {/* Head */}
-            <mesh position={[0, 0.62, 0]} geometry={FP_HEAD_GEO} castShadow={isHigh}>
+            <mesh dispose={null} position={[0, 0.62, 0]} geometry={FP_HEAD_GEO} castShadow={isHigh}>
               <meshStandardMaterial color="#8D6E63" roughness={0.7} />
             </mesh>
 
             {/* Farmer Straw Hat / Turban - Proportionately sized */}
             <group position={[0, 0.76, 0]}>
               {/* Hat Crown */}
-              <mesh geometry={FP_HAT_CROWN_GEO} castShadow={isHigh}>
+              <mesh dispose={null} geometry={FP_HAT_CROWN_GEO} castShadow={isHigh}>
                 <meshStandardMaterial color="#F57F17" roughness={0.85} />
               </mesh>
               {/* Subtle Brim */}
-              <mesh position={[0, -0.05, 0]} geometry={FP_HAT_BRIM_GEO} castShadow={isHigh}>
+              <mesh dispose={null} position={[0, -0.05, 0]} geometry={FP_HAT_BRIM_GEO} castShadow={isHigh}>
                 <meshStandardMaterial color="#F9A825" roughness={0.85} />
               </mesh>
             </group>
 
             {/* Backpack spray tank for bio-decomposer */}
             {activeAlternative === 'compost' && (
-              <mesh position={[0, 0, -0.26]} geometry={FP_BACKPACK_GEO} castShadow={isHigh}>
+              <mesh dispose={null} position={[0, 0, -0.26]} geometry={FP_BACKPACK_GEO} castShadow={isHigh}>
                 <meshStandardMaterial color="#0288D1" roughness={0.5} />
               </mesh>
             )}
@@ -669,14 +690,14 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
 
           {/* 2. Left Arm */}
           <group ref={leftArmRef} position={[-0.34, 1.25, 0]}>
-            <mesh position={[0, -0.28, 0]} geometry={FP_ARM_GEO} castShadow={isHigh}>
+            <mesh dispose={null} position={[0, -0.28, 0]} geometry={FP_ARM_GEO} castShadow={isHigh}>
               <meshStandardMaterial color="#8D6E63" />
             </mesh>
           </group>
 
           {/* 3. Right Arm */}
           <group ref={rightArmRef} position={[0.34, 1.25, 0]}>
-            <mesh position={[0, -0.28, 0]} geometry={FP_ARM_GEO} castShadow={isHigh}>
+            <mesh dispose={null} position={[0, -0.28, 0]} geometry={FP_ARM_GEO} castShadow={isHigh}>
               <meshStandardMaterial color="#8D6E63" />
             </mesh>
 
@@ -684,15 +705,15 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
             {burnState === 'lighting' && (
               <group position={[0, -0.58, 0.15]} rotation={[0.4, 0, 0]}>
                 {/* Torch wooden handle */}
-                <mesh position={[0, -0.12, 0]} geometry={FP_TORCH_HANDLE_GEO}>
+                <mesh dispose={null} position={[0, -0.12, 0]} geometry={FP_TORCH_HANDLE_GEO}>
                   <meshStandardMaterial color="#4E342E" roughness={0.9} />
                 </mesh>
                 {/* Torch metal cup */}
-                <mesh position={[0, 0.12, 0]} geometry={FP_TORCH_CUP_GEO}>
+                <mesh dispose={null} position={[0, 0.12, 0]} geometry={FP_TORCH_CUP_GEO}>
                   <meshStandardMaterial color="#212121" metalness={0.8} />
                 </mesh>
                 {/* Torch Flame */}
-                <mesh position={[0, 0.22, 0]} geometry={FP_TORCH_FLAME_GEO}>
+                <mesh dispose={null} position={[0, 0.22, 0]} geometry={FP_TORCH_FLAME_GEO}>
                   <meshBasicMaterial color="#FF5722" />
                 </mesh>
               </group>
@@ -701,10 +722,10 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
             {/* Sprayer wand when composting */}
             {activeAlternative === 'compost' && (
               <group position={[0, -0.5, 0.2]} rotation={[0.7, 0, 0]}>
-                <mesh position={[0, 0, 0]} geometry={FP_SPRAYER_WAND_GEO}>
+                <mesh dispose={null} position={[0, 0, 0]} geometry={FP_SPRAYER_WAND_GEO}>
                   <meshStandardMaterial color="#37474F" metalness={0.8} />
                 </mesh>
-                <mesh position={[0, 0.35, 0]} geometry={FP_SPRAYER_NOZZLE_GEO}>
+                <mesh dispose={null} position={[0, 0.35, 0]} geometry={FP_SPRAYER_NOZZLE_GEO}>
                   <meshStandardMaterial color="#FFB300" />
                 </mesh>
               </group>
@@ -713,10 +734,10 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
             {/* Hand trowel / rake when mulching */}
             {activeAlternative === 'mulch' && (
               <group position={[0, -0.45, 0.15]} rotation={[0.6, 0, 0]}>
-                <mesh position={[0, 0, 0]} geometry={FP_TROWEL_HANDLE_GEO}>
+                <mesh dispose={null} position={[0, 0, 0]} geometry={FP_TROWEL_HANDLE_GEO}>
                   <meshStandardMaterial color="#5D4037" roughness={0.8} />
                 </mesh>
-                <mesh position={[0, 0.18, 0]} geometry={FP_TROWEL_BLADE_GEO}>
+                <mesh dispose={null} position={[0, 0.18, 0]} geometry={FP_TROWEL_BLADE_GEO}>
                   <meshStandardMaterial color="#78909C" metalness={0.7} />
                 </mesh>
               </group>
@@ -725,7 +746,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
             {/* Tractor grab bar when climbing tractor */}
             {activeAlternative === 'happy_seeder' && (
               <group position={[-0.15, -0.2, 0.22]} rotation={[0, 0, 0.2]}>
-                <mesh position={[0, 0, 0]} geometry={FP_TRACTOR_BAR_GEO}>
+                <mesh dispose={null} position={[0, 0, 0]} geometry={FP_TRACTOR_BAR_GEO}>
                   <meshStandardMaterial color="#FFB300" metalness={0.8} />
                 </mesh>
               </group>
@@ -734,22 +755,22 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
 
           {/* 4. Left Leg (Dhoti) */}
           <group ref={leftLegRef} position={[-0.15, 0.58, 0]}>
-            <mesh position={[0, -0.28, 0]} geometry={FP_LEG_GEO} castShadow={isHigh}>
+            <mesh dispose={null} position={[0, -0.28, 0]} geometry={FP_LEG_GEO} castShadow={isHigh}>
               <meshStandardMaterial color="#ECEFF1" roughness={0.8} />
             </mesh>
             {/* Foot */}
-            <mesh position={[0, -0.58, 0.05]} geometry={FP_FOOT_GEO}>
+            <mesh dispose={null} position={[0, -0.58, 0.05]} geometry={FP_FOOT_GEO}>
               <meshStandardMaterial color="#3E2723" />
             </mesh>
           </group>
 
           {/* 5. Right Leg */}
           <group ref={rightLegRef} position={[0.15, 0.58, 0]}>
-            <mesh position={[0, -0.28, 0]} geometry={FP_LEG_GEO} castShadow={isHigh}>
+            <mesh dispose={null} position={[0, -0.28, 0]} geometry={FP_LEG_GEO} castShadow={isHigh}>
               <meshStandardMaterial color="#ECEFF1" roughness={0.8} />
             </mesh>
             {/* Foot */}
-            <mesh position={[0, -0.58, 0.05]} geometry={FP_FOOT_GEO}>
+            <mesh dispose={null} position={[0, -0.58, 0.05]} geometry={FP_FOOT_GEO}>
               <meshStandardMaterial color="#3E2723" />
             </mesh>
           </group>

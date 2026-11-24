@@ -13,6 +13,19 @@ const PROP_FLAG_PENNANT_GEO = new THREE.BoxGeometry(1.2, 0.75, 0.04)
 const PROP_DESK_GEO = new THREE.BoxGeometry(1.2, 0.9, 0.8)
 const PROP_LEDGER_GEO = new THREE.BoxGeometry(0.45, 0.06, 0.35)
 const PROP_COIN_BOX_GEO = new THREE.BoxGeometry(0.32, 0.16, 0.28)
+;[
+  PROP_ARCH_PILLAR_GEO,
+  PROP_ARCH_BEAM_GEO,
+  PROP_SIGN_BOARD_GEO,
+  PROP_FLAG_POLE_GEO,
+  PROP_FLAG_BASE_GEO,
+  PROP_FLAG_PENNANT_GEO,
+  PROP_DESK_GEO,
+  PROP_LEDGER_GEO,
+  PROP_COIN_BOX_GEO,
+].forEach(g => {
+  g.dispose = () => {}
+})
 
 /**
  * InWorldStatusProps.jsx
@@ -48,20 +61,20 @@ export default function InWorldStatusProps() {
       {/* 1. VILLAGE ENTRY ARCH & BANNER (Road into village at Z=36.5) */}
       <group position={[0, 0, 36.5]}>
         {/* Left Arch Pillar */}
-        <mesh position={[-3.6, 2.2, 0]} geometry={PROP_ARCH_PILLAR_GEO} castShadow>
+        <mesh dispose={null} position={[-3.6, 2.2, 0]} geometry={PROP_ARCH_PILLAR_GEO} castShadow>
           <meshStandardMaterial color="#5D4037" roughness={0.9} />
         </mesh>
         {/* Right Arch Pillar */}
-        <mesh position={[3.6, 2.2, 0]} geometry={PROP_ARCH_PILLAR_GEO} castShadow>
+        <mesh dispose={null} position={[3.6, 2.2, 0]} geometry={PROP_ARCH_PILLAR_GEO} castShadow>
           <meshStandardMaterial color="#5D4037" roughness={0.9} />
         </mesh>
         {/* Crossbeam */}
-        <mesh position={[0, 4.2, 0]} geometry={PROP_ARCH_BEAM_GEO} castShadow>
+        <mesh dispose={null} position={[0, 4.2, 0]} geometry={PROP_ARCH_BEAM_GEO} castShadow>
           <meshStandardMaterial color="#4E342E" roughness={0.9} />
         </mesh>
 
         {/* Hanging Village Signboard */}
-        <mesh position={[0, 3.4, 0]} geometry={PROP_SIGN_BOARD_GEO}>
+        <mesh dispose={null} position={[0, 3.4, 0]} geometry={PROP_SIGN_BOARD_GEO}>
           <meshStandardMaterial color={bannerColor} roughness={0.7} />
         </mesh>
 
@@ -103,15 +116,15 @@ export default function InWorldStatusProps() {
       {/* 2. FARM GATE REPUTATION FLAG (Entry to main farm at X=2.5, Z=5.0) */}
       <group position={[2.5, 0, 5.0]}>
         {/* Flag Pole */}
-        <mesh position={[0, 2.4, 0]} geometry={PROP_FLAG_POLE_GEO} castShadow>
+        <mesh dispose={null} position={[0, 2.4, 0]} geometry={PROP_FLAG_POLE_GEO} castShadow>
           <meshStandardMaterial color="#8D6E63" roughness={0.6} />
         </mesh>
         {/* Base Stone */}
-        <mesh position={[0, 0.2, 0]} geometry={PROP_FLAG_BASE_GEO}>
+        <mesh dispose={null} position={[0, 0.2, 0]} geometry={PROP_FLAG_BASE_GEO}>
           <meshStandardMaterial color="#78909C" roughness={0.9} />
         </mesh>
         {/* Fabric Pennant */}
-        <mesh position={[0.65, 4.1, 0]} geometry={PROP_FLAG_PENNANT_GEO}>
+        <mesh dispose={null} position={[0.65, 4.1, 0]} geometry={PROP_FLAG_PENNANT_GEO}>
           <meshStandardMaterial color={flagColor} roughness={0.8} />
         </mesh>
 
@@ -151,15 +164,15 @@ export default function InWorldStatusProps() {
       {/* 3. FARMER'S LEDGER & COIN CHEST (Beside Farmhouse at X=11.5, Z=-8.0) */}
       <group position={[11.5, 0, -8.0]}>
         {/* Wooden Desk */}
-        <mesh position={[0, 0.45, 0]} geometry={PROP_DESK_GEO} castShadow>
+        <mesh dispose={null} position={[0, 0.45, 0]} geometry={PROP_DESK_GEO} castShadow>
           <meshStandardMaterial color="#6D4C41" roughness={0.8} />
         </mesh>
         {/* Open Ledger Book */}
-        <mesh position={[-0.2, 0.92, 0]} geometry={PROP_LEDGER_GEO} rotation={[0, 0.15, 0]}>
+        <mesh dispose={null} position={[-0.2, 0.92, 0]} geometry={PROP_LEDGER_GEO} rotation={[0, 0.15, 0]}>
           <meshStandardMaterial color="#FFF8E1" roughness={0.9} />
         </mesh>
         {/* Brass Coin Box */}
-        <mesh position={[0.3, 0.96, 0]} geometry={PROP_COIN_BOX_GEO}>
+        <mesh dispose={null} position={[0.3, 0.96, 0]} geometry={PROP_COIN_BOX_GEO}>
           <meshStandardMaterial color="#FFA000" metalness={0.6} roughness={0.3} />
         </mesh>
 

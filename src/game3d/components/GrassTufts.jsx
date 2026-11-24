@@ -140,6 +140,18 @@ function createTuftGeometry() {
   return merged
 }
 
+let _cachedTuftGeo = null
+function getTuftGeometry() {
+  if (!_cachedTuftGeo) {
+    _cachedTuftGeo = createTuftGeometry()
+    _cachedTuftGeo.dispose = () => {}
+  }
+  return _cachedTuftGeo
+}
+
+const GRASS_PATCH_GEO = new THREE.CircleGeometry(1, 7)
+GRASS_PATCH_GEO.dispose = () => {}
+
 export default function GrassTufts() {
   const { qualityConfig, isFieldBurnt, windState } = useGame3D()
   const tuftsRef = useRef(null)
@@ -147,7 +159,7 @@ export default function GrassTufts() {
   const shaderRef = useRef(null)
 
   const count = qualityConfig.grassTuftsCount || 180
-  const geometry = useMemo(() => createTuftGeometry(), [])
+  const geometry = useMemo(() => getTuftGeometry(), [])
   const positions = useMemo(() => generateTuftPositions(count), [count])
 
   // Custom Wind-Driven Vertex Shader
@@ -227,10 +239,10 @@ export default function GrassTufts() {
       {/* 1. Flat Green Grass Carpet Patches */}
       <instancedMesh
         ref={patchRef}
-        args={[undefined, undefined, GRASS_PATCHES.length]}
+        args={[GRASS_PATCH_GEO, undefined, GRASS_PATCHES.length]}
+        dispose={null}
         receiveShadow={false}
       >
-        <circleGeometry args={[1, 7]} />
         <meshStandardMaterial
           color={isFieldBurnt ? '#4E5B28' : '#43A047'}
           roughness={0.95}
@@ -241,6 +253,7 @@ export default function GrassTufts() {
       <instancedMesh
         ref={tuftsRef}
         args={[geometry, tuftMaterial, count]}
+        dispose={null}
         receiveShadow={qualityConfig.shadows}
         name="GrassTuftsInstanced"
       />

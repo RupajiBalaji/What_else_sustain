@@ -5,6 +5,23 @@ import { useGame3D } from '../context/Game3DContext'
 import { useModelAvailability, applyKenneyTextures } from '../assets/ModelLoader'
 import { useGLTF } from '@react-three/drei'
 
+const TREE_ROUND_TRUNK_GEO = new THREE.CylinderGeometry(0.24, 0.4, 2.2, 6)
+const TREE_ROUND_FOLIAGE_GEO = new THREE.DodecahedronGeometry(2.1, 0)
+const TREE_SLENDER_TRUNK_GEO = new THREE.CylinderGeometry(0.18, 0.28, 2.8, 5)
+const TREE_SLENDER_FOLIAGE_GEO = new THREE.ConeGeometry(1.5, 3.4, 6)
+const TREE_ACACIA_TRUNK_GEO = new THREE.CylinderGeometry(0.2, 0.35, 2.4, 5)
+const TREE_ACACIA_FOLIAGE_GEO = new THREE.CylinderGeometry(2.4, 1.2, 1.1, 7)
+;[
+  TREE_ROUND_TRUNK_GEO,
+  TREE_ROUND_FOLIAGE_GEO,
+  TREE_SLENDER_TRUNK_GEO,
+  TREE_SLENDER_FOLIAGE_GEO,
+  TREE_ACACIA_TRUNK_GEO,
+  TREE_ACACIA_FOLIAGE_GEO,
+].forEach(g => {
+  g.dispose = () => {}
+})
+
 export const TREE_POSITIONS = [
   // Along the riverbank (X = -36 to -38)
   { x: -37, z: -25, s: 1.3, type: 'round' },
@@ -111,6 +128,7 @@ function TreeArchetype({ trees, trunkGeo, foliageGeo, foliageColor, trunkHeight,
       <instancedMesh
         ref={trunkRef}
         args={[trunkGeo, undefined, count]}
+        dispose={null}
         castShadow={isShadows}
         receiveShadow={isShadows}
       >
@@ -119,6 +137,7 @@ function TreeArchetype({ trees, trunkGeo, foliageGeo, foliageColor, trunkHeight,
       <instancedMesh
         ref={foliageRef}
         args={[foliageGeo, foliageMaterial, count]}
+        dispose={null}
         castShadow={isShadows}
         receiveShadow={isShadows}
       />
@@ -131,21 +150,12 @@ function ProceduralTrees({ activeTrees, isShadows, windState }) {
   const slenderTrees = useMemo(() => activeTrees.filter(t => t.type === 'slender'), [activeTrees])
   const acaciaTrees = useMemo(() => activeTrees.filter(t => t.type === 'acacia'), [activeTrees])
 
-  const roundTrunkGeo = useMemo(() => new THREE.CylinderGeometry(0.24, 0.4, 2.2, 6), [])
-  const roundFoliageGeo = useMemo(() => new THREE.DodecahedronGeometry(2.1, 0), [])
-
-  const slenderTrunkGeo = useMemo(() => new THREE.CylinderGeometry(0.18, 0.28, 2.8, 5), [])
-  const slenderFoliageGeo = useMemo(() => new THREE.ConeGeometry(1.5, 3.4, 6), [])
-
-  const acaciaTrunkGeo = useMemo(() => new THREE.CylinderGeometry(0.2, 0.35, 2.4, 5), [])
-  const acaciaFoliageGeo = useMemo(() => new THREE.CylinderGeometry(2.4, 1.2, 1.1, 7), [])
-
   return (
     <group name="ProceduralTreesVaried">
       <TreeArchetype
         trees={roundTrees}
-        trunkGeo={roundTrunkGeo}
-        foliageGeo={roundFoliageGeo}
+        trunkGeo={TREE_ROUND_TRUNK_GEO}
+        foliageGeo={TREE_ROUND_FOLIAGE_GEO}
         foliageColor="#689F38"
         trunkHeight={2.2}
         foliageY={3.1}
@@ -154,8 +164,8 @@ function ProceduralTrees({ activeTrees, isShadows, windState }) {
       />
       <TreeArchetype
         trees={slenderTrees}
-        trunkGeo={slenderTrunkGeo}
-        foliageGeo={slenderFoliageGeo}
+        trunkGeo={TREE_SLENDER_TRUNK_GEO}
+        foliageGeo={TREE_SLENDER_FOLIAGE_GEO}
         foliageColor="#7CB342"
         trunkHeight={2.8}
         foliageY={3.5}
@@ -164,8 +174,8 @@ function ProceduralTrees({ activeTrees, isShadows, windState }) {
       />
       <TreeArchetype
         trees={acaciaTrees}
-        trunkGeo={acaciaTrunkGeo}
-        foliageGeo={acaciaFoliageGeo}
+        trunkGeo={TREE_ACACIA_TRUNK_GEO}
+        foliageGeo={TREE_ACACIA_FOLIAGE_GEO}
         foliageColor="#558B2F"
         trunkHeight={2.4}
         foliageY={3.0}
@@ -218,18 +228,6 @@ export default function TreesInstanced() {
   const isShadows = qualityConfig.shadows
   const maxCount = qualityConfig.treeCount || 26
   const activeTrees = TREE_POSITIONS.slice(0, maxCount)
-
-  const hasTree1 = useModelAvailability('/models/tree_1.glb')
-  const hasTreeDefault = useModelAvailability('/models/tree.glb')
-  const hasTreeModel = hasTree1 || hasTreeDefault
-
-  if (hasTreeModel) {
-    return (
-      <React.Suspense fallback={<ProceduralTrees activeTrees={activeTrees} isShadows={isShadows} windState={windState} />}>
-        <GLTFTrees activeTrees={activeTrees} isShadows={isShadows} windState={windState} />
-      </React.Suspense>
-    )
-  }
 
   return <ProceduralTrees activeTrees={activeTrees} isShadows={isShadows} windState={windState} />
 }

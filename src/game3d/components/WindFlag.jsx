@@ -3,6 +3,13 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 
+const FLAG_POLE_GEO = new THREE.CylinderGeometry(0.08, 0.12, 6.4, 6)
+const FLAG_CAP_GEO = new THREE.SphereGeometry(0.16, 8, 8)
+const FLAG_CLOTH_GEO = new THREE.PlaneGeometry(1.6, 0.9, 3, 2)
+;[FLAG_POLE_GEO, FLAG_CAP_GEO, FLAG_CLOTH_GEO].forEach(g => {
+  g.dispose = () => {}
+})
+
 export default function WindFlag({ position = [8, 0, -4] }) {
   const { windState, quality } = useGame3D()
   const flagPivotRef = useRef(null)
@@ -29,14 +36,12 @@ export default function WindFlag({ position = [8, 0, -4] }) {
   return (
     <group position={position} name="WindFlagPole">
       {/* Wooden Flagpole */}
-      <mesh position={[0, 3.2, 0]} castShadow={isHigh} receiveShadow={isHigh}>
-        <cylinderGeometry args={[0.08, 0.12, 6.4, 6]} />
+      <mesh position={[0, 3.2, 0]} castShadow={isHigh} receiveShadow={isHigh} geometry={FLAG_POLE_GEO} dispose={null} frustumCulled={false}>
         <meshStandardMaterial color="#6D4C41" roughness={0.8} />
       </mesh>
 
       {/* Gold Cap */}
-      <mesh position={[0, 6.45, 0]}>
-        <sphereGeometry args={[0.16, 8, 8]} />
+      <mesh position={[0, 6.45, 0]} geometry={FLAG_CAP_GEO} dispose={null} frustumCulled={false}>
         <meshStandardMaterial color="#FFD54F" metalness={0.7} roughness={0.3} />
       </mesh>
 
@@ -46,8 +51,10 @@ export default function WindFlag({ position = [8, 0, -4] }) {
           ref={clothRef}
           position={[0.8, 0, 0]}
           castShadow={isHigh}
+          geometry={FLAG_CLOTH_GEO}
+          dispose={null}
+          frustumCulled={false}
         >
-          <planeGeometry args={[1.6, 0.9, 3, 2]} />
           <meshStandardMaterial
             color="#FF5722" // Vibrant rural saffron flag
             side={THREE.DoubleSide}

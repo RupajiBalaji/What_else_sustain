@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 
 const SEEDLING_GEO = new THREE.ConeGeometry(0.16, 0.48, 5)
+SEEDLING_GEO.dispose = () => {}
 const SEEDLING_MAT = new THREE.MeshStandardMaterial({
   color: '#43A047',
   roughness: 0.55,
@@ -66,6 +67,7 @@ export default function SeedlingsInstanced() {
 
   return (
     <instancedMesh
+      dispose={null}
       ref={meshRef}
       args={[SEEDLING_GEO, SEEDLING_MAT, count]}
       castShadow={isHigh}

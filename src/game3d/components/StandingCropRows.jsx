@@ -83,6 +83,8 @@ function createCropClusterGeometry(soilHealth = 70) {
   merged.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   merged.setIndex(indices)
 
+  merged.dispose = () => {}
+
   g1.dispose()
   g2.dispose()
   g3.dispose()
@@ -139,6 +141,8 @@ function createStubbleGeometry() {
   merged.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   merged.setIndex(indices)
 
+  merged.dispose = () => {}
+
   g1.dispose()
   g2.dispose()
   return merged
@@ -193,6 +197,7 @@ function StubbleField({ cropData, count, isShadows }) {
 
   return (
     <instancedMesh
+      dispose={null}
       ref={stubbleRef}
       args={[geo, mat, count]}
       castShadow={isShadows}
@@ -373,6 +378,7 @@ export default function StandingCropRows() {
 
   return (
     <instancedMesh
+      dispose={null}
       ref={meshRef}
       args={[geometry, material, count]}
       castShadow={isShadows}

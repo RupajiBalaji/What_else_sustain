@@ -173,19 +173,23 @@ export default function CinematicCamera() {
     const controls = {
       rotate: (deltaYaw) => {
         isEasingPhaseRef.current = false
+        hasUserInteractedRef.current = true
         watchVillageEndTimeRef.current = 0
         targetYawRef.current += deltaYaw
       },
       pitch: (deltaPitch) => {
         isEasingPhaseRef.current = false
+        hasUserInteractedRef.current = true
         watchVillageEndTimeRef.current = 0
         targetPitchRef.current = Math.max(-0.1745, Math.min(1.0472, targetPitchRef.current + deltaPitch))
       },
       zoom: (deltaDist) => {
+        hasUserInteractedRef.current = true
         targetDistanceRef.current = Math.max(3.0, Math.min(14.0, targetDistanceRef.current + deltaDist))
       },
       reset: () => {
         isEasingPhaseRef.current = false
+        hasUserInteractedRef.current = true
         isWatchingVillageRef.current = false
         watchVillageEndTimeRef.current = 0
         targetYawRef.current = 0.0

@@ -123,6 +123,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   const isMovingRef = useRef(false)
   const walkTimeRef = useRef(0)
   const lastNavUpdateRef = useRef(0)
+  const simTimeRef = useRef(0)
   const lastTargetIdRef = useRef(null)
 
   const isHigh = quality === 'high'
@@ -138,6 +139,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         if (playerRef.current) playerRef.current.position.set(...pos)
       }
       window.__wes_debug.getCameraHeading = () => lastHeadingYawRef.current
+      window.__wes_debug.getSimTime = () => simTimeRef.current
       window.__wes_debug.driveJoystick = (normX, normY) => {
         playerInput.joystickX = normX
         playerInput.joystickY = normY
@@ -154,8 +156,8 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
             _scratchNextPos.set(testPos.x, testPos.y, testPos.z)
             return checkCollisions(_scratchNextPos)
           },
-          0.05,
-          3
+          0.1,
+          4
         )
       }
       window.__wes_debug.checkCollisions = (pos) => {
@@ -334,8 +336,9 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
   }
 
   // Frame update loop
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     if (!playerRef.current) return
+    simTimeRef.current = clock.getElapsedTime()
 
     // Derive camera heading yaw directly from camera world direction (projected onto ground plane)
     camera.getWorldDirection(_scratchCamDir)
@@ -399,11 +402,11 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
           _scratchNextPos.set(testPos.x, testPos.y, testPos.z)
           return checkCollisions(_scratchNextPos)
         },
-        0.05,
-        3
+        0.1,
+        4
       )
 
-      walkTimeRef.current += Math.min(delta, 0.05) * (currentSpeed * 1.65)
+      walkTimeRef.current += Math.min(delta, 0.1) * (currentSpeed * 1.65)
 
       // Surface detection for footsteps: dirt (field), grass (border/canal), road (gravel/stone)
       let surface = 'dirt'
@@ -458,8 +461,8 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
     // Note: Do NOT auto-snap or turn the farmer during decision (Item 1 requirement)
 
     // Report nearest pile navigation coordinates for HUD guidance arrow (throttled to ~12 Hz)
-    if (_.clock.getElapsedTime() - lastNavUpdateRef.current > 0.08) {
-      lastNavUpdateRef.current = _.clock.getElapsedTime()
+    if (clock.getElapsedTime() - lastNavUpdateRef.current > 0.08) {
+      lastNavUpdateRef.current = clock.getElapsedTime()
       if (absoluteClosest) {
         const dx = absoluteClosest.x - posRef.current.x
         const dz = absoluteClosest.z - posRef.current.z
@@ -476,7 +479,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
 
     // 2. Procedural walk, idle, and matching choice animations
     const t = walkTimeRef.current
-    const elapsed = _.clock.getElapsedTime()
+    const elapsed = clock.getElapsedTime()
 
     if (burnState === 'lighting') {
       // 1. Burn: Torch lighting animation (lean forward, extend torch arm down to pile)
@@ -616,7 +619,7 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         torsoRef.current.rotation.x = 0
         torsoRef.current.rotation.y = 0
       }
-      const idleTime = _.clock.getElapsedTime()
+      const idleTime = clock.getElapsedTime()
       const breath = Math.sin(idleTime * 2.5) * 0.02
       if (leftLegRef.current) {
         leftLegRef.current.rotation.x = 0

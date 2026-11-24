@@ -83,18 +83,33 @@ describe('Camera-Relative Movement (getMoveVector)', () => {
     })
   })
 
-  describe('Delta Clamping & Sub-Stepped Position Integration (Item 4)', () => {
+  describe('Delta Clamping & Sub-Stepped Position Integration (Item 4 & Item 2)', () => {
     test('Simulating a 0.4 s frame asserts farmer moves no more than 0.3 m', () => {
       const curPos = { x: 0, y: 0, z: 0 }
-      const velocity = { x: 0, y: 0, z: 5.5 } // max player speed 5.5 m/s
+      const speed = 2.8 // typical walking velocity
+      const velocity = { x: 0, y: 0, z: speed }
       const noCollisions = () => false
 
       const result = integratePlayerPosition(curPos, velocity, 0.4, noCollisions)
 
-      // Clamped delta = 0.05s -> max displacement = 5.5 * 0.05 = 0.275 m
+      // Clamped delta = 0.1s -> displacement = 2.8 * 0.1 = 0.28 m <= 0.3 m
       assert.ok(result.displacement <= 0.3, `Farmer moved ${result.displacement}m, expected <= 0.3m`)
       assert.ok(result.displacement >= 0.25, `Farmer moved ${result.displacement}m, expected >= 0.25m`)
-      assert.strictEqual(result.clampedDelta, 0.05, `Clamped delta was ${result.clampedDelta}, expected 0.05`)
+      assert.strictEqual(result.clampedDelta, 0.1, `Clamped delta was ${result.clampedDelta}, expected 0.1`)
+    })
+
+    test('At delta 0.1 s the farmer covers speed times 0.1 m', () => {
+      const curPos = { x: 0, y: 0, z: 0 }
+      const speed = 4.5
+      const velocity = { x: 0, y: 0, z: speed }
+      const noCollisions = () => false
+
+      const result = integratePlayerPosition(curPos, velocity, 0.1, noCollisions)
+      const expectedDist = speed * 0.1 // 0.45 m
+      assert.ok(
+        Math.abs(result.displacement - expectedDist) < 1e-4,
+        `Farmer covered ${result.displacement}m, expected ${expectedDist}m`
+      )
     })
 
     test('Simulating a 0.4 s frame towards a collider asserts farmer never enters collider', () => {

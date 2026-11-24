@@ -65,11 +65,11 @@ export function getOldMoveVector(camYaw, inputForward, inputRight) {
  * @param {{ x: number, y: number, z: number }} velocity - Current player velocity (m/s)
  * @param {number} delta - Frame delta time in seconds
  * @param {function({ x: number, y: number, z: number }): boolean} checkCollisions - Collision test returning true if colliding
- * @param {number} [maxDelta=0.05] - Maximum delta clamp for position integration
- * @param {number} [subSteps=3] - Number of sub-steps for collision checking
+ * @param {number} [maxDelta=0.1] - Maximum delta clamp for position integration (clamps frames <= 0.1s)
+ * @param {number} [subSteps=4] - Number of sub-steps for collision checking
  * @returns {{ newPos: { x: number, y: number, z: number }, displacement: number, clampedDelta: number }}
  */
-export function integratePlayerPosition(curPos, velocity, delta, checkCollisions, maxDelta = 0.05, subSteps = 3) {
+export function integratePlayerPosition(curPos, velocity, delta, checkCollisions, maxDelta = 0.1, subSteps = 4) {
   const clampedDelta = Math.min(delta, maxDelta)
   const subDelta = clampedDelta / Math.max(1, subSteps)
   const subVx = velocity.x * subDelta

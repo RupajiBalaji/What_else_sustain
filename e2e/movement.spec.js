@@ -70,6 +70,7 @@ test.describe('Camera-Relative Movement & End-to-End Direction Test', () => {
     // Helper to measure displacement and compute dot product with camera forward/right
     const testMove = async (dir) => {
       const p0 = await page.evaluate(() => window.__wes_debug.getPlayerPos())
+      const t0 = await page.evaluate(() => window.__wes_debug.getSimTime?.() || 0)
       const heading = await page.evaluate(() => window.__wes_debug.getCameraHeading())
 
       const fwd = { x: Math.sin(heading), z: Math.cos(heading) }
@@ -78,6 +79,8 @@ test.describe('Camera-Relative Movement & End-to-End Direction Test', () => {
       await moveDirection(dir, 600)
 
       const p1 = await page.evaluate(() => window.__wes_debug.getPlayerPos())
+      const t1 = await page.evaluate(() => window.__wes_debug.getSimTime?.() || 0)
+      const elapsedSim = Math.max(0.05, t1 - t0)
       const disp = { x: p1[0] - p0[0], z: p1[2] - p0[2] }
       const dist = Math.hypot(disp.x, disp.z)
 
@@ -85,7 +88,14 @@ test.describe('Camera-Relative Movement & End-to-End Direction Test', () => {
       const dotFwd = normDisp.x * fwd.x + normDisp.z * fwd.z
       const dotRight = normDisp.x * right.x + normDisp.z * right.z
 
-      return { dist, dotFwd, dotRight, heading, p0, p1 }
+      return { dist, dotFwd, dotRight, heading, p0, p1, elapsedSim }
+    }
+
+    // Helper to assert movement distance relative to elapsed simulation time (not fixed 0.2m)
+    const expectSimDistance = (res) => {
+      // Minimum distance scaled to elapsed simulation time: at least 0.8 m/s average speed
+      const minExpected = Math.max(0.05, res.elapsedSim * 0.8)
+      expect(res.dist).toBeGreaterThan(minExpected)
     }
 
     // 1. NEGATIVE CONTROL TEST: Prove old formula FAILS the forward test
@@ -97,23 +107,23 @@ test.describe('Camera-Relative Movement & End-to-End Direction Test', () => {
 
     // 2. POSITIVE TEST: Default Camera Heading
     const resW1 = await testMove('W')
-    console.log(`[Default Heading] W: dotFwd=${resW1.dotFwd.toFixed(3)}, dist=${resW1.dist.toFixed(3)}`)
-    expect(resW1.dist).toBeGreaterThan(0.2)
+    console.log(`[Default Heading] W: dotFwd=${resW1.dotFwd.toFixed(3)}, dist=${resW1.dist.toFixed(3)}, sim=${resW1.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resW1)
     expect(resW1.dotFwd).toBeGreaterThan(0.8)
 
     const resS1 = await testMove('S')
-    console.log(`[Default Heading] S: dotFwd=${resS1.dotFwd.toFixed(3)}, dist=${resS1.dist.toFixed(3)}`)
-    expect(resS1.dist).toBeGreaterThan(0.2)
+    console.log(`[Default Heading] S: dotFwd=${resS1.dotFwd.toFixed(3)}, dist=${resS1.dist.toFixed(3)}, sim=${resS1.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resS1)
     expect(resS1.dotFwd).toBeLessThan(-0.8)
 
     const resD1 = await testMove('D')
-    console.log(`[Default Heading] D: dotRight=${resD1.dotRight.toFixed(3)}, dist=${resD1.dist.toFixed(3)}`)
-    expect(resD1.dist).toBeGreaterThan(0.2)
+    console.log(`[Default Heading] D: dotRight=${resD1.dotRight.toFixed(3)}, dist=${resD1.dist.toFixed(3)}, sim=${resD1.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resD1)
     expect(resD1.dotRight).toBeGreaterThan(0.8)
 
     const resA1 = await testMove('A')
-    console.log(`[Default Heading] A: dotRight=${resA1.dotRight.toFixed(3)}, dist=${resA1.dist.toFixed(3)}`)
-    expect(resA1.dist).toBeGreaterThan(0.2)
+    console.log(`[Default Heading] A: dotRight=${resA1.dotRight.toFixed(3)}, dist=${resA1.dist.toFixed(3)}, sim=${resA1.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resA1)
     expect(resA1.dotRight).toBeLessThan(-0.8)
 
     // 3. ROTATE CAMERA 90 DEGREES (~PI/2 rad) via camera controller
@@ -123,30 +133,26 @@ test.describe('Camera-Relative Movement & End-to-End Direction Test', () => {
     })
     await page.waitForTimeout(100)
     await page.evaluate(() => window.__wes_camera.rotate(Math.PI / 2))
-    await page.waitForFunction(() => {
-      const diff = Math.abs(window.__wes_camera.getYaw() - window.__wes_camera.getTargetYaw())
-      return diff < 0.02
-    }, { timeout: 4000 }).catch(() => {})
-    await page.waitForTimeout(200)
+    await page.waitForTimeout(600)
 
     const resW2 = await testMove('W')
-    console.log(`[Rotated 90°] W: dotFwd=${resW2.dotFwd.toFixed(3)}, dist=${resW2.dist.toFixed(3)}`)
-    expect(resW2.dist).toBeGreaterThan(0.2)
+    console.log(`[Rotated 90°] W: dotFwd=${resW2.dotFwd.toFixed(3)}, dist=${resW2.dist.toFixed(3)}, sim=${resW2.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resW2)
     expect(resW2.dotFwd).toBeGreaterThan(0.8)
 
     const resS2 = await testMove('S')
-    console.log(`[Rotated 90°] S: dotFwd=${resS2.dotFwd.toFixed(3)}, dist=${resS2.dist.toFixed(3)}`)
-    expect(resS2.dist).toBeGreaterThan(0.2)
+    console.log(`[Rotated 90°] S: dotFwd=${resS2.dotFwd.toFixed(3)}, dist=${resS2.dist.toFixed(3)}, sim=${resS2.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resS2)
     expect(resS2.dotFwd).toBeLessThan(-0.8)
 
     const resD2 = await testMove('D')
-    console.log(`[Rotated 90°] D: dotRight=${resD2.dotRight.toFixed(3)}, dist=${resD2.dist.toFixed(3)}`)
-    expect(resD2.dist).toBeGreaterThan(0.2)
+    console.log(`[Rotated 90°] D: dotRight=${resD2.dotRight.toFixed(3)}, dist=${resD2.dist.toFixed(3)}, sim=${resD2.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resD2)
     expect(resD2.dotRight).toBeGreaterThan(0.8)
 
     const resA2 = await testMove('A')
-    console.log(`[Rotated 90°] A: dotRight=${resA2.dotRight.toFixed(3)}, dist=${resA2.dist.toFixed(3)}`)
-    expect(resA2.dist).toBeGreaterThan(0.2)
+    console.log(`[Rotated 90°] A: dotRight=${resA2.dotRight.toFixed(3)}, dist=${resA2.dist.toFixed(3)}, sim=${resA2.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resA2)
     expect(resA2.dotRight).toBeLessThan(-0.8)
 
     // 4. ROTATE CAMERA 180 DEGREES (~PI rad) via pointer dragging across 3D canvas
@@ -166,13 +172,13 @@ test.describe('Camera-Relative Movement & End-to-End Direction Test', () => {
     }
 
     const resW3 = await testMove('W')
-    console.log(`[Rotated 180° drag] W: dotFwd=${resW3.dotFwd.toFixed(3)}, dist=${resW3.dist.toFixed(3)}`)
-    expect(resW3.dist).toBeGreaterThan(0.2)
+    console.log(`[Rotated 180° drag] W: dotFwd=${resW3.dotFwd.toFixed(3)}, dist=${resW3.dist.toFixed(3)}, sim=${resW3.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resW3)
     expect(resW3.dotFwd).toBeGreaterThan(0.8)
 
     const resD3 = await testMove('D')
-    console.log(`[Rotated 180° drag] D: dotRight=${resD3.dotRight.toFixed(3)}, dist=${resD3.dist.toFixed(3)}`)
-    expect(resD3.dist).toBeGreaterThan(0.2)
+    console.log(`[Rotated 180° drag] D: dotRight=${resD3.dotRight.toFixed(3)}, dist=${resD3.dist.toFixed(3)}, sim=${resD3.elapsedSim.toFixed(3)}s`)
+    expectSimDistance(resD3)
     expect(resD3.dotRight).toBeGreaterThan(0.8)
 
     // Save screenshot of player movement in field

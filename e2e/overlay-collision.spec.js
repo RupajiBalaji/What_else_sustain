@@ -103,6 +103,8 @@ async function inspectOverlayCollisions(page) {
           collisions.push({
             a: a.id,
             b: b.id,
+            aRect: a.rect,
+            bRect: b.rect,
             xOverlap,
             yOverlap
           })
@@ -307,8 +309,12 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
 
     await watchVillageBtn.click({ force: true })
     await page.waitForTimeout(800)
+    await page.evaluate(() => window.__wes_debug?.resolveCollisions?.())
     const phase3Result = await inspectOverlayCollisions(page)
     console.log(`[OVERLAY TEST] Phase 3 (Watch Village): ${phase3Result.count} elements checked, ${phase3Result.worldCardCount} world cards, cards: ${JSON.stringify(phase3Result.activeWorldCards)}`)
+    if (phase3Result.collisions.length > 0) {
+      console.log('*** PHASE 3 DETECTED COLLISIONS ***:', JSON.stringify(phase3Result.collisions, null, 2))
+    }
     expect(phase3Result.collisions).toEqual([])
     expect(phase3Result.worldCardCount).toBeLessThanOrEqual(2)
 

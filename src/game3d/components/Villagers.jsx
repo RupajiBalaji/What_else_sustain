@@ -251,7 +251,7 @@ export default function Villagers() {
         // Keep at most 1 cough chip active to guarantee max 2 world cards alongside village air station
         const showChip = isCoughing && (
           isWatchingVillage
-            ? idx === ((coughRotationIndex % (VILLAGERS_DATA.length - 1)) + 1) // picks v2..v6, avoiding v1 right next to air station
+            ? (coughRotationIndex % 2 === 0 ? idx === 2 : idx === 5) // In watch village, rotate between v3 and v6 (open village view, completely clear of left HUD cards)
             : idx === coughRotationIndex
         )
         return (

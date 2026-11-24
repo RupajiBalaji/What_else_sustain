@@ -217,6 +217,9 @@ export default function CinematicCamera() {
         currentDistanceRef.current = targetDistanceRef.current
         springArmDistRef.current = targetDistanceRef.current
         currentLookTargetRef.current.set(-3.5, 2.0, 44.0)
+        if (typeof window !== 'undefined' && window.__wes_debug?.resolveCollisions) {
+          setTimeout(() => window.__wes_debug.resolveCollisions(), 50)
+        }
       },
       getYaw: () => currentYawRef.current,
       getPitch: () => currentPitchRef.current,

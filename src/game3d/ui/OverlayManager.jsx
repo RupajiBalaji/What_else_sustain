@@ -40,9 +40,11 @@ export function OverlayManagerProvider({ children }) {
     const choicePanelEl = document.querySelector('[data-testid="in-world-choice-panel"]')
     const isChoiceOpen = Boolean(choicePanelEl && window.getComputedStyle(choicePanelEl).display !== 'none' && window.getComputedStyle(choicePanelEl).visibility !== 'hidden')
 
+    const hasLeftHud = Boolean(document.querySelector('[data-testid="consequence-callout-card"], [data-testid="smoke-meter-hud"]')) && !isMobile
+
     const safeTop = isMobile ? 84 : 76
     const safeBottom = isTouch ? (isChoiceOpen && isMobile ? 320 : 160) : 46
-    const safeLeft = 16
+    const safeLeft = hasLeftHud ? 325 : 16
     const safeRight = (isChoiceOpen && !isMobile) ? 375 : (isMobile ? 24 : 36)
 
     // Convert to array and sort descending by priority
@@ -159,81 +161,86 @@ export function OverlayManagerProvider({ children }) {
       }
 
       if (collidesWithAny(candidateRect)) {
-        let resolved = false
-        const SHIFT_MARGIN = 14
-
-        for (const placed of placedBoxes) {
-          const overlaps = !(
-            candidateRect.right + 8 <= placed.left ||
-            candidateRect.left >= placed.right + 8 ||
-            candidateRect.bottom + 8 <= placed.top ||
-            candidateRect.top >= placed.bottom + 8
-          )
-          if (!overlaps) continue
-
-          // Candidate shift 1: Left of placed
-          const dxLeft = placed.left - SHIFT_MARGIN - candidateRect.right
-          const testLeft = {
-            ...candidateRect,
-            left: candidateRect.left + dxLeft,
-            right: candidateRect.right + dxLeft
-          }
-          if (testLeft.left >= safeLeft && !collidesWithAny(testLeft, placed)) {
-            offsetX += dxLeft
-            candidateRect.left = testLeft.left
-            candidateRect.right = testLeft.right
-            resolved = true
-            break
-          }
-
-          // Candidate shift 2: Downward below placed
-          const dyDown = placed.bottom + SHIFT_MARGIN - candidateRect.top
-          const testDown = {
-            ...candidateRect,
-            top: candidateRect.top + dyDown,
-            bottom: candidateRect.bottom + dyDown
-          }
-          if (testDown.bottom <= winH - safeBottom && !collidesWithAny(testDown, placed)) {
-            offsetY += dyDown
-            candidateRect.top = testDown.top
-            candidateRect.bottom = testDown.bottom
-            resolved = true
-            break
-          }
-
-          // Candidate shift 3: Upward above placed
-          const dyUp = placed.top - SHIFT_MARGIN - candidateRect.bottom
-          const testUp = {
-            ...candidateRect,
-            top: candidateRect.top + dyUp,
-            bottom: candidateRect.bottom + dyUp
-          }
-          if (testUp.top >= safeTop && !collidesWithAny(testUp, placed)) {
-            offsetY += dyUp
-            candidateRect.top = testUp.top
-            candidateRect.bottom = testUp.bottom
-            resolved = true
-            break
-          }
-
-          // Candidate shift 4: Right of placed
-          const dxRight = placed.right + SHIFT_MARGIN - candidateRect.left
-          const testRight = {
-            ...candidateRect,
-            left: candidateRect.left + dxRight,
-            right: candidateRect.right + dxRight
-          }
-          if (testRight.right <= winW - safeRight && !collidesWithAny(testRight, placed)) {
-            offsetX += dxRight
-            candidateRect.left = testRight.left
-            candidateRect.right = testRight.right
-            resolved = true
-            break
-          }
-        }
-
-        if (!resolved) {
+        // Speech bubbles (cough chips) must never displace awkwardly over docked HUD cards—collapse (hide) immediately
+        if (entry.id?.startsWith('villager_cough_')) {
           shouldCollapse = true
+        } else {
+          let resolved = false
+          const SHIFT_MARGIN = 16
+
+          for (const placed of placedBoxes) {
+            const overlaps = !(
+              candidateRect.right + 8 <= placed.left ||
+              candidateRect.left >= placed.right + 8 ||
+              candidateRect.bottom + 8 <= placed.top ||
+              candidateRect.top >= placed.bottom + 8
+            )
+            if (!overlaps) continue
+
+            // Candidate shift 1: Left of placed
+            const dxLeft = placed.left - SHIFT_MARGIN - candidateRect.right
+            const testLeft = {
+              ...candidateRect,
+              left: candidateRect.left + dxLeft,
+              right: candidateRect.right + dxLeft
+            }
+            if (testLeft.left >= safeLeft && !collidesWithAny(testLeft, placed)) {
+              offsetX += dxLeft
+              candidateRect.left = testLeft.left
+              candidateRect.right = testLeft.right
+              resolved = true
+              break
+            }
+
+            // Candidate shift 2: Downward below placed
+            const dyDown = placed.bottom + SHIFT_MARGIN - candidateRect.top
+            const testDown = {
+              ...candidateRect,
+              top: candidateRect.top + dyDown,
+              bottom: candidateRect.bottom + dyDown
+            }
+            if (testDown.bottom <= winH - safeBottom && !collidesWithAny(testDown, placed)) {
+              offsetY += dyDown
+              candidateRect.top = testDown.top
+              candidateRect.bottom = testDown.bottom
+              resolved = true
+              break
+            }
+
+            // Candidate shift 3: Upward above placed
+            const dyUp = placed.top - SHIFT_MARGIN - candidateRect.bottom
+            const testUp = {
+              ...candidateRect,
+              top: candidateRect.top + dyUp,
+              bottom: candidateRect.bottom + dyUp
+            }
+            if (testUp.top >= safeTop && !collidesWithAny(testUp, placed)) {
+              offsetY += dyUp
+              candidateRect.top = testUp.top
+              candidateRect.bottom = testUp.bottom
+              resolved = true
+              break
+            }
+
+            // Candidate shift 4: Right of placed
+            const dxRight = placed.right + SHIFT_MARGIN - candidateRect.left
+            const testRight = {
+              ...candidateRect,
+              left: candidateRect.left + dxRight,
+              right: candidateRect.right + dxRight
+            }
+            if (testRight.right <= winW - safeRight && !collidesWithAny(testRight, placed)) {
+              offsetX += dxRight
+              candidateRect.left = testRight.left
+              candidateRect.right = testRight.right
+              resolved = true
+              break
+            }
+          }
+
+          if (!resolved) {
+            shouldCollapse = true
+          }
         }
       }
 
@@ -256,7 +263,7 @@ export function OverlayManagerProvider({ children }) {
     }
     const interval = setInterval(() => {
       resolveCollisions()
-    }, 200)
+    }, 40)
     return () => clearInterval(interval)
   }, [resolveCollisions])
 
@@ -411,7 +418,6 @@ export function ManagedOverlay({
           data-collapsed={isCollapsed ? 'true' : 'false'}
           style={{
             transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
-            transition: 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)',
             maxWidth,
             width: 'max-content',
             boxSizing: 'border-box',

@@ -25,3 +25,10 @@
 | 2026-11-23T13:49:59.515Z | 768x1024 | 10.98s | software GL, not representative of player hardware |
 | 2026-11-23T13:52:13.074Z | 1366x768 | 15.37s | software GL, not representative of player hardware |
 | 2026-11-23T13:54:54.637Z | 1920x1080 | 21.33s | software GL, not representative of player hardware |
+| 2026-11-24T14:25:02.789Z | 360x640 | 7.77s | software GL, not representative of player hardware |
+| 2026-11-26T03:32:25.465Z | 360x640 | 9.10s | software GL, not representative of player hardware |
+| 2026-11-26T03:38:43.992Z | 390x844 | 7.19s | software GL, not representative of player hardware |
+| 2026-11-26T03:45:56.225Z | 412x915 | 10.44s | software GL, not representative of player hardware |
+| 2026-11-26T03:55:08.851Z | 768x1024 | 13.05s | software GL, not representative of player hardware |
+| 2026-11-26T04:37:13.299Z | 1366x768 | 16.00s | software GL, not representative of player hardware |
+| 2026-11-26T05:22:00.301Z | 1920x1080 | 33.81s | software GL, not representative of player hardware |

@@ -95,6 +95,20 @@ export function OverlayManagerProvider({ children }) {
       })
     }
 
+    // Helper: check if a candidate box overlaps or violates 8px margin with any already placed box
+    const collidesWithAny = (box, ignoreBox = null) => {
+      for (const p of placedBoxes) {
+        if (p === ignoreBox) continue
+        const separated =
+          box.right + 8 <= p.left ||
+          box.left >= p.right + 8 ||
+          box.bottom + 8 <= p.top ||
+          box.top >= p.bottom + 8
+        if (!separated) return true
+      }
+      return false
+    }
+
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
       const rawRect = entry.getRect()
@@ -106,6 +120,11 @@ export function OverlayManagerProvider({ children }) {
 
       // At most 2 world labels visible at once; lower priority collapse to icon
       if (visibleCount >= 2) {
+        shouldCollapse = true
+      }
+
+      // Speech bubbles (cough chips) must never displace awkwardly over docked HUD cards—collapse immediately if raw position is inside left HUD or overlaps any placed box
+      if (entry.id?.startsWith('villager_cough_') && ((hasLeftHud && rawRect.left < safeLeft) || collidesWithAny(rawRect))) {
         shouldCollapse = true
       }
 
@@ -144,20 +163,6 @@ export function OverlayManagerProvider({ children }) {
           candidateRect.top += offsetY
           candidateRect.bottom += offsetY
         }
-      }
-
-      // Helper: check if a candidate box overlaps or violates 8px margin with any already placed box
-      const collidesWithAny = (box, ignoreBox = null) => {
-        for (const p of placedBoxes) {
-          if (p === ignoreBox) continue
-          const separated =
-            box.right + 8 <= p.left ||
-            box.left >= p.right + 8 ||
-            box.bottom + 8 <= p.top ||
-            box.top >= p.bottom + 8
-          if (!separated) return true
-        }
-        return false
       }
 
       if (collidesWithAny(candidateRect)) {

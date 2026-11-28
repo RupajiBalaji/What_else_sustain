@@ -22,8 +22,11 @@ async function inspectOverlayCollisions(page) {
       '[data-testid="what-else-controls"]',
       '[data-testid="virtual-joystick"]',
       '[data-testid="virtual-look-pad"]',
+      '[data-testid="director-local-hint"]',
+      '[data-testid="money-floating-tag"]',
       '[data-overlay-id]',
-      '[data-testid="cough-chip"]'
+      '[data-testid="cough-chip"]',
+      '[data-testid="wave-chip"]'
     ]
 
     const items = []
@@ -126,12 +129,14 @@ async function inspectOverlayCollisions(page) {
       }
     }
 
-    // 3. Count distinct top-level visible active world cards (including cough chips)
+    // 3. Count distinct top-level visible active world cards (including cough/wave chips and docked consequence callout)
     const activeWorldCards = items.filter((it) => {
-      if (!it.isWorldCard || it.isCollapsed) return false
+      const isDockedCallout = it.id === 'consequence-callout-card'
+      if ((!it.isWorldCard && !isDockedCallout) || it.isCollapsed) return false
       // Exclude nested child nodes of another item (e.g. cough-chip inside villager_cough)
       return !items.some((other) => other !== it && other.el.contains(it.el))
     })
+    const waveCardCount = activeWorldCards.filter((w) => w.id.startsWith('villager_wave_')).length
 
     return {
       count: items.length,
@@ -139,6 +144,7 @@ async function inspectOverlayCollisions(page) {
       spacingViolations,
       marginViolations,
       worldCardCount: activeWorldCards.length,
+      waveCardCount,
       activeWorldCards: activeWorldCards.map((w) => w.id)
     }
   })
@@ -359,6 +365,75 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
     const vp = page.viewportSize()
     if (vp) {
       await page.screenshot({ path: `tests/screenshots/${vp.width}x${vp.height}-decision-point.png` })
+    }
+  })
+
+  test('enforces max 2 world cards, max 1 wave bubble, zero collisions at 2, 5, 9, 14, 20s during all 4 alternative sequences', async ({ page }) => {
+    await page.route('**/api/**', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok' }) })
+    })
+    await page.addInitScript(() => {
+      try { localStorage.clear() } catch {}
+      try { sessionStorage.clear() } catch {}
+    })
+
+    await page.goto('/?noFpsFallback=1')
+    const startBtn = page.locator('[data-testid="start-quick-play-button"], [data-testid="start-3d-button"]').first()
+    await startBtn.waitFor({ state: 'visible', timeout: 60000 })
+    await startBtn.click()
+
+    const skipQuizBtn = page.locator('[data-testid="skip-quiz-button"]')
+    try {
+      await skipQuizBtn.waitFor({ state: 'visible', timeout: 4000 })
+      await skipQuizBtn.click()
+    } catch {}
+
+    const choicePanel = page.locator('[data-testid="in-world-choice-panel"]')
+    await choicePanel.waitFor({ state: 'visible', timeout: 30000 })
+
+    // Verify Regional Advisory is dismissible once and does not reappear
+    const hintCard = page.locator('[data-testid="director-local-hint"]')
+    if (await hintCard.isVisible().catch(() => false)) {
+      await page.locator('[data-testid="dismiss-local-hint-button"]').click({ force: true })
+      await expect(hintCard).toBeHidden()
+    }
+
+    const alts = ['happy_seeder', 'bale_sell', 'mulch', 'compost']
+    const sampleTimesSec = [2, 5, 9, 14, 20]
+
+    for (const altKey of alts) {
+      await page.locator(`[data-testid="choice-option-${altKey}"]`).click({ force: true })
+      const confirmBtn = page.locator('[data-testid="confirm-choice-button"]')
+      await confirmBtn.waitFor({ state: 'visible', timeout: 10000 })
+      await confirmBtn.click({ force: true })
+
+      // Advisory must remain hidden during alternative sequences
+      await expect(hintCard).toBeHidden()
+
+      let elapsed = 0
+      for (const t of sampleTimesSec) {
+        const waitMs = (t - elapsed) * 1000
+        if (waitMs > 0) await page.waitForTimeout(waitMs)
+        elapsed = t
+
+        await page.evaluate(() => window.__wes_debug?.resolveCollisions?.())
+        const res = await inspectOverlayCollisions(page)
+        expect(res.collisions, `${altKey} @ ${t}s collisions`).toEqual([])
+        expect(res.worldCardCount, `${altKey} @ ${t}s worldCardCount`).toBeLessThanOrEqual(2)
+        expect(res.waveCardCount, `${altKey} @ ${t}s waveCardCount`).toBeLessThanOrEqual(1)
+      }
+
+      // Rewind to test next alternative
+      const reportReplayBtn = page.locator('[data-testid="season-report-replay-button"], button:has-text("Replay")').first()
+      const hudRewindBtn = page.locator('[data-testid="rewind-button"], button:has-text("What else?")').first()
+      if (await reportReplayBtn.isVisible().catch(() => false)) {
+        await reportReplayBtn.click({ force: true })
+      } else {
+        await hudRewindBtn.waitFor({ state: 'visible', timeout: 10000 })
+        await hudRewindBtn.click({ force: true })
+      }
+      await choicePanel.waitFor({ state: 'visible', timeout: 15000 })
+      await expect(hintCard).toBeHidden()
     }
   })
 })

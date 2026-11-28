@@ -41,9 +41,17 @@ export function OverlayManagerProvider({ children }) {
     const isChoiceOpen = Boolean(choicePanelEl && window.getComputedStyle(choicePanelEl).display !== 'none' && window.getComputedStyle(choicePanelEl).visibility !== 'hidden')
 
     const hasLeftHud = Boolean(document.querySelector('[data-testid="consequence-callout-card"], [data-testid="smoke-meter-hud"]')) && !isMobile
+    const calloutEl = document.querySelector('[data-testid="consequence-callout-card"]')
+    const hasDockedCallout = Boolean(
+      calloutEl &&
+      window.getComputedStyle(calloutEl).display !== 'none' &&
+      window.getComputedStyle(calloutEl).visibility !== 'hidden'
+    )
+    // Max 2 world cards visible at once, and docked consequence callout counts toward that 2-card budget
+    const maxWorldCards = hasDockedCallout ? 1 : 2
 
     const safeTop = isMobile ? 84 : 76
-    const safeBottom = isTouch ? (isChoiceOpen && isMobile ? 320 : 160) : 46
+    const safeBottom = isTouch ? (isChoiceOpen && isMobile ? 320 : 210) : 56
     const safeLeft = hasLeftHud ? 325 : 16
     const safeRight = (isChoiceOpen && !isMobile) ? 375 : (isMobile ? 24 : 36)
 
@@ -61,7 +69,9 @@ export function OverlayManagerProvider({ children }) {
       '[data-testid="smoke-meter-hud"]',
       '[data-testid="in-world-choice-panel"]',
       '[data-testid="watch-village-button"]',
-      '[data-testid="continue-to-report-button"]'
+      '[data-testid="continue-to-report-button"]',
+      '[data-testid="what-else-controls"]',
+      '[data-testid="director-local-hint"]'
     ]
     for (const sel of hudSelectors) {
       const el = document.querySelector(sel)
@@ -83,7 +93,7 @@ export function OverlayManagerProvider({ children }) {
       }
     }
 
-    // Exclusion zones for farmer head and ignited pile
+    // Exclusion zones for farmer center, mobile joystick/look pad, and ignited pile
     const ignitedPilePos = window.__wes_debug?.getIgnitedPileScreenPos?.()
     const exclusionZones = []
     if (ignitedPilePos?.inFrustum) {
@@ -93,6 +103,20 @@ export function OverlayManagerProvider({ children }) {
         top: ignitedPilePos.y - 48,
         bottom: ignitedPilePos.y + 48
       })
+    }
+    // Keep world cards out of center farmer region
+    exclusionZones.push({
+      left: winW * 0.42,
+      right: winW * 0.58,
+      top: winH * 0.38,
+      bottom: winH * 0.65
+    })
+    // Keep world cards out of mobile joystick (bottom-left) and look pad (bottom-right)
+    if (isMobile || isTouch) {
+      exclusionZones.push(
+        { left: 0, right: 176, top: winH - 184, bottom: winH },
+        { left: winW - 176, right: winW, top: winH - 184, bottom: winH }
+      )
     }
 
     // Helper: check if a candidate box overlaps or violates 8px margin with any already placed box
@@ -118,13 +142,26 @@ export function OverlayManagerProvider({ children }) {
       let offsetY = 0
       let shouldCollapse = false
 
-      // At most 2 world labels visible at once; lower priority collapse to icon
-      if (visibleCount >= 2) {
+      // At most 2 world labels visible at once (docked callout counts); queue/collapse lower priority
+      if (visibleCount >= maxWorldCards) {
         shouldCollapse = true
       }
 
-      // Speech bubbles (cough chips) must never displace awkwardly over docked HUD cards—collapse immediately if raw position is inside left HUD or overlaps any placed box
-      if (entry.id?.startsWith('villager_cough_') && ((hasLeftHud && rawRect.left < safeLeft) || collidesWithAny(rawRect))) {
+      // Unmount/collapse overlays that are off-screen so they don't update every frame
+      if (
+        rawRect.right < 0 ||
+        rawRect.left > winW ||
+        rawRect.bottom < 0 ||
+        rawRect.top > winH
+      ) {
+        shouldCollapse = true
+      }
+
+      // Speech bubbles (cough/wave chips) must never displace awkwardly over docked HUD cards—collapse immediately
+      if (
+        (entry.id?.startsWith('villager_cough_') || entry.id?.startsWith('villager_wave_')) &&
+        ((hasLeftHud && rawRect.left < safeLeft) || collidesWithAny(rawRect))
+      ) {
         shouldCollapse = true
       }
 
@@ -166,8 +203,8 @@ export function OverlayManagerProvider({ children }) {
       }
 
       if (collidesWithAny(candidateRect)) {
-        // Speech bubbles (cough chips) must never displace awkwardly over docked HUD cards—collapse (hide) immediately
-        if (entry.id?.startsWith('villager_cough_')) {
+        // Speech bubbles (cough/wave chips) must never displace awkwardly over docked HUD cards—collapse immediately
+        if (entry.id?.startsWith('villager_cough_') || entry.id?.startsWith('villager_wave_')) {
           shouldCollapse = true
         } else {
           let resolved = false
@@ -254,7 +291,7 @@ export function OverlayManagerProvider({ children }) {
         placedBoxes.push(candidateRect)
       }
       entry.setOffset({ x: Math.round(offsetX), y: Math.round(offsetY) })
-      entry.setCollapsed(shouldCollapse)
+      entry.setCollapsed(shouldCollapse, Math.round(offsetX), Math.round(offsetY))
     }
   }, [])
 
@@ -354,7 +391,15 @@ export function ManagedOverlay({
         }
       },
       setOffset: handleSetOffset,
-      setCollapsed: setIsCollapsed
+      setCollapsed: (collapsed, ox = 0, oy = 0) => {
+        if (containerRef.current) {
+          containerRef.current.style.display = collapsed ? 'none' : ''
+          if (!collapsed) {
+            containerRef.current.style.transform = `translate3d(${ox}px, ${oy}px, 0)`
+          }
+        }
+        setIsCollapsed(collapsed)
+      }
     }
 
     manager.registerOverlay(id, entry)
@@ -388,22 +433,38 @@ export function ManagedOverlay({
     return null
   }
 
-  // When suppressed by choice panel, remain attached in DOM with display: none for director queries without collision
+  // When suppressed by choice panel: keep village_sign attached for director queries, unmount all others
   if (isHiddenByChoicePanel) {
-    return (
-      <group position={position}>
-        <Html center={center} style={{ display: 'none', pointerEvents: 'none', visibility: 'hidden' }}>
-          <div
-            ref={containerRef}
-            data-overlay-id={id}
-            data-hidden-by-choice="true"
-            style={{ display: 'none' }}
-          >
-            {children}
-          </div>
-        </Html>
-      </group>
-    )
+    if (id === 'village_sign') {
+      return (
+        <group position={position}>
+          <Html center={center} style={{ display: 'none', pointerEvents: 'none', visibility: 'hidden' }}>
+            <div
+              ref={containerRef}
+              data-overlay-id={id}
+              data-hidden-by-choice="true"
+              style={{ display: 'none' }}
+            >
+              {children}
+            </div>
+          </Html>
+        </group>
+      )
+    }
+    return null
+  }
+
+  // Unmount <Html> completely when collapsed/off-screen for speech/floating tags so they do not update every frame
+  if (
+    isCollapsed &&
+    (id?.startsWith('villager_cough_') ||
+      id?.startsWith('villager_wave_') ||
+      id === 'money_floating_tag' ||
+      id === 'soil_cutaway_plaque' ||
+      id === 'village_air_station' ||
+      id === 'reputation_flag')
+  ) {
+    return <group position={position} />
   }
 
   return (

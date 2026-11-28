@@ -83,6 +83,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const [seasonReportData, setSeasonReportData] = useState(null)
   const [showSeasonReport, setShowSeasonReport] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
+  const [dismissedDirectorHint, setDismissedDirectorHint] = useState(false)
   const lastSowingWasPerfectRef = useRef(false)
 
   // ==========================================
@@ -1166,6 +1167,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         setShowSeasonReport,
         showAchievements,
         setShowAchievements,
+        dismissedDirectorHint,
+        setDismissedDirectorHint,
         completeSowing,
         resolveSeasonalEvent,
         finishSeason,

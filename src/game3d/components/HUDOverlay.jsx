@@ -73,13 +73,14 @@ export default function HUDOverlay({ onSwitchToLite }) {
     toastNotice,
     invertLook,
     scenarioData,
-    isAnyModalOpen
+    isAnyModalOpen,
+    dismissedDirectorHint,
+    setDismissedDirectorHint
   } = useGame3D()
 
   // Mobile virtual joystick state
   const [isTouchDevice, setIsTouchDevice] = useState(false)
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 640 : false))
-  const [dismissedDirectorHint, setDismissedDirectorHint] = useState(false)
   const joystickBaseRef = useRef(null)
   const [knobPos, setKnobPos] = useState({ x: 0, y: 0 })
   const isDraggingJoystickRef = useRef(false)
@@ -612,8 +613,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
           </div>
         )}
 
-        {/* Local Agronomic Hint from Scenario Director (Dismissible card) */}
-        {!dismissedDirectorHint && scenarioData?.localHint && (seasonPhase === 'decision' || harvestState === 'harvested') && burnState === 'idle' && (
+        {/* Local Agronomic Hint from Scenario Director (Dismissible once per session; never during consequence/alternatives) */}
+        {!dismissedDirectorHint && scenarioData?.localHint && (seasonPhase === 'decision' || harvestState === 'harvested') && burnState === 'idle' && !activeAlternative && !hasMadeChoice && (
           <div
             data-testid="director-local-hint"
             style={{

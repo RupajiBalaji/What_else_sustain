@@ -122,7 +122,7 @@ function ProceduralVillager({ data, isCoughing, isWaving, isHigh }) {
   )
 }
 
-function SingleVillager({ data, isCoughing, showCoughChip, isWaving, qualityConfig }) {
+function SingleVillager({ data, isCoughing, showCoughChip, isWaving, showWaveChip, qualityConfig }) {
   const isHigh = qualityConfig.shadows
   const currentAnim = isCoughing ? 'cough' : isWaving ? 'wave' : 'idle'
 
@@ -157,17 +157,16 @@ function SingleVillager({ data, isCoughing, showCoughChip, isWaving, qualityConf
           <div
             data-testid="cough-chip"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              border: '2px solid #D32F2F',
-              color: '#B71C1C',
-              padding: '3px 8px',
+              backgroundColor: 'rgba(20, 26, 32, 0.94)',
+              border: '1.5px solid #EF5350',
+              color: '#FF8A80',
+              padding: '3px 9px',
               borderRadius: '9999px',
               fontSize: '11px',
               fontWeight: 800,
               whiteSpace: 'nowrap',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-              pointerEvents: 'none',
-              animation: 'pulse 1s infinite'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+              pointerEvents: 'none'
             }}
           >
             😷 Cough! Smog...
@@ -175,8 +174,8 @@ function SingleVillager({ data, isCoughing, showCoughChip, isWaving, qualityConf
         </ManagedOverlay>
       )}
 
-      {/* World-space Cheerful greeting bubble */}
-      {isWaving && (
+      {/* World-space Cheerful greeting bubble (at most 1 rotating) */}
+      {showWaveChip && (
         <ManagedOverlay
           id={`villager_wave_${data.id}`}
           priority="decorative_sign"
@@ -187,18 +186,18 @@ function SingleVillager({ data, isCoughing, showCoughChip, isWaving, qualityConf
           zIndexRange={[15, 0]}
         >
           <div
+            data-testid="wave-chip"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              border: '2px solid #4CAF50',
-              color: '#1B5E20',
+              backgroundColor: 'rgba(20, 26, 32, 0.94)',
+              border: '1.5px solid #66BB6A',
+              color: '#A5D6A7',
               padding: '3px 9px',
               borderRadius: '9999px',
               fontSize: '11px',
               fontWeight: 800,
               whiteSpace: 'nowrap',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-              pointerEvents: 'none',
-              animation: 'bounce 1s infinite'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+              pointerEvents: 'none'
             }}
           >
             👋 Clean Air! 🌾
@@ -225,11 +224,16 @@ export default function Villagers() {
       (villageHealth < 45 && burnState !== 'lighting' && burnState !== 'burning'))
 
   const [coughRotationIndex, setCoughRotationIndex] = useState(0)
+  const [waveRotationIndex, setWaveRotationIndex] = useState(0)
 
-  // Play audio cough cue during the smoke plume arrival & rotate at most 2 cough chips
+  // Waving triggers on sustainable choices OR high village health
+  const isWaving =
+    Boolean(activeAlternative) || (villageHealth >= 78 && burnState === 'idle')
+
+  // Play audio cough cue during the smoke plume arrival & rotate at most 1 cough/wave chip
   useFrame(({ clock }) => {
+    const now = clock.getElapsedTime()
     if (isCoughing) {
-      const now = clock.getElapsedTime()
       if (now - lastCoughAudioRef.current > 3.6) {
         lastCoughAudioRef.current = now
         audioManager.playCoughSound()
@@ -238,12 +242,13 @@ export default function Villagers() {
       if (rot !== coughRotationIndex) {
         setCoughRotationIndex(rot)
       }
+    } else if (isWaving) {
+      const wRot = Math.floor(now / 2.6) % VILLAGERS_DATA.length
+      if (wRot !== waveRotationIndex) {
+        setWaveRotationIndex(wRot)
+      }
     }
   })
-
-  // Waving triggers on sustainable choices OR high village health
-  const isWaving =
-    Boolean(activeAlternative) || (villageHealth >= 78 && burnState === 'idle')
 
   return (
     <group name="VillagersGroup">
@@ -251,9 +256,10 @@ export default function Villagers() {
         // Keep at most 1 cough chip active to guarantee max 2 world cards alongside village air station
         const showChip = isCoughing && (
           isWatchingVillage
-            ? (coughRotationIndex % 2 === 0 ? idx === 2 : idx === 5) // In watch village, rotate between v3 and v6 (open village view, completely clear of left HUD cards)
+            ? (coughRotationIndex % 2 === 0 ? idx === 2 : idx === 5)
             : idx === coughRotationIndex
         )
+        const showWaveChip = isWaving && !isCoughing && idx === waveRotationIndex
         return (
           <SingleVillager
             key={v.id}
@@ -261,6 +267,7 @@ export default function Villagers() {
             isCoughing={isCoughing}
             showCoughChip={showChip}
             isWaving={isWaving}
+            showWaveChip={showWaveChip}
             qualityConfig={qualityConfig}
           />
         )

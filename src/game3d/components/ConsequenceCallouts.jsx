@@ -58,6 +58,12 @@ export default function ConsequenceCallouts() {
     }
   }, [isBurnt, isAlternativeActive, isAnyModalOpen, showSeasonReport])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.__wes_debug?.resolveCollisions) {
+      window.__wes_debug.resolveCollisions()
+    }
+  }, [activeStep, isBurnt, isAlternativeActive])
+
   if (typeof document === 'undefined') return null
   if (isAnyModalOpen || showSeasonReport || activeStep === 0 || (!isBurnt && !isAlternativeActive)) {
     return null

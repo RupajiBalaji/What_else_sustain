@@ -4,7 +4,7 @@
  * for offline access and instant second-load performance.
  */
 
-const CACHE_NAME = 'wes-cache-v3'
+const CACHE_NAME = 'wes-cache-v4'
 const ASSET_PATTERNS_CACHE_FIRST = [
   /\/models\//,
   /\/draco\//,

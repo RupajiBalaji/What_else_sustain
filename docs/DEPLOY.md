@@ -134,3 +134,9 @@ echo $SUMMARY | jq .
 # 5. rank must equal "A"
 ```
 If the summary returns the pre/post scores and delta after a process restart, session persistence on managed PostgreSQL is formally verified.
+
+---
+
+## 5. Service Worker Asset Cache Busting
+- `public/sw.js` caches `.glb` models, Draco decoders, icons, and textures under `CACHE_NAME` (currently `wes-cache-v4`).
+- **Rule**: Whenever any 3D model (`.glb`) or texture (`.png`, `.jpg`, `.webp`) in `public/` changes, **bump `CACHE_NAME`** (e.g., `wes-cache-v4` -> `wes-cache-v5`) before deploying so returning clients evict stale assets on activate.

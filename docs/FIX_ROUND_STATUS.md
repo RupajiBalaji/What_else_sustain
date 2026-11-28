@@ -15,5 +15,5 @@
 | C2 | Tier C | DONE | pending | `npm run lint` | Added `no-unused-vars` and `react-hooks/exhaustive-deps` as `warn` in `eslint.config.js`; `npm run lint` passes with 0 errors. |
 | C3 | Tier C | DONE | pending | `ci.yml` | Added `tests/screenshots/` to `.gitignore`, untracked test screenshots, copied curated screenshots to `docs/screenshots/`, and added CI artifact upload. |
 | C4 | Tier C | DONE | pending | `.github/workflows/ci.yml`, `playwright.config.js` | Configured `playwright.config.js` & CI for all 6 viewports: `360x640`, `390x844`, `844x390`, `768x1024`, `1366x768`, `1920x1080`. |
-| C5 | Tier C | NOT DONE | — | — | Bump SW cache version and document in `docs/DEPLOY.md`. |
-| C6 | Tier C | NOT DONE | — | — | Read `25c32a4` and summarize changes and risks in final report. |
+| C5 | Tier C | DONE | pending | — | Bumped `CACHE_NAME` in `public/sw.js` (`wes-cache-v3` -> `wes-cache-v4`) and added cache-bump rule to `docs/DEPLOY.md`. |
+| C6 | Tier C | DONE | `25c32a4` | `backend/tests/test_security_audit.py` | Audited `25c32a4`: restricted CORS/origins, disabled `/docs` in prod, added security headers, path-traversal guard on SPA fallback, Pydantic bounds, `PrivacyModal` + delete-data controls, pinned deps. Residual risk: in-memory rate-limiter resets per worker; `allow_headers=["*"]`; Gemini keys via env. |

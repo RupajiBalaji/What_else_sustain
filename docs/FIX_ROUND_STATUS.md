@@ -26,5 +26,5 @@
 | R2-2 | Round 2 | DONE | pending | `npm run lint`, `npm run build` | Replaced active status banner with `Sequence complete!` toast on completion; shifted mobile top banners left of zoom controls (`maxWidth: calc(100vw - 112px)`). |
 | R2-3 | Round 2 | DONE | pending | `e2e/alt-sequences.spec.js` | Nudged `bale_sell` camera yaw (`0.24` -> `-0.52`) to keep the farm gate flag pole `[2.5, 0, 5.0]` clear of baler, truck, and farmer. |
 | R2-4 | Round 2 | DONE | pending | `scripts/balance-sim.js`, `npm test` | Flagged ₹0 as FAIL; added switchable `crmSubsidyMode` (`none` default / `individual_50` / `chc_80`). Off: `burn` FAIL S4, `happy_seeder` FAIL S5, `mulch` FAIL S9, `compost` PASS (₹51k), `bale_sell` PASS (₹61k). 50%/80%: all sustainable options PASS (only `burn` FAIL S4). Designer decisions added to `docs/BALANCE_REPORT.md`. |
-| R2-5 | Round 2 | NOT DONE | — | — | Bale & Sell base-income label clarifies bale & transport net only. |
+| R2-5 | Round 2 | DONE | pending | `npm run lint`, `npm test` | Clarified `bale_sell` in-world callout & counter to say `"Bale & Transport Net Only (excludes grain crop income)"` so it is not confused with the season report total. |
 | R2-6 | Round 2 | NOT DONE | — | — | Actual visible DOM overlay count test with negative control (`360x640`, `390x844`, `1366x768`). |

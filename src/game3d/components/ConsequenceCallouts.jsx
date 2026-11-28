@@ -94,12 +94,12 @@ export default function ConsequenceCallouts() {
       title: isBurnt
         ? `Residue Choice: -₹${absRev} (${fin.acres} ac)`
         : activeAlternative === 'bale_sell'
-          ? `Bale & Sell Net: ${revSign}₹${absRev} (${fin.acres} ac)`
+          ? `Bale & Transport Net Only: ${revSign}₹${absRev} (${fin.acres} ac)`
           : `Input Cost: ${revSign}₹${absRev} (${fin.acres} ac)`,
       detail: isBurnt
         ? `Estimated fertilizer replacement drain across ${fin.acres} acres (game estimate: ~₹3,000–₹4,500/ac total impact).`
         : activeAlternative === 'bale_sell'
-          ? `Net after baling & transport across ${fin.acres} ac (Punjab range: -₹200 to +₹800/ac, game estimate).`
+          ? `Bale & transport net only (excludes grain crop income). Punjab range: -₹200 to +₹800/ac, game estimate.`
           : `Upfront hire/input cost across ${fin.acres} ac; preserves soil fertility for harvest yield (game estimate).`,
       tag: activeAlternative === 'bale_sell'
         ? 'Source: PAU & MNRE (Punjab)'

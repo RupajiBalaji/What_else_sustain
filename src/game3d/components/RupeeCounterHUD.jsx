@@ -45,7 +45,7 @@ export default function RupeeCounterHUD() {
         >
           <span style={{ fontSize: '1.4rem' }}>💰</span>
           <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#BBDEFB' }}>
-            {t('game3d.rupeeEarned')}:
+            Bale &amp; transport net only:
           </span>
           <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#FFD54F' }}>
             +₹{rupeeCount.toLocaleString()}

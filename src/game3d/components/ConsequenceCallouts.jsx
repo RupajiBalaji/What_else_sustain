@@ -144,6 +144,7 @@ export default function ConsequenceCallouts() {
     }
   }
 
+  const isShortLandscape = typeof window !== 'undefined' && window.innerHeight < 500 && !isMobile
   const current = calloutData[activeStep]
   if (!current) return null
 
@@ -154,11 +155,12 @@ export default function ConsequenceCallouts() {
       data-testid="consequence-callout-card"
       style={{
         position: 'absolute',
-        left: isMobile ? '12px' : '20px',
+        left: isShortLandscape ? 'auto' : (isMobile ? '12px' : '20px'),
+        right: isShortLandscape ? '16px' : 'auto',
         transform: 'none',
-        top: isMobile ? 'calc(138px + env(safe-area-inset-top, 0px))' : '190px',
+        top: isShortLandscape ? '56px' : (isMobile ? 'calc(138px + env(safe-area-inset-top, 0px))' : '190px'),
         bottom: 'auto',
-        width: isMobile ? 'min(260px, calc(100vw - 80px))' : '290px',
+        width: isShortLandscape ? '210px' : (isMobile ? 'min(260px, calc(100vw - 80px))' : '290px'),
         zIndex: 75,
         backgroundColor: 'rgba(22, 28, 34, 0.95)',
         backdropFilter: 'blur(8px)',

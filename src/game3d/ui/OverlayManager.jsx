@@ -349,7 +349,7 @@ export function ManagedOverlay({
   distanceFactor,
   visible = true
 }) {
-  const { isAnyModalOpen, showSeasonReport, showChoiceWheel, isChoicePanelOpen } = useGame3D()
+  const { isAnyModalOpen, showSeasonReport, showChoiceWheel, isChoicePanelOpen, isRewinding } = useGame3D()
   const manager = useOverlayManager()
 
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -428,8 +428,8 @@ export function ManagedOverlay({
     id === 'reputation_flag'
   )
 
-  // Hide completely while ANY modal is open (modals maintain highest z-index)
-  if (isAnyModalOpen || showSeasonReport || !visible) {
+  // Hide completely while ANY modal, season report, or rewind effect is active
+  if (isRewinding || isAnyModalOpen || showSeasonReport || !visible) {
     return null
   }
 

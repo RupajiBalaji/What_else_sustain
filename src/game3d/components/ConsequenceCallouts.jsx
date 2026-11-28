@@ -19,6 +19,7 @@ export default function ConsequenceCallouts() {
     smokeData,
     isAnyModalOpen,
     showSeasonReport,
+    isRewinding,
     farmConfig,
     persistentState
   } = useGame3D()
@@ -65,7 +66,7 @@ export default function ConsequenceCallouts() {
   }, [activeStep, isBurnt, isAlternativeActive])
 
   if (typeof document === 'undefined') return null
-  if (isAnyModalOpen || showSeasonReport || activeStep === 0 || (!isBurnt && !isAlternativeActive)) {
+  if (isRewinding || isAnyModalOpen || showSeasonReport || activeStep === 0 || (!isBurnt && !isAlternativeActive)) {
     return null
   }
 

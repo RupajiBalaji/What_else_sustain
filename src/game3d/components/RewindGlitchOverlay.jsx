@@ -3,13 +3,17 @@ import { useGame3D } from '../context/Game3DContext'
 import { useLanguage } from '../../context/LanguageContext'
 
 export default function RewindGlitchOverlay() {
-  const { isRewinding } = useGame3D()
+  const { isRewinding, reducedMotion, quality } = useGame3D()
   const { t } = useLanguage()
 
   if (!isRewinding) return null
 
+  const isLowOrReduced = reducedMotion || quality === 'low'
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+
   return (
     <div
+      data-testid="rewind-glitch-overlay"
       style={{
         position: 'fixed',
         inset: 0,
@@ -17,75 +21,75 @@ export default function RewindGlitchOverlay() {
         pointerEvents: 'none',
         overflow: 'hidden',
         userSelect: 'none',
-        mixBlendMode: 'screen'
+        // Single lightweight translucent CSS layer (no expensive mix-blend-mode or blur over full canvas)
+        background: isLowOrReduced
+          ? 'rgba(10, 16, 20, 0.35)'
+          : 'repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0px, rgba(0, 0, 0, 0.22) 2px, rgba(0, 230, 118, 0.04) 2px, rgba(0, 230, 118, 0.04) 4px)'
       }}
     >
-      {/* 1. VHS Scanlines Background */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.45) 0px, rgba(0, 0, 0, 0.45) 2px, transparent 2px, transparent 4px)',
-          opacity: 0.85
-        }}
-      />
+      {/* Subtle colour-band accent only on Medium/High without reduced motion */}
+      {!isLowOrReduced && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '38%',
+            left: 0,
+            right: 0,
+            height: '14%',
+            background: 'linear-gradient(180deg, rgba(0, 230, 118, 0.14) 0%, rgba(255, 193, 7, 0.12) 50%, rgba(0, 188, 212, 0.14) 100%)'
+          }}
+        />
+      )}
 
-      {/* 2. VHS Chromatic Glitch Bar */}
+      {/* REW / SP timecode safely below top HUD bar & readable on 360x640 */}
       <div
+        data-testid="rewind-timecode"
         style={{
           position: 'absolute',
-          top: '35%',
-          left: 0,
-          right: 0,
-          height: '22%',
-          background: 'linear-gradient(180deg, rgba(0, 255, 255, 0.35) 0%, rgba(255, 0, 128, 0.4) 50%, rgba(255, 255, 0, 0.35) 100%)',
-          filter: 'blur(2px)',
-          animation: 'pulse 0.2s infinite'
-        }}
-      />
-
-      {/* 3. VHS REWIND HUD TEXT & TRACKING INDICATOR */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '32px',
-          left: '32px',
+          top: 'calc(64px + env(safe-area-inset-top, 0px))',
+          left: 'calc(16px + env(safe-area-inset-left, 0px))',
+          backgroundColor: 'rgba(16, 22, 28, 0.90)',
+          border: '1.5px solid rgba(0, 230, 118, 0.65)',
+          borderRadius: '10px',
+          padding: isMobile ? '6px 12px' : '8px 14px',
           color: '#00E676',
           fontFamily: 'monospace, monospace',
-          textShadow: '0 0 8px rgba(0, 230, 118, 0.8), 2px 2px 0 #FF0055',
-          fontSize: '1.4rem',
+          fontSize: isMobile ? '0.95rem' : '1.15rem',
           fontWeight: 900,
-          letterSpacing: '3px',
+          letterSpacing: '2px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px'
+          gap: '2px',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.45)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span>⏪</span>
           <span>REW 08x</span>
         </div>
-        <div style={{ fontSize: '1rem', color: '#FFFFFF', opacity: 0.9 }}>
+        <div style={{ fontSize: isMobile ? '0.78rem' : '0.9rem', color: '#ECEFF1', letterSpacing: '1px' }}>
           SP -0:04:18
         </div>
       </div>
 
+      {/* Bottom Rewind Label inside safe area */}
       <div
         style={{
           position: 'absolute',
-          bottom: '40px',
+          bottom: 'calc(32px + env(safe-area-inset-bottom, 0px))',
           left: '50%',
           transform: 'translateX(-50%)',
-          backgroundColor: 'rgba(0, 0, 0, 0.75)',
-          border: '2px solid #00E676',
+          maxWidth: 'calc(100vw - 32px)',
+          backgroundColor: 'rgba(16, 22, 28, 0.92)',
+          border: '1.5px solid #00E676',
           color: '#00E676',
-          padding: '8px 20px',
+          padding: isMobile ? '6px 14px' : '8px 20px',
           borderRadius: '9999px',
           fontFamily: 'monospace',
           fontWeight: 900,
-          fontSize: '1rem',
-          letterSpacing: '1px',
-          textShadow: '0 0 10px #00E676'
+          fontSize: isMobile ? '0.82rem' : '0.95rem',
+          letterSpacing: '0.5px',
+          whiteSpace: 'nowrap'
         }}
       >
         {t('game3d.whatElseRewindTitle')}

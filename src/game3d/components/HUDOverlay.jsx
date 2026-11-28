@@ -74,6 +74,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
     invertLook,
     scenarioData,
     isAnyModalOpen,
+    isRewinding,
     dismissedDirectorHint,
     setDismissedDirectorHint
   } = useGame3D()
@@ -613,8 +614,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
           </div>
         )}
 
-        {/* Local Agronomic Hint from Scenario Director (Dismissible once per session; never during consequence/alternatives) */}
-        {!dismissedDirectorHint && scenarioData?.localHint && (seasonPhase === 'decision' || harvestState === 'harvested') && burnState === 'idle' && !activeAlternative && !hasMadeChoice && (
+        {/* Local Agronomic Hint from Scenario Director (Dismissible once per session; hidden during rewind/consequence/alternatives) */}
+        {!isRewinding && !dismissedDirectorHint && scenarioData?.localHint && (seasonPhase === 'decision' || harvestState === 'harvested') && burnState === 'idle' && !activeAlternative && !hasMadeChoice && (
           <div
             data-testid="director-local-hint"
             style={{
@@ -698,8 +699,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
         )}
       </div>
 
-      {/* LIVE SMOKE EXPOSURE METERS (During fire & consequence) */}
-      <SmokeMeterHUD />
+      {/* LIVE SMOKE EXPOSURE METERS (During fire & consequence, hidden during rewind) */}
+      {!isRewinding && <SmokeMeterHUD />}
 
       {/* SEQUENCED TIMED CONSEQUENCE CALLOUTS (Left column on desktop, compact above touch controls on mobile) */}
       <ConsequenceCallouts />
@@ -821,7 +822,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
       <OneSeasonLaterModal onSwitchToLite={onSwitchToLite} />
 
       {/* PERSISTENT QUIET "WHAT ELSE?" REWIND & COMPARISON BUTTONS (Section 4.3 S8) */}
-      {hasMadeChoice && !showSeasonReport && !showComparison && (
+      {!isRewinding && hasMadeChoice && !showSeasonReport && !showComparison && (
         <div
           data-testid="what-else-controls"
           style={{
@@ -889,7 +890,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
       <RewindGlitchOverlay />
 
       {/* LIVE BIOMASS REVENUE COUNTER & CLEAN AIR HUD */}
-      <RupeeCounterHUD />
+      {!isRewinding && <RupeeCounterHUD />}
 
       {/* BEFORE & AFTER COMPARISON SPLIT SLIDER */}
       <ComparisonSliderModal onSwitchToLite={onSwitchToLite} />
@@ -1005,8 +1006,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
         </div>
       )}
 
-      {/* Dynamic Performance & Tier Adjustment Toast Notice (Docked center-top under HUD bar) */}
-      {toastNotice && (
+      {/* Dynamic Performance & Tier Adjustment Toast Notice (Docked center-top under HUD bar, hidden during rewind) */}
+      {!isRewinding && toastNotice && (
         <div
           style={{
             position: 'absolute',

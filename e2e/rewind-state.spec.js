@@ -60,6 +60,23 @@ test.describe('Rewind State Restoration (Item 1)', () => {
     // Trigger Replay from Season Report
     await reportReplayBtn.click({ force: true })
 
+    // Verify Rewind Screen (Item 4): timecode visible below HUD row, all cards/buttons hidden
+    const rewindOverlay = page.locator('[data-testid="rewind-glitch-overlay"]')
+    const rewindTimecode = page.locator('[data-testid="rewind-timecode"]')
+    await rewindOverlay.waitFor({ state: 'visible', timeout: 5000 })
+    await expect(rewindTimecode).toBeVisible()
+    await expect(page.locator('[data-testid="what-else-controls"]')).toBeHidden()
+    await expect(page.locator('[data-testid="director-local-hint"]')).toBeHidden()
+    await expect(page.locator('[data-testid="consequence-callout-card"]')).toBeHidden()
+
+    const overlapCheck = await page.evaluate(() => {
+      const hud = document.querySelector('[data-testid="hud-top-bar"]')?.getBoundingClientRect()
+      const tc = document.querySelector('[data-testid="rewind-timecode"]')?.getBoundingClientRect()
+      return { hudBottom: hud?.bottom ?? 0, tcTop: tc?.top ?? 0 }
+    })
+    expect(overlapCheck.tcTop).toBeGreaterThanOrEqual(overlapCheck.hudBottom)
+    await page.screenshot({ path: 'tests/screenshots/rewind-screen-verified.png' })
+
     // Wait for choice panel to return after 1.35s rewind
     await choicePanel.waitFor({ state: 'visible', timeout: 15000 })
     await page.waitForTimeout(200)

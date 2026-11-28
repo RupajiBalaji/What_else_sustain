@@ -3,6 +3,11 @@ import * as THREE from 'three'
 import { sound } from '../../game/soundManager'
 import { audioManager } from '../audio/AudioManager'
 import { createSeasonMachine, SEASON_STATES } from '../state/seasonMachine'
+import {
+  captureDecisionSnapshot,
+  restoreDecisionSnapshot,
+  recordOneTimeDiscovery
+} from '../state/rewindSnapshot'
 import { useGame } from '../../context/GameContext'
 import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 import { getQualityConfig, autoDetectQualityTier } from '../config/qualityConfig'
@@ -47,6 +52,10 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   // ==========================================
   const seasonMachineRef = useRef(createSeasonMachine(SEASON_STATES.SOWING))
   const [seasonPhase, setSeasonPhaseState] = useState(SEASON_STATES.SOWING)
+  const decisionSnapshotRef = useRef(null)
+  const isRewindingRef = useRef(false)
+  const persistentStateRef = useRef(persistentState)
+  persistentStateRef.current = persistentState
 
   const setSeasonPhase = useCallback((targetPhase, payload = {}) => {
     try {
@@ -55,6 +64,13 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       }
     } catch (e) {
       console.warn('[SeasonMachine] Transition warning:', e.message)
+    }
+    if (
+      targetPhase === SEASON_STATES.DECISION &&
+      !isRewindingRef.current &&
+      !decisionSnapshotRef.current
+    ) {
+      decisionSnapshotRef.current = captureDecisionSnapshot(persistentStateRef.current)
     }
     setSeasonPhaseState(targetPhase)
   }, [])
@@ -268,6 +284,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       window.__wes_debug.getFps = () => fps
       window.__wes_debug.setInvertLook = setInvertLook
       window.__wes_debug.getInvertLook = () => invertLook
+      window.__wes_debug.getPersistentState = () => persistentStateRef.current
+      window.__wes_debug.getDecisionSnapshot = () => decisionSnapshotRef.current
     }
   }, [quality, fps])
 
@@ -713,7 +731,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         }
       }
 
-      const updated = {
+      const disc = recordOneTimeDiscovery({
         ...prev,
         soilHealth: nextSoil,
         villageHealth: nextVillage,
@@ -727,7 +745,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         compostUses: (prev.compostUses || 0) + (choiceKey === 'compost' ? 1 : 0),
         mulchUses: (prev.mulchUses || 0) + (choiceKey === 'mulch' ? 1 : 0),
         history: [...(prev.history || []), { seasonIndex: prev.seasonIndex || 1, choiceKey, netSeasonBalance, rank: rank.rank }]
-      }
+      }, choiceKey)
+      const updated = disc.state
 
       savePersistentState(updated)
       checkAndUnlockAchievements(updated)
@@ -772,14 +791,19 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       return updated
     })
 
+    decisionSnapshotRef.current = null
     setSeasonPhase('sowing')
-  }, [savePersistentState, triggerToast])
+  }, [savePersistentState, triggerToast, setSeasonPhase])
 
   // Replay Current Season (Rewind & Try Alternate Choice)
   const replaySeason = useCallback(() => {
+    isRewindingRef.current = true
     setShowSeasonReport(false)
     setShowComparison(false)
     setShowOneSeasonModal(false)
+    setSeasonReportData(null)
+    setIsWatchingVillage(false)
+    setWatchVillageProgress(0)
     sound.stopFireCrackle()
     sound.stopTractorEngine()
     sound.stopBalerSound()
@@ -792,6 +816,14 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     if (altTimerRef.current) clearTimeout(altTimerRef.current)
     if (altIntervalRef.current) clearInterval(altIntervalRef.current)
 
+    if (decisionSnapshotRef.current) {
+      setPersistentState((prev) => {
+        const restored = restoreDecisionSnapshot(prev, decisionSnapshotRef.current)
+        savePersistentState(restored)
+        return restored
+      })
+    }
+
     setTimeout(() => {
       setIsRewinding(false)
       setBurnState('idle')
@@ -800,16 +832,23 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       setActiveAlternative(null)
       setAlternativeProgress(0)
       setRupeeCount(0)
+      setSmokeData({
+        playerExposure: null,
+        villageExposure: null,
+        disclaimer: 'Modelled game estimate, not a measured air-quality reading.',
+        allParamsVerified: false
+      })
       setPlayerResetTrigger((p) => p + 1)
       setHasMadeChoice(false)
       setSelectedChoiceId(null)
       setHarvestState('harvested')
       setHarvestProgress(1.0)
       setSeasonPhase('decision')
+      isRewindingRef.current = false
       setShowChoiceWheel(true)
       triggerToast('Rewound to harvest! Explore an alternative approach.')
     }, 1350)
-  }, [triggerToast])
+  }, [triggerToast, savePersistentState, setSeasonPhase])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -828,6 +867,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     } catch {
       // Safe fallback
     }
+    decisionSnapshotRef.current = null
+    setTriedChoices([])
     const fresh = { ...GAME_BALANCE.INITIAL_STATE }
     setPersistentState(fresh)
     setShowSeasonReport(false)

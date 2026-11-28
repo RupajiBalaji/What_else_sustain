@@ -67,8 +67,8 @@ jobs:
         run: npm run build
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
-      - name: Run Playwright E2E smoke tests
-        run: npx playwright test --project="Phone (390x844)" --project="Desktop (1366x768)"
+      - name: Run Playwright E2E suite (all 6 viewports)
+        run: npx playwright test
         env:
           CI: true
       - name: Upload Playwright test screenshots

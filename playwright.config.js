@@ -35,9 +35,9 @@ export default defineConfig({
       }
     },
     {
-      name: 'Phone (412x915)',
+      name: 'Phone landscape (844x390)',
       use: {
-        viewport: { width: 412, height: 915 },
+        viewport: { width: 844, height: 390 },
         isMobile: true,
         hasTouch: true
       }

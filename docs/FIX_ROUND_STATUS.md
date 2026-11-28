@@ -14,6 +14,6 @@
 | C1 | Tier C | DONE | pending | `npm run build` | Deleted `vercel.json`, `netlify.toml`, `api/ask-advisor.js`, and legacy `/api/ask-advisor` middleware from `vite.config.js`; Render + `backend/app` is the sole backend. |
 | C2 | Tier C | DONE | pending | `npm run lint` | Added `no-unused-vars` and `react-hooks/exhaustive-deps` as `warn` in `eslint.config.js`; `npm run lint` passes with 0 errors. |
 | C3 | Tier C | DONE | pending | `ci.yml` | Added `tests/screenshots/` to `.gitignore`, untracked test screenshots, copied curated screenshots to `docs/screenshots/`, and added CI artifact upload. |
-| C4 | Tier C | NOT DONE | — | `.github/workflows/*.yml` | CI runs all 6 viewports (`360x640`, `390x844`, `768x1024`, `1366x768`, `1920x1080`, `844x390`). |
+| C4 | Tier C | DONE | pending | `.github/workflows/ci.yml`, `playwright.config.js` | Configured `playwright.config.js` & CI for all 6 viewports: `360x640`, `390x844`, `844x390`, `768x1024`, `1366x768`, `1920x1080`. |
 | C5 | Tier C | NOT DONE | — | — | Bump SW cache version and document in `docs/DEPLOY.md`. |
 | C6 | Tier C | NOT DONE | — | — | Read `25c32a4` and summarize changes and risks in final report. |

@@ -411,13 +411,13 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         0,
         moveVec.z * targetSpeed
       )
-      // Accelerate towards target velocity with frame-rate independent damping
-      const accelAlpha = 1 - Math.exp(-14.0 * Math.min(delta, 0.05))
+      // Accelerate towards target velocity with frame-rate independent damping (0.1s clamp matches integration step)
+      const accelAlpha = 1 - Math.exp(-14.0 * Math.min(delta, 0.1))
       currentVelRef.current.lerp(targetVelRef.current, accelAlpha)
     } else {
       targetVelRef.current.set(0, 0, 0)
       // Decelerate smoothly to stop with frame-rate independent damping
-      const decelAlpha = 1 - Math.exp(-16.0 * Math.min(delta, 0.05))
+      const decelAlpha = 1 - Math.exp(-16.0 * Math.min(delta, 0.1))
       currentVelRef.current.lerp(targetVelRef.current, decelAlpha)
     }
 

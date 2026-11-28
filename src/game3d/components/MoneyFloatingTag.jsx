@@ -1,84 +1,76 @@
 import React from 'react'
 import { useGame3D } from '../context/Game3DContext'
 import { ManagedOverlay } from '../ui/OverlayManager'
+import { computeChoiceFinancials } from '../config/economy'
 
 /**
  * Floating financial outcome badge displayed directly above the farmer.
- * Reads real impact values from scenarios.json:
- * - Loss when burning (-₹3,500/acre)
- * - Pure cash revenue when baling (+₹15,000)
- * - Fertilizer and moisture savings when mulching / composting (+₹2,000 - ₹3,000/acre)
+ * Reads real impact values from scenarios.json via economy.js and agrees
+ * to the rupee with the HUD balance and Season Report.
  */
 export default function MoneyFloatingTag({ position = [0, 2.35, 0] }) {
-  const { burnState, activeAlternative, rupeeCount } = useGame3D()
+  const { burnState, activeAlternative, rupeeCount, farmConfig, persistentState } = useGame3D()
 
   const isBurnt = burnState === 'consequence'
   const isAlternativeActive = Boolean(activeAlternative)
 
   if (!isBurnt && !isAlternativeActive) return <group />
 
-  // Determine financial details based on scenarios.json data
+  const choiceKey = isBurnt ? 'burn' : activeAlternative
+  const fin = computeChoiceFinancials(choiceKey, {
+    acres: farmConfig?.acres || 5,
+    seasonIndex: persistentState?.seasonIndex || 1
+  })
+  const absRev = Math.abs(fin.decisionRevenue).toLocaleString('en-IN')
+  const revSign = fin.decisionRevenue >= 0 ? '+' : '-'
+
   let tagData = null
 
   if (isBurnt) {
     tagData = {
       icon: '💸',
-      title: 'Net Drain: ~₹3,000–₹4,500 / acre',
-      total: '-₹15,000 to ₹22,500 total drain (game estimate)',
-      detail: 'Burnt soil nutrients force expensive synthetic urea & DAP next season',
-      bgColor: 'rgba(255, 235, 238, 0.96)',
-      borderColor: '#D32F2F',
-      textColor: '#B71C1C',
-      badgeColor: '#FFCDD2',
-      badgeText: '⚠️ GAME ESTIMATE'
+      title: `Choice Cost: -₹${absRev} (${fin.acres} ac)`,
+      total: 'Net drain ~₹3,000–₹4,500/ac (game estimate)',
+      detail: 'Burnt soil nutrients force extra urea & DAP next season • Game estimate',
+      borderColor: '#EF5350',
+      accentColor: '#FF8A80'
     }
   } else if (activeAlternative === 'bale_sell') {
+    const shownRupees = (rupeeCount ?? fin.decisionRevenue).toLocaleString('en-IN')
     tagData = {
-      icon: '💵',
-      title: `Cash Revenue: +₹${rupeeCount.toLocaleString()}`,
-      total: '+₹3,000 / acre net profit',
-      detail: 'Direct cash payout from biomass power plant for baled paddy straw',
-      bgColor: 'rgba(227, 242, 253, 0.96)',
-      borderColor: '#1976D2',
-      textColor: '#0D47A1',
-      badgeColor: '#BBDEFB',
-      badgeText: '💰 CASH PROFIT'
+      icon: '🚛',
+      title: `Bale & Sell Net: +₹${shownRupees} (${fin.acres} ac)`,
+      total: 'Punjab range: -₹200 to +₹800/ac net',
+      detail: 'After baling & transport • Source: PAU & MNRE (Punjab, game estimate)',
+      borderColor: '#42A5F5',
+      accentColor: '#90CAF9'
     }
   } else if (activeAlternative === 'happy_seeder') {
     tagData = {
       icon: '🚜',
-      title: 'Fertilizer Saved: ~₹2,000 / acre',
-      total: '+₹10,000 saved (5 acres)',
-      detail: 'Direct stubble sowing retains natural fertility and cuts fertilizer needs',
-      bgColor: 'rgba(232, 245, 233, 0.96)',
-      borderColor: '#388E3C',
-      textColor: '#1B5E20',
-      badgeColor: '#C8E6C9',
-      badgeText: '🌱 SMART SAVINGS'
+      title: `Hire Cost: ${revSign}₹${absRev} (${fin.acres} ac)`,
+      total: `₹${fin.econ.upfrontCostPerAcre.toLocaleString('en-IN')}/ac • Retains soil moisture`,
+      detail: 'Source: PAU & ICAR custom hiring • Game estimate',
+      borderColor: '#66BB6A',
+      accentColor: '#A5D6A7'
     }
   } else if (activeAlternative === 'mulch') {
     tagData = {
       icon: '🌾',
-      title: 'Moisture & Nutrients: +₹2,000 / acre',
-      total: '+₹10,000 net value (5 acres)',
-      detail: 'Straw mulch retains 15-25% soil water and enriches topsoil humus',
-      bgColor: 'rgba(241, 248, 233, 0.96)',
-      borderColor: '#689F38',
-      textColor: '#33691E',
-      badgeColor: '#DCEDC8',
-      badgeText: '💧 WATER SHIELD'
+      title: `Mulch Cost: ${revSign}₹${absRev} (${fin.acres} ac)`,
+      total: `₹${fin.econ.upfrontCostPerAcre.toLocaleString('en-IN')}/ac • +15–25% moisture`,
+      detail: 'Source: FAO & NPMCR guidelines • Game estimate',
+      borderColor: '#9CCC65',
+      accentColor: '#C5E1A5'
     }
   } else if (activeAlternative === 'compost') {
     tagData = {
       icon: '🧪',
-      title: 'Humus Value: +₹3,000 / acre',
-      total: '+₹15,000 organic gold value',
-      detail: 'Bio-decomposer yields ~3.5 tons/ha of premium organic compost',
-      bgColor: 'rgba(239, 235, 233, 0.96)',
-      borderColor: '#8D6E63',
-      textColor: '#4E342E',
-      badgeColor: '#D7CCC8',
-      badgeText: '✨ ORGANIC GOLD'
+      title: `Spray Cost: ${revSign}₹${absRev} (${fin.acres} ac)`,
+      total: `₹${fin.econ.upfrontCostPerAcre.toLocaleString('en-IN')}/ac • Organic humus`,
+      detail: 'Source: ICAR-IARI Pusa trials • Game estimate',
+      borderColor: '#A1887F',
+      accentColor: '#D7CCC8'
     }
   }
 
@@ -94,38 +86,32 @@ export default function MoneyFloatingTag({ position = [0, 2.35, 0] }) {
       zIndexRange={[20, 0]}
     >
       <div
+        data-testid="money-floating-tag"
         style={{
-          backgroundColor: tagData.bgColor,
-          border: `2px solid ${tagData.borderColor}`,
-          borderRadius: '16px',
+          backgroundColor: 'rgba(20, 26, 32, 0.94)',
+          backdropFilter: 'blur(10px)',
+          border: `1.5px solid ${tagData.borderColor}`,
+          borderRadius: '14px',
           padding: '8px 12px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-          color: tagData.textColor,
-          width: '220px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+          color: '#FFFFFF',
+          width: '228px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           userSelect: 'none',
           pointerEvents: 'none',
-          animation: 'fadeInUp 0.3s ease',
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px'
+          gap: '3px'
         }}
       >
-        {/* Header Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '12px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>{tagData.icon}</span>
-            <span>{tagData.title}</span>
-          </span>
+        <div style={{ fontSize: '11.5px', fontWeight: 900, color: tagData.accentColor, display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span>{tagData.icon}</span>
+          <span>{tagData.title}</span>
         </div>
-
-        {/* Total Value */}
-        <div style={{ fontSize: '11px', fontWeight: 900 }}>
+        <div style={{ fontSize: '10.5px', fontWeight: 800, color: '#ECEFF1' }}>
           {tagData.total}
         </div>
-
-        {/* Subtext description */}
-        <div style={{ fontSize: '9.5px', lineHeight: 1.25, opacity: 0.9 }}>
+        <div style={{ fontSize: '9.5px', lineHeight: 1.25, color: '#B0BEC5' }}>
           {tagData.detail}
         </div>
       </div>

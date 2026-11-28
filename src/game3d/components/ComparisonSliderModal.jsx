@@ -237,8 +237,14 @@ export default function ComparisonSliderModal({ onSwitchToLite }) {
             <tbody>
               <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                 <td style={{ padding: '8px 12px', fontWeight: 700, color: '#ECEFF1' }}>Farm Financial Impact</td>
-                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#EF9A9A' }}>-₹3,000 to ₹4,500/ac <span style={{ fontSize: '0.65rem', color: '#B0BEC5' }}>(estimate)</span></td>
-                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#A5D6A7' }}>+₹1,500 to ₹2,500/ac <span style={{ fontSize: '0.65rem', color: '#B0BEC5' }}>(estimate)</span></td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#EF9A9A' }}>-₹3,000 to ₹4,500/ac <span style={{ fontSize: '0.65rem', color: '#B0BEC5' }}>(game estimate)</span></td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', color: '#A5D6A7' }}>
+                  {activeAlternative === 'bale_sell'
+                    ? '-₹200 to +₹800/ac (Punjab)'
+                    : 'Moisture & NPK saved'}
+                  {' '}
+                  <span style={{ fontSize: '0.65rem', color: '#B0BEC5' }}>(Source: PAU / NPMCR, game estimate)</span>
+                </td>
               </tr>
               <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                 <td style={{ padding: '8px 12px', fontWeight: 700, color: '#ECEFF1' }}>Soil Health Delta</td>

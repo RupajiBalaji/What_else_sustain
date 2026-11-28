@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useGame3D } from '../context/Game3DContext'
+import { computeChoiceFinancials } from '../config/economy'
 
 /**
  * ConsequenceCallouts.jsx
@@ -12,7 +13,15 @@ import { useGame3D } from '../context/Game3DContext'
  * - Accurate NPMCR 2021 sourced nutrient figures, game estimates clearly labeled
  */
 export default function ConsequenceCallouts() {
-  const { burnState, activeAlternative, smokeData, isAnyModalOpen, showSeasonReport } = useGame3D()
+  const {
+    burnState,
+    activeAlternative,
+    smokeData,
+    isAnyModalOpen,
+    showSeasonReport,
+    farmConfig,
+    persistentState
+  } = useGame3D()
 
   const isBurnt = burnState === 'consequence'
   const isAlternativeActive = Boolean(activeAlternative)
@@ -56,16 +65,34 @@ export default function ConsequenceCallouts() {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
 
-  // Sourced data for each callout card
+  const choiceKey = isBurnt ? 'burn' : (activeAlternative || 'burn')
+  const fin = computeChoiceFinancials(choiceKey, {
+    acres: farmConfig?.acres || 5,
+    seasonIndex: persistentState?.seasonIndex || 1
+  })
+  const revSign = fin.decisionRevenue >= 0 ? '+' : '-'
+  const absRev = Math.abs(fin.decisionRevenue).toLocaleString('en-IN')
+
+  // Sourced data for each callout card (matches HUD & Season Report to the exact rupee)
   const calloutData = {
     1: {
       id: 'callout_money',
       icon: isBurnt ? '💸' : '💰',
-      title: isBurnt ? 'Net Loss: ~₹3,000–₹4,500 / acre (game estimate)' : 'Financial Return: Input Savings',
+      title: isBurnt
+        ? `Residue Choice: -₹${absRev} (${fin.acres} ac)`
+        : activeAlternative === 'bale_sell'
+          ? `Bale & Sell Net: ${revSign}₹${absRev} (${fin.acres} ac)`
+          : `Input Cost: ${revSign}₹${absRev} (${fin.acres} ac)`,
       detail: isBurnt
-        ? 'Estimated hidden soil nutrient drain across 5 acres (-₹15,000 to ₹22,500, game estimate).'
-        : 'Avoided burning saves future fertilizer inputs and unlocks straw value.',
-      tag: isBurnt ? 'game estimate • scenarios.json' : 'Sourced estimate (scenarios.json)',
+        ? `Estimated fertilizer replacement drain across ${fin.acres} acres (game estimate: ~₹3,000–₹4,500/ac total impact).`
+        : activeAlternative === 'bale_sell'
+          ? `Net after baling & transport across ${fin.acres} ac (Punjab range: -₹200 to +₹800/ac, game estimate).`
+          : `Upfront hire/input cost across ${fin.acres} ac; preserves soil fertility for harvest yield (game estimate).`,
+      tag: activeAlternative === 'bale_sell'
+        ? 'Source: PAU & MNRE (Punjab)'
+        : isBurnt
+          ? 'Game estimate'
+          : 'Source: ICAR / PAU • Game estimate',
       borderColor: isBurnt ? '#D32F2F' : '#2E7D32',
       color: isBurnt ? '#FF8A80' : '#A5D6A7'
     },

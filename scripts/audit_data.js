@@ -133,7 +133,6 @@ const ALLOWED_HONESTY_TERMS = [
   'teri',
   'cpcb',
   'moefcc',
-  'scenarios.json',
   'review',
   'modelled',
   'model',
@@ -173,10 +172,14 @@ const ALLOWED_HONESTY_TERMS = [
 ]
 
 const numClaimRegex = /(?:₹\s*[\d,]+|\d+(?:\.\d+)?%|\b\d+[-–]\d+\b)/
+const filenameLeakRegex = /\b[\w-]+\.(?:json|jsx?|py|md|csv|txt)\b/i
 
 function checkUserFacingString(text, location) {
   if (typeof text !== 'string') return
   auditedCount++
+  if (filenameLeakRegex.test(text)) {
+    errors.push(`String at ${location} exposes internal filename or extension: "${text}"`)
+  }
   if (numClaimRegex.test(text)) {
     const lower = text.toLowerCase()
     const isHonest = ALLOWED_HONESTY_TERMS.some((term) => lower.includes(term))
@@ -223,7 +226,7 @@ if (fs.existsSync(advisorPath)) {
   }
 }
 
-// 3c. Audit LoadingScreen tips
+// 3c. Audit LoadingScreen tips and UI components for filename leaks or unsourced numbers
 const loadingPath = path.join(rootDir, 'src', 'game3d', 'components', 'LoadingScreen.jsx')
 if (fs.existsSync(loadingPath)) {
   const loadingRaw = fs.readFileSync(loadingPath, 'utf8')
@@ -237,6 +240,31 @@ if (fs.existsSync(loadingPath)) {
       }
     })
   }
+}
+
+// 3d. Scan UI JSX string literals for accidental internal filename leaks (e.g. .json)
+const uiFilesToScan = [
+  'src/game3d/components/ConsequenceCallouts.jsx',
+  'src/game3d/components/MoneyFloatingTag.jsx',
+  'src/game3d/components/InWorldChoicePanel.jsx',
+  'src/game3d/components/ComparisonSliderModal.jsx',
+  'src/game3d/components/SeasonReportModal.jsx'
+]
+for (const rel of uiFilesToScan) {
+  const abs = path.join(rootDir, rel)
+  if (!fs.existsSync(abs)) continue
+  const lines = fs.readFileSync(abs, 'utf8').split('\n')
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('import ') || trimmed.startsWith('//') || trimmed.startsWith('*')) return
+    const strMatches = line.match(/['"`][^'"`\n]{3,}['"`]/g) || []
+    for (const s of strMatches) {
+      const inner = s.slice(1, -1)
+      if (filenameLeakRegex.test(inner)) {
+        errors.push(`UI file ${rel}:${idx + 1} contains filename in string literal: "${inner}"`)
+      }
+    }
+  })
 }
 
 console.log(`Audited ${auditedCount} statistics, metrics, and user-facing strings across EN, TE, and HI.`)

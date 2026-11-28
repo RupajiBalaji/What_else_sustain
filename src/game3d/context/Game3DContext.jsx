@@ -12,6 +12,11 @@ import { useGame } from '../../context/GameContext'
 import { simulateSmokeApi, recordPlaySession } from '../../utils/api'
 import { getQualityConfig, autoDetectQualityTier } from '../config/qualityConfig'
 import { GAME_BALANCE, getSeasonEvent } from '../config/gameBalance'
+import {
+  computeChoiceFinancials,
+  computeSeasonOutcome,
+  getSeasonGoal
+} from '../config/economy'
 import { STRAW_PILES_DATA } from '../config/strawData'
 import { useLanguage } from '../../context/LanguageContext'
 import { fetchScenarioDirector, REGIONAL_DEFAULTS } from '../../services/directorClient'
@@ -634,38 +639,29 @@ export function Game3DProvider({ children, onFallbackToLite }) {
 
   // Step D: Finish Season & Calculate Carry-Over Consequences
   const finishSeason = useCallback((choiceKey) => {
-    const decisionConfig = GAME_BALANCE.DECISIONS[choiceKey] || GAME_BALANCE.DECISIONS.burn
-    const soilHealth = persistentState.soilHealth || 70
-    const villageHealth = persistentState.villageHealth || 75
-    const isPerfectSow = lastSowingWasPerfectRef.current
+    const curState = persistentStateRef.current
+    const acres = farmConfig?.acres || 5
+    const outcome = computeSeasonOutcome(choiceKey, curState, {
+      acres,
+      isPerfectSow: lastSowingWasPerfectRef.current
+    })
 
-    // Base grain revenue scaled by current soil health + sowing precision
-    const baseRevenue = GAME_BALANCE.HARVEST.BASE_CROP_REVENUE
-    const minRevenue = GAME_BALANCE.HARVEST.MIN_CROP_REVENUE
-    const healthMult = Math.max(0.4, soilHealth / 100)
-    const sowBonus = isPerfectSow ? 1.10 : 1.0
-    const cropRevenue = Math.max(minRevenue, Math.round(baseRevenue * healthMult * sowBonus))
-
-    // Decision specific costs / gains
-    const decisionRevenue =
-      choiceKey === 'burn'
-        ? -3500
-        : choiceKey === 'bale_sell'
-        ? 15000
-        : choiceKey === 'happy_seeder'
-        ? -2500
-        : choiceKey === 'mulch'
-        ? -1200
-        : -800
-
-    const netSeasonBalance = cropRevenue + decisionRevenue
-
-    const soilDelta = decisionConfig.soilHealthDelta
-    const villageDelta = decisionConfig.villageHealthDelta
-    const repDelta = decisionConfig.reputationDelta
-    const xpGained = decisionConfig.xpAward
-
-    const nextStreak = decisionConfig.streakReset ? 0 : (persistentState.streak || 0) + 1
+    const {
+      cropRevenue,
+      operatingCost,
+      setback,
+      decisionRevenue,
+      netSeasonBalance,
+      harvestAddition,
+      soilDelta,
+      villageDelta,
+      repDelta,
+      xpGained,
+      nextStreak,
+      nextSoil,
+      nextVillage,
+      nextRep
+    } = outcome
 
     // Calculate score (0-100) for letter rank
     const compositeScore = Math.max(
@@ -673,8 +669,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       Math.min(
         100,
         Math.round(
-          (soilHealth + soilDelta) * 0.4 +
-          (villageHealth + villageDelta) * 0.4 +
+          nextSoil * 0.4 +
+          nextVillage * 0.4 +
           (choiceKey !== 'burn' ? 20 : 0) +
           nextStreak * 2
         )
@@ -686,21 +682,25 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     else if (compositeScore >= GAME_BALANCE.RANKS.A.minScore) rank = GAME_BALANCE.RANKS.A
     else if (compositeScore >= GAME_BALANCE.RANKS.B.minScore) rank = GAME_BALANCE.RANKS.B
 
+    const baleSign = decisionRevenue >= 0 ? '+' : ''
     const summaryText =
       choiceKey === 'burn'
-        ? 'Stubble was burnt. Heavy smog drifted into the village, and soil microbes perished in the heat.'
+        ? `Stubble was burnt. Heavy smog drifted into the village, and soil microbes perished (-₹${Math.abs(decisionRevenue).toLocaleString('en-IN')} fertilizer drain, game estimate).`
         : choiceKey === 'happy_seeder'
-        ? 'Happy Seeder zero-till drilling preserved field moisture and kept the village skies pure.'
+        ? `Happy Seeder zero-till drilling preserved field moisture and kept the village skies pure (-₹${Math.abs(decisionRevenue).toLocaleString('en-IN')} hire across ${acres} ac, game estimate).`
         : choiceKey === 'bale_sell'
-        ? 'Residue was baled and transported to the bio-energy refinery, generating ₹15,000 extra income.'
+        ? `Residue was baled and sold to the bio-energy refinery (${baleSign}₹${decisionRevenue.toLocaleString('en-IN')} net across ${acres} ac; Punjab range -₹200 to +₹800/ac, Source: PAU & MNRE).`
         : choiceKey === 'mulch'
-        ? 'Mulching shielded topsoil moisture, nurtured earthworms, and boosted next season root vitality.'
-        : 'Compost (bio-decomposer) converted straw into fertile organic humus, reviving soil biodiversity.'
+        ? `Mulching shielded topsoil moisture, nurtured earthworms, and boosted next season root vitality (-₹${Math.abs(decisionRevenue).toLocaleString('en-IN')} across ${acres} ac, game estimate).`
+        : `Compost (bio-decomposer) converted straw into fertile organic humus (-₹${Math.abs(decisionRevenue).toLocaleString('en-IN')} across ${acres} ac, game estimate).`
 
     const report = {
       rank,
       choiceKey,
+      acres,
       cropRevenue,
+      operatingCost,
+      setback,
       decisionRevenue,
       netSeasonBalance,
       soilDelta,
@@ -708,20 +708,15 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       repDelta,
       xpGained,
       streak: nextStreak,
+      seasonGoal: getSeasonGoal(curState.seasonIndex || 1),
       summaryText
     }
 
     setSeasonReportData(report)
 
-    // Harvest revenue added to persistent state (decision cost was already deducted in world)
-    const harvestAddition = cropRevenue + (choiceKey === 'bale_sell' ? 15000 : 0)
-
     setPersistentState((prev) => {
-      const nextSoil = Math.max(0, Math.min(100, (prev.soilHealth || 70) + soilDelta))
-      const nextVillage = Math.max(0, Math.min(100, (prev.villageHealth || 75) + villageDelta))
-      const nextMoney = Math.max(0, (prev.money || 12000) + harvestAddition)
-      const nextRep = Math.max(0, Math.min(100, (prev.reputation || 50) + repDelta))
       const nextXP = (prev.farmerXP || 0) + xpGained
+      const nextMoney = Math.max(0, (prev.money ?? 12000) + harvestAddition)
 
       let nextLevel = prev.farmerLevel || 1
       for (let i = GAME_BALANCE.LEVELS.length - 1; i >= 0; i--) {
@@ -740,7 +735,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         streak: nextStreak,
         farmerXP: nextXP,
         farmerLevel: nextLevel,
-        totalBaleIncome: (prev.totalBaleIncome || 0) + (decisionConfig.baleSaleGrossIncome || 0),
+        totalBaleIncome: (prev.totalBaleIncome || 0) + (choiceKey === 'bale_sell' ? Math.max(0, decisionRevenue) : 0),
         happySeederUses: (prev.happySeederUses || 0) + (choiceKey === 'happy_seeder' ? 1 : 0),
         compostUses: (prev.compostUses || 0) + (choiceKey === 'compost' ? 1 : 0),
         mulchUses: (prev.mulchUses || 0) + (choiceKey === 'mulch' ? 1 : 0),
@@ -756,7 +751,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     // Advance to season report
     setSeasonPhase('season_report')
     setShowSeasonReport(true)
-  }, [persistentState, savePersistentState, checkAndUnlockAchievements])
+  }, [farmConfig?.acres, savePersistentState, checkAndUnlockAchievements, setSeasonPhase])
 
   // Step E: Next Season Transition
   const nextSeason = useCallback(() => {
@@ -913,15 +908,21 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     triggerHaptic([40, 30, 40])
     audioManager.setMusicState('tense')
 
-    // Immediately update farm capital in the world to reflect estimated nutrient replenishment drain
-    setPersistentState((prev) => {
-      const updated = {
-        ...prev,
-        money: Math.max(0, (prev.money || 12000) - 3500)
-      }
-      savePersistentState(updated)
-      return updated
+    // Burning has ₹0 upfront cost (fertilizer penalty applies in season consequence)
+    const burnFin = computeChoiceFinancials('burn', {
+      acres: farmConfig?.acres || 5,
+      seasonIndex: persistentStateRef.current?.seasonIndex || 1
     })
+    if (burnFin.upfrontCost > 0) {
+      setPersistentState((prev) => {
+        const updated = {
+          ...prev,
+          money: Math.max(0, (prev.money ?? 12000) - burnFin.upfrontCost)
+        }
+        savePersistentState(updated)
+        return updated
+      })
+    }
 
     setTimeout(() => {
       setTimeScale(1.0)
@@ -1018,16 +1019,17 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setAlternativeProgress(0)
     setRupeeCount(0)
 
-    // Immediately update farm capital for alternative upfront input costs
-    const upfrontCost =
-      altKey === 'happy_seeder' ? 2500 :
-      altKey === 'mulch' ? 1200 :
-      altKey === 'compost' ? 800 : 0
+    // Immediately update farm capital for alternative upfront input costs (from scenarios.json * acres)
+    const altFin = computeChoiceFinancials(altKey, {
+      acres: farmConfig?.acres || 5,
+      seasonIndex: persistentStateRef.current?.seasonIndex || 1
+    })
+    const upfrontCost = altFin.upfrontCost
     if (upfrontCost > 0) {
       setPersistentState((prev) => {
         const updated = {
           ...prev,
-          money: Math.max(0, (prev.money || 12000) - upfrontCost)
+          money: Math.max(0, (prev.money ?? 12000) - upfrontCost)
         }
         savePersistentState(updated)
         return updated
@@ -1062,7 +1064,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       setAlternativeProgress(prog)
 
       if (altKey === 'bale_sell') {
-        const targetRupees = 15000
+        const targetRupees = altFin.endReturn
         const currentRupees = Math.round(targetRupees * Math.pow(prog, 1.2))
         setRupeeCount(currentRupees)
       }
@@ -1077,7 +1079,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       triggerHaptic(60)
       setAlternativeProgress(1.0)
       if (altKey === 'bale_sell') {
-        setRupeeCount(15000)
+        setRupeeCount(altFin.endReturn)
         sound.playCoin()
       }
 

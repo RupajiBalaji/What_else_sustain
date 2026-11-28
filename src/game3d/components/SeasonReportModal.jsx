@@ -31,13 +31,16 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
 
   const {
     rank,
-    cropRevenue = 24000,
+    cropRevenue = 0,
+    operatingCost = 0,
+    setback = null,
     decisionRevenue = 0,
-    netSeasonBalance = 24000,
+    netSeasonBalance = 0,
     soilDelta = 0,
     villageDelta = 0,
     xpGained = 50,
     streak = 0,
+    seasonGoal = '',
     summaryText = 'Clean air maintained across the village.'
   } = seasonReportData
 
@@ -165,24 +168,41 @@ export default function SeasonReportModal({ onNextSeason, onRewindSeason, onOpen
             }}
           >
             <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#616161', textTransform: 'uppercase', marginBottom: '4px' }}>
-              Financial Results
+              Financial Results (Game Estimate)
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#37474F', marginBottom: '3px' }}>
               <span>Crop Harvest Sale:</span>
               <strong style={{ color: '#2E7D32' }}>+₹{Math.round(cropRevenue * (counterAnim / 100)).toLocaleString('en-IN')}</strong>
             </div>
+            {operatingCost > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#37474F', marginBottom: '3px' }}>
+                <span>Season Operating Cost:</span>
+                <strong style={{ color: '#C62828' }}>-₹{Math.round(operatingCost * (counterAnim / 100)).toLocaleString('en-IN')}</strong>
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#37474F', marginBottom: '3px' }}>
               <span>Residue Choice Balance:</span>
               <strong style={{ color: decisionRevenue >= 0 ? '#2E7D32' : '#C62828' }}>
                 {decisionRevenue >= 0 ? '+' : ''}₹{Math.round(decisionRevenue * (counterAnim / 100)).toLocaleString('en-IN')}
               </strong>
             </div>
+            {setback && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#C62828', marginBottom: '3px' }}>
+                <span>⚠️ {setback.label}:</span>
+                <strong>-₹{Math.round(Math.abs(setback.amount) * (counterAnim / 100)).toLocaleString('en-IN')}</strong>
+              </div>
+            )}
             <div style={{ borderTop: '1px solid #E0E0E0', paddingTop: '4px', marginTop: '4px', display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', fontWeight: 900 }}>
               <span style={{ color: '#16382B' }}>Net Season Balance:</span>
               <span style={{ color: netSeasonBalance >= 0 ? '#2E7D32' : '#C62828' }}>
                 {netSeasonBalance >= 0 ? '+' : ''}₹{Math.round(netSeasonBalance * (counterAnim / 100)).toLocaleString('en-IN')}
               </span>
             </div>
+            {seasonGoal && (
+              <div style={{ marginTop: '4px', fontSize: '0.72rem', color: '#455A64', fontWeight: 700 }}>
+                🎯 {seasonGoal}
+              </div>
+            )}
           </div>
 
           {/* Carry-over Metrics Grid */}

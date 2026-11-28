@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useLanguage } from '../../context/LanguageContext'
 import { useGame3D } from '../context/Game3DContext'
 import { sound } from '../../game/soundManager'
+import { CHOICE_ECONOMICS, computeChoiceFinancials, getSeasonGoal } from '../config/economy'
 
 /**
  * 5 Crop Residue Choices:
@@ -48,9 +49,9 @@ export const CHOICE_OPTIONS = [
     color: '#64B5F6',
     bgColor: 'rgba(13, 71, 161, 0.22)',
     borderColor: '#1976D2',
-    cost: 'Paid by plant',
+    cost: 'Net -₹200 to +₹800/ac (Punjab)',
     effort: 'Medium',
-    desc: 'Collects straw bales and sells to biomass energy plants for +₹15,000 cash income.'
+    desc: 'Bales & sells straw to biomass plants. Net after baling & transport: -₹200 to +₹800/ac (Punjab, Source: PAU & MNRE, game estimate).'
   },
   {
     id: 'mulch',
@@ -98,8 +99,15 @@ export default function InWorldChoicePanel() {
     triedChoices = [],
     seasonPhase,
     quizState,
-    scenarioData
+    scenarioData,
+    farmConfig,
+    persistentState
   } = useGame3D()
+
+  const seasonGoal = useMemo(
+    () => getSeasonGoal(persistentState?.seasonIndex || 1),
+    [persistentState?.seasonIndex]
+  )
 
   const orderedOptions = useMemo(() => {
     if (!scenarioData?.featuredAlternatives || scenarioData.featuredAlternatives.length === 0) {
@@ -252,10 +260,13 @@ export default function InWorldChoicePanel() {
           <span style={{ fontSize: '1.15rem' }}>🌾</span>
           <div>
             <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: '#A5D6A7', fontWeight: 900, letterSpacing: '0.04em' }}>
-              Crop Residue Decision
+              Crop Residue Decision • {farmConfig?.acres || 5} ac
             </div>
             <div style={{ fontSize: '0.86rem', fontWeight: 900 }}>
               Choose what to do with the straw
+            </div>
+            <div data-testid="season-goal-banner" style={{ fontSize: '0.68rem', color: '#FFD54F', fontWeight: 700, marginTop: '2px' }}>
+              🎯 {seasonGoal}
             </div>
           </div>
         </div>

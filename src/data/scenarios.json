@@ -1,6 +1,16 @@
 [
   {
     "id": "farm_crop_residue",
+    "extraChoiceEconomics": {
+      "happy_seeder": {
+        "upfrontCostPerAcre": 1400,
+        "endReturnPerAcre": 0,
+        "netRangePerAcre": [-1600, 1200],
+        "region": "Punjab & Haryana",
+        "source": "PAU & ICAR Happy Seeder custom hiring benchmarks",
+        "verified": false
+      }
+    },
     "category": "farming",
     "icon": "🌾",
     "illustrationType": "farm",
@@ -21,6 +31,15 @@
     "choices": [
       {
         "id": "choice_burn_stubble",
+        "gameKey": "burn",
+        "economics": {
+          "upfrontCostPerAcre": 0,
+          "endPenaltyPerAcre": 700,
+          "netRangePerAcre": [-4500, -3000],
+          "region": "Punjab & Haryana",
+          "source": "State Agricultural University Agronomy survey averages",
+          "verified": false
+        },
         "icon": "🔥",
         "badge": {
           "en": "⚡ Quick & ₹0 Upfront",
@@ -114,6 +133,15 @@
       },
       {
         "id": "choice_mulch_soil",
+        "gameKey": "mulch",
+        "economics": {
+          "upfrontCostPerAcre": 1200,
+          "endReturnPerAcre": 0,
+          "netRangePerAcre": [-1500, 800],
+          "region": "Punjab & Haryana",
+          "source": "FAO Conservation Agriculture & NPMCR guidelines",
+          "verified": false
+        },
         "icon": "🚜",
         "badge": {
           "en": "🌱 Soil Enricher",
@@ -168,6 +196,15 @@
       },
       {
         "id": "choice_compost_decomposer",
+        "gameKey": "compost",
+        "economics": {
+          "upfrontCostPerAcre": 400,
+          "endReturnPerAcre": 0,
+          "netRangePerAcre": [-500, 1200],
+          "region": "North India (IARI trials)",
+          "source": "ICAR-IARI Pusa Decomposer field trials",
+          "verified": false
+        },
         "icon": "🪱",
         "badge": {
           "en": "🧪 Organic Gold",
@@ -222,6 +259,15 @@
       },
       {
         "id": "choice_sell_biomass",
+        "gameKey": "bale_sell",
+        "economics": {
+          "upfrontCostPerAcre": 0,
+          "endReturnPerAcre": 500,
+          "netRangePerAcre": [-200, 800],
+          "region": "Punjab",
+          "source": "PAU & MNRE Punjab biomass baling benchmarks",
+          "verified": false
+        },
         "icon": "💰",
         "badge": {
           "en": "💵 Cash Profit",
@@ -265,8 +311,8 @@
             "te": "తక్కువ (యంత్రాలు నేరుగా పొలం నుండి బేల్స్ చేసి తీసుకెళ్తాయి)"
           },
           "moneyImpact": {
-            "en": "Earn ₹1,500 to ₹2,500 / acre pure cash profit",
-            "te": "ఎకరానికి ₹1,500 నుండి ₹2,500 వరకు నికర నగదు లాభం"
+            "en": "Net range -₹200 to +₹800 / acre after collection & transport (Punjab, game estimate)",
+            "te": "సేకరణ & రవాణా ఖర్చుల తర్వాత ఎకరానికి -₹200 నుండి +₹800 నికర శ్రేణి (పంజాబ్, ఆట అంచనా)"
           },
           "howTo": {
             "en": "Contact your local Farmer Producer Organization (FPO) or straw aggregator. They bring a baler machine to bundle and haul the straw away.",

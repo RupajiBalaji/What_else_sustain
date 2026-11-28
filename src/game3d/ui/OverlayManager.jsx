@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useState, useEffect, useCallback, useMemo } from 'react'
+import React, { createContext, useContext, useRef, useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react'
 import { Html } from '@react-three/drei'
 import { useGame3D } from '../context/Game3DContext'
 
@@ -373,7 +373,7 @@ export function ManagedOverlay({
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
   const maxWidth = isMobile ? '320px' : '420px'
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!manager || !id) return
 
     const entry = {

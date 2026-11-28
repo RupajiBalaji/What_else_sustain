@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect } from 'react'
 import { useGame3D } from '../context/Game3DContext'
+import { useOverlayManager } from '../ui/OverlayManager'
 import { computeChoiceFinancials } from '../config/economy'
 
 /**
@@ -26,9 +27,14 @@ export default function ConsequenceCallouts() {
 
   const isBurnt = burnState === 'consequence'
   const isAlternativeActive = Boolean(activeAlternative)
+  const overlayManager = useOverlayManager()
 
   // Step ticker: 0 (idle) -> 1 (Money) -> 2 (Soil) -> 3 (Air) -> 4 (People) -> 0 (finished)
   const [activeStep, setActiveStep] = useState(0)
+
+  useLayoutEffect(() => {
+    overlayManager?.resolveCollisions?.()
+  }, [overlayManager, activeStep, isRewinding, isAnyModalOpen, showSeasonReport])
 
   useEffect(() => {
     if (isAnyModalOpen || showSeasonReport || (!isBurnt && !isAlternativeActive)) {

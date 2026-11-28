@@ -901,6 +901,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   const startBurnSequence = useCallback((pile) => {
     setShowChoiceWheel(false)
     setShowOneSeasonModal(false)
+    setDismissedDirectorHint(true)
     setHasMadeChoice(true)
     setSeasonPhase('consequence')
     setTriedChoices((prev) => [...new Set([...prev, 'burn'])])
@@ -1019,6 +1020,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   // Start one of the 4 sustainable alternatives
   const startAlternative = useCallback((altKey) => {
     setShowChoiceWheel(false)
+    setDismissedDirectorHint(true)
     setHasMadeChoice(true)
     setSeasonPhase('consequence')
     setTriedChoices((prev) => [...new Set([...prev, altKey])])

@@ -5,7 +5,7 @@
 | A1 | Tier A | DONE | `5dce579` | `tests/unit/rewindSnapshot.test.js`, `e2e/rewind-state.spec.js` | Snapshots money, soil, village, reputation, XP, streak on decision start; restores on `replaySeason` while keeping `triedChoices` & one-time discovery bonuses. |
 | A2 | Tier A | DONE | pending | `tests/unit/economy.test.js`, `scripts/balance-sim.js` | `scenarios.json` + `economy.js` drive all costs/returns; removed hard-coded `moneyCost`/`baleSaleGrossIncome` from `gameBalance.js`; `balance-sim.js` simulates 10 seasons per option into `docs/BALANCE_REPORT.md`. |
 | A3 | Tier A | DONE | `8a301d7` | `e2e/rewind-state.spec.js`, `e2e/playthrough.spec.js` | Every option ends with Continue, What else?, and Compare; Season Report opens only on Continue. |
-| A4 | Tier A | IN_PROGRESS | `f569bdc` | `e2e/overlay-collision.spec.js` | Max 2 world cards, max 1 wave bubble, offscreen unmount, dark-glass money cards; checking Happy Seeder advisory behavior. |
+| A4 | Tier A | DONE | pending | `e2e/overlay-collision.spec.js`, `e2e/director.spec.js` | Max 2 world cards, max 1 wave bubble, offscreen unmount, dark-glass money cards; advisory hint auto-dismisses once a choice is confirmed. |
 | B1 | Tier B | DONE | `e423e11` | `e2e/alt-sequences.spec.js` | `alt_sequence` camera frames all 4 machines/actions; farmer clear with connected limbs. |
 | B2 | Tier B | DONE | `550342c` | `e2e/rewind-state.spec.js` | Rewind screen hides HUD cards/buttons, places timecode below HUD, light single scanline effect. |
 | B3 | Tier B | DONE | `05944ad` | `e2e/perf-overlay.spec.js` | `?perf=1` overlay with fps, frame time, draw calls, `Copy Report`; particle pooling & burn stall fixes. |

@@ -182,7 +182,15 @@ export default function FireSmokeSystem() {
     }
   }, [isBurning, windState, setIgnitedPiles])
 
-  // Frame update: animate fire, embers, smoke, and flickering point light
+  const activePilesList = useMemo(() => {
+    const list = STRAW_PILES_DATA.filter((p) => ignitedPiles.includes(p.id))
+    if (list.length === 0 && (isBurning || isSmokeActive)) {
+      list.push(STRAW_PILES_DATA[0])
+    }
+    return list
+  }, [ignitedPiles, isBurning, isSmokeActive])
+
+  // Frame update: animate fire, embers, smoke, and flickering point light (zero per-frame allocations)
   useFrame(({ clock, camera }, delta) => {
     const elapsed = clock.getElapsedTime()
     const windRad = ((windState?.directionDeg ?? 75) * Math.PI) / 180
@@ -193,10 +201,6 @@ export default function FireSmokeSystem() {
     const smokeDriftZ = Math.max(0.7, Math.cos(windRad)) * windSpeed * 0.5 + 0.45
     const smokeDriftX = Math.sin(windRad) * windSpeed * 0.4
 
-    const activePilesList = STRAW_PILES_DATA.filter((p) => ignitedPiles.includes(p.id))
-    if (activePilesList.length === 0 && (isBurning || isSmokeActive)) {
-      activePilesList.push(STRAW_PILES_DATA[0])
-    }
     const hasPiles = activePilesList.length > 0
 
     // 1. Point Light Flicker (clamped warm amber firelight)
@@ -211,18 +215,14 @@ export default function FireSmokeSystem() {
       }
     }
 
-    // 2. Fire Particles (Core, Body, Tips - slender, normal-blended licks)
+    // 2. Fire Particles (Core, Body, Tips - pooled, zero per-frame array slice/closure)
     if (fireMeshRef.current) {
-      fireMeshRef.current.count = maxFire
-      if (!isBurning || !hasPiles) {
-        _particleDummy.scale.set(0, 0, 0)
-        _particleDummy.updateMatrix()
-        for (let i = 0; i < maxFire; i++) {
-          fireMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
-        }
-        fireMeshRef.current.instanceMatrix.needsUpdate = true
-      } else {
-        fireParticles.slice(0, maxFire).forEach((p, i) => {
+      fireMeshRef.current.visible = isBurning && hasPiles
+      if (isBurning && hasPiles) {
+        const count = Math.min(maxFire, fireParticles.length)
+        fireMeshRef.current.count = count
+        for (let i = 0; i < count; i++) {
+          const p = fireParticles[i]
           p.life += delta
           if (p.life >= p.maxLife) {
             p.life = 0
@@ -250,23 +250,19 @@ export default function FireSmokeSystem() {
           _particleDummy.scale.set(size, size, size)
           _particleDummy.updateMatrix()
           fireMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
-        })
+        }
         fireMeshRef.current.instanceMatrix.needsUpdate = true
       }
     }
 
-    // 3. Embers
+    // 3. Embers (pooled, zero per-frame array slice/closure)
     if (emberMeshRef.current) {
-      emberMeshRef.current.count = maxEmbers
-      if (!isBurning || !hasPiles) {
-        _particleDummy.scale.set(0, 0, 0)
-        _particleDummy.updateMatrix()
-        for (let i = 0; i < maxEmbers; i++) {
-          emberMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
-        }
-        emberMeshRef.current.instanceMatrix.needsUpdate = true
-      } else {
-        emberParticles.slice(0, maxEmbers).forEach((p, i) => {
+      emberMeshRef.current.visible = isBurning && hasPiles
+      if (isBurning && hasPiles) {
+        const count = Math.min(maxEmbers, emberParticles.length)
+        emberMeshRef.current.count = count
+        for (let i = 0; i < count; i++) {
+          const p = emberParticles[i]
           p.life += delta
           if (p.life >= p.maxLife) {
             p.life = 0
@@ -292,24 +288,20 @@ export default function FireSmokeSystem() {
           _particleDummy.scale.set(size, size, size)
           _particleDummy.updateMatrix()
           emberMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
-        })
+        }
         emberMeshRef.current.instanceMatrix.needsUpdate = true
       }
     }
 
-    // 4. Smoke Plume Particles (dark, expanding, billowing toward northern village)
+    // 4. Smoke Plume Particles (pooled, zero per-frame array slice/closure)
     if (smokeMeshRef.current) {
-      smokeMeshRef.current.count = maxSmoke
-      if (!isSmokeActive || !hasPiles) {
-        _particleDummy.scale.set(0, 0, 0)
-        _particleDummy.updateMatrix()
-        for (let i = 0; i < maxSmoke; i++) {
-          smokeMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
-        }
-        smokeMeshRef.current.instanceMatrix.needsUpdate = true
-      } else {
+      smokeMeshRef.current.visible = isSmokeActive && hasPiles
+      if (isSmokeActive && hasPiles) {
         const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 640
-        smokeParticles.slice(0, maxSmoke).forEach((p, i) => {
+        const count = Math.min(maxSmoke, smokeParticles.length)
+        smokeMeshRef.current.count = count
+        for (let i = 0; i < count; i++) {
+          const p = smokeParticles[i]
           p.life += delta
           if (p.life >= p.maxLife) {
             p.life = 0
@@ -328,8 +320,6 @@ export default function FireSmokeSystem() {
           p.y += (p.vy * 0.90 + Math.sin(progress * Math.PI) * 0.35) * delta
           p.z += (p.vz + smokeDriftZ * progress * 3.0) * delta
 
-          // Expands naturally into billowing dark smoke puffs drifting towards the village
-          // On mobile, constrain plume width to within about one-third of screen width at 6s
           const size = isMobileScreen
             ? Math.max(0.85, 1.1 + progress * 2.3)
             : Math.max(1.1, 1.4 + progress * 4.2)
@@ -339,7 +329,7 @@ export default function FireSmokeSystem() {
           _particleDummy.scale.set(size, size, size)
           _particleDummy.updateMatrix()
           smokeMeshRef.current.setMatrixAt(i, _particleDummy.matrix)
-        })
+        }
         smokeMeshRef.current.instanceMatrix.needsUpdate = true
       }
     }

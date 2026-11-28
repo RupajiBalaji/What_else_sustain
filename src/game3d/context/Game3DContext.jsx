@@ -196,9 +196,15 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     })
   }, [savePersistentState])
 
-  // Settings Drawer & Diagnostics
+  // Settings Drawer & Diagnostics (?perf=1 enables corner perf readout)
   const [showSettings, setShowSettings] = useState(false)
-  const [showDevStats, setShowDevStats] = useState(false)
+  const [showDevStats, setShowDevStats] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('perf') === '1'
+    } catch {
+      return false
+    }
+  })
   const toggleDevStats = useCallback(() => {
     setShowDevStats((p) => !p)
   }, [])

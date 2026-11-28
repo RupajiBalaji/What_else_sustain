@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { useGame3D } from '../context/Game3DContext'
 
 const MIST_PARTICLE_COUNT = 80
+const _mistDummy = new THREE.Object3D()
 
 export default function CompostSprayEffect() {
   const { activeAlternative, alternativeProgress, quality } = useGame3D()
@@ -27,7 +28,6 @@ export default function CompostSprayEffect() {
 
   useFrame((_, delta) => {
     if (!mistMeshRef.current || !isActive) return
-    const dummy = new THREE.Object3D()
 
     for (let i = 0; i < MIST_PARTICLE_COUNT; i++) {
       const p = mistParticles[i]
@@ -49,10 +49,10 @@ export default function CompostSprayEffect() {
 
         const prog = p.life / p.maxLife
         const scale = 0.08 + prog * 0.2
-        dummy.position.set(p.x, p.y, p.z)
-        dummy.scale.set(scale, scale, scale)
-        dummy.updateMatrix()
-        mistMeshRef.current.setMatrixAt(i, dummy.matrix)
+        _mistDummy.position.set(p.x, p.y, p.z)
+        _mistDummy.scale.set(scale, scale, scale)
+        _mistDummy.updateMatrix()
+        mistMeshRef.current.setMatrixAt(i, _mistDummy.matrix)
       }
     }
     mistMeshRef.current.instanceMatrix.needsUpdate = true

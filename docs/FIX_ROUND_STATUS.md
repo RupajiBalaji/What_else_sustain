@@ -9,7 +9,7 @@
 | B1 | Tier B | DONE | `e423e11` | `e2e/alt-sequences.spec.js` | `alt_sequence` camera frames all 4 machines/actions; farmer clear with connected limbs. |
 | B2 | Tier B | DONE | `550342c` | `e2e/rewind-state.spec.js` | Rewind screen hides HUD cards/buttons, places timecode below HUD, light single scanline effect. |
 | B3 | Tier B | DONE | `05944ad` | `e2e/perf-overlay.spec.js` | `?perf=1` overlay with fps, frame time, draw calls, `Copy Report`; particle pooling & burn stall fixes. |
-| B4 | Tier B | NOT DONE | — | — | Houses not tall dark boxes, denser crop field, `360x640` choice sheet <= 40% height & farmer visible. |
+| B4 | Tier B | DONE | pending | `e2e/smoke.spec.js`, `e2e/overlay-collision.spec.js` | Warmed house albedo/emissive & balanced proportions (`1.35x/1.05x`), denser instanced crop rows (`30x34` high / `22x24` med / `14x16` low), `39vh` mobile choice sheet keeps farmer visible on `360x640`. |
 | B5 | Tier B | NOT DONE | — | `tests/unit/movement.test.js`, `e2e/movement.spec.js` | Fix `0.05s` accel/decel clamp in `FarmerPlayer.jsx` and `1920x1080` movement test tolerance. |
 | C1 | Tier C | NOT DONE | — | — | Delete `vercel.json`, `netlify.toml`, `api/ask-advisor.js`, and legacy `vite.config.js` middleware. |
 | C2 | Tier C | NOT DONE | — | `npm run lint` | Add `no-unused-vars` and `react-hooks/exhaustive-deps` to `eslint.config.js`. |

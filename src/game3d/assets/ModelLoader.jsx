@@ -117,8 +117,15 @@ export function applyKenneyTextures(root, manifest = null) {
         }
         child.material.side = THREE.FrontSide
         child.material.shadowSide = THREE.BackSide
-        child.material.roughness = 0.85
+        child.material.roughness = 0.78
         child.material.metalness = 0.0
+        if (child.material.color) {
+          child.material.color.setHex(0xffffff)
+        }
+        if (child.material.emissive) {
+          child.material.emissive.setHex(0x2b241d)
+          child.material.emissiveIntensity = 0.22
+        }
       }
 
       // Safe semantic solid-color fallback if texture fails to load

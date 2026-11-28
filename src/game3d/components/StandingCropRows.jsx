@@ -215,9 +215,9 @@ export default function StandingCropRows() {
 
   const soilHealth = persistentState?.soilHealth ?? 70
 
-  // Distinct row & column counts with clearly visible row spacing
-  const rows = qualityConfig.tier === 'high' ? 22 : qualityConfig.tier === 'medium' ? 16 : 10
-  const cols = qualityConfig.tier === 'high' ? 26 : qualityConfig.tier === 'medium' ? 18 : 12
+  // Distinct row & column counts with dense furrow coverage (single instanced draw call)
+  const rows = qualityConfig.tier === 'high' ? 30 : qualityConfig.tier === 'medium' ? 22 : 14
+  const cols = qualityConfig.tier === 'high' ? 34 : qualityConfig.tier === 'medium' ? 24 : 16
   const count = rows * cols
 
   const geometry = useMemo(() => getCropClusterGeometry(soilHealth), [soilHealth])

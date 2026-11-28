@@ -215,9 +215,9 @@ export default function InWorldChoicePanel() {
           ? {
               left: '8px',
               right: '8px',
-              bottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
-              maxHeight: '64vh',
-              borderRadius: '20px 20px 16px 16px',
+              bottom: 'calc(6px + env(safe-area-inset-bottom, 0px))',
+              maxHeight: '39vh',
+              borderRadius: '16px',
               boxShadow: '0 -8px 32px rgba(0,0,0,0.6)'
             }
           : {
@@ -233,8 +233,8 @@ export default function InWorldChoicePanel() {
         border: '1.5px solid rgba(255, 255, 255, 0.16)',
         display: 'flex',
         flexDirection: 'column',
-        padding: isMobile ? '12px' : '16px',
-        gap: '8px',
+        padding: isMobile ? '8px 10px' : '16px',
+        gap: isMobile ? '5px' : '8px',
         zIndex: 95,
         overflowY: 'auto',
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',

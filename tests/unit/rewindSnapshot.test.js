@@ -92,3 +92,54 @@ test('Rewind Snapshot: playing all 5 options with rewinds never exceeds start + 
     }
   }
 })
+
+test('Rewind Snapshot (A1): play Burn, rewind, play Happy Seeder, rewind restores every value to snapshot', () => {
+  const startState = {
+    ...GAME_BALANCE.INITIAL_STATE,
+    money: 12000,
+    soilHealth: 70,
+    villageHealth: 75,
+    reputation: 50,
+    farmerXP: 25,
+    streak: 2,
+    history: [],
+    achievements: []
+  }
+  const snapshot = captureDecisionSnapshot(startState)
+
+  // Play Burn
+  let afterBurn = {
+    ...startState,
+    money: startState.money - 17500,
+    soilHealth: 45,
+    villageHealth: 45,
+    reputation: 30,
+    farmerXP: 40,
+    streak: 0,
+    history: [{ seasonIndex: 1, choiceKey: 'burn' }]
+  }
+  afterBurn = recordOneTimeDiscovery(afterBurn, 'burn').state
+  const rewound1 = restoreDecisionSnapshot(afterBurn, snapshot)
+  for (const k of ['money', 'soilHealth', 'villageHealth', 'reputation', 'farmerXP', 'streak']) {
+    assert.equal(rewound1[k], snapshot[k], `Burn rewind mismatch on ${k}`)
+  }
+  assert.deepEqual(rewound1.discoveryBonusesAwarded, ['burn'])
+
+  // Play Happy Seeder
+  let afterHS = {
+    ...rewound1,
+    money: rewound1.money - 7000,
+    soilHealth: 84,
+    villageHealth: 93,
+    reputation: 66,
+    farmerXP: 90,
+    streak: 3,
+    history: [{ seasonIndex: 1, choiceKey: 'happy_seeder' }]
+  }
+  afterHS = recordOneTimeDiscovery(afterHS, 'happy_seeder').state
+  const rewound2 = restoreDecisionSnapshot(afterHS, snapshot)
+  for (const k of ['money', 'soilHealth', 'villageHealth', 'reputation', 'farmerXP', 'streak']) {
+    assert.equal(rewound2[k], snapshot[k], `Happy Seeder rewind mismatch on ${k}`)
+  }
+  assert.deepEqual(rewound2.discoveryBonusesAwarded, ['burn', 'happy_seeder'])
+})

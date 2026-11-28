@@ -42,14 +42,13 @@ export const GAME_BALANCE = {
 
   // --- Decision Impacts (Carried over to future seasons) ---
   DECISIONS: {
-    // 1. Stubble Burning (The Mistake)
+    // 1. Stubble Burning (The Mistake) — money costs/returns come from scenarios.json via economy.js
     burn: {
       id: 'burn',
       name: 'Open Field Burning',
       soilHealthDelta: -25,        // Destroys topsoil biology, nitrogen & worms
       villageHealthDelta: -30,     // Thick smoke blankets village
       reputationDelta: -20,        // Disapproval from neighbors & environmental elders
-      moneyCost: 0,                // Seems free up-front (the short-term illusion!)
       revenueYieldPenalty: 0.30,   // Next crop produces 30% less grain
       densityFactor: 0.70,         // Visibly sparser crop next season (70% density)
       colorYellowingFactor: 0.28,  // Noticeably pale/yellowing crop foliage
@@ -64,7 +63,6 @@ export const GAME_BALANCE = {
       soilHealthDelta: +14,        // Stubble retains moisture and enriches soil
       villageHealthDelta: +18,     // Zero smoke, clean village air
       reputationDelta: +16,        // Respected for modern conservation farming
-      moneyCost: -2500,            // Machine rental & fuel
       revenueYieldBonus: 0.12,     // Next crop yield +12% from improved moisture retention
       densityFactor: 1.05,         // Healthier, denser crop
       colorYellowingFactor: 0.0,
@@ -79,9 +77,7 @@ export const GAME_BALANCE = {
       soilHealthDelta: +6,         // Soil preserved; roots left intact
       villageHealthDelta: +20,     // Zero open burning in the district
       reputationDelta: +18,        // Praised for enterprise and clean logistics
-      moneyCost: 0,
       revenueYieldBonus: 0.05,
-      baleSaleGrossIncome: 15000,  // Direct income from bio-energy aggregator
       densityFactor: 1.02,
       colorYellowingFactor: 0.0,
       streakIncrement: true,
@@ -95,7 +91,6 @@ export const GAME_BALANCE = {
       soilHealthDelta: +20,        // Moisture retention +15-25% (NPMCR), suppresses weeds
       villageHealthDelta: +16,     // Clean atmosphere
       reputationDelta: +12,        // Admired for soil-first conservation mindset
-      moneyCost: -1200,            // Mulcher tractor pass fuel
       revenueYieldBonus: 0.15,     // Moisture buffer yields great returns
       densityFactor: 1.10,         // Lush, vibrant crop density
       colorYellowingFactor: -0.1,  // Deep lush green foliage
@@ -110,7 +105,6 @@ export const GAME_BALANCE = {
       soilHealthDelta: +24,        // Rapid fungal conversion to rich organic compost
       villageHealthDelta: +18,     // Pure air and restored soil biome
       reputationDelta: +14,        // Progressive eco-friendly farmer
-      moneyCost: -800,             // Enzyme spray microbial culture kit
       revenueYieldBonus: 0.16,     // High organic carbon boost
       densityFactor: 1.12,         // Highest microbial & worm count
       colorYellowingFactor: -0.15, // Deepest vibrant emerald green

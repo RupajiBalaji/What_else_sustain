@@ -20,6 +20,8 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
     setReducedMotion,
     invertLook,
     setInvertLook,
+    crmSubsidyMode,
+    setCrmSubsidyMode,
     soundVolume,
     setSoundVolume,
     musicVolume,
@@ -357,6 +359,24 @@ export default function SettingsDrawer({ isOpen, onClose, onSwitchToLite }) {
               onChange={toggleFps}
               style={{ width: '18px', height: '18px', accentColor: '#2E7D32' }}
             />
+          </label>
+
+          {/* CRM Machinery Subsidy (Switchable Game Setting, Off by default) */}
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3E2723' }}>CRM Subsidy (Game Setting)</div>
+              <div style={{ fontSize: '0.72rem', color: '#757575' }}>Optional 50% individual / 80% CHC discount on Happy Seeder & Mulch</div>
+            </div>
+            <select
+              data-testid="crm-subsidy-select"
+              value={crmSubsidyMode || 'none'}
+              onChange={(e) => setCrmSubsidyMode(e.target.value)}
+              style={{ fontSize: '0.78rem', padding: '4px 6px', borderRadius: '6px', border: '1px solid #BDBDBD', backgroundColor: '#FFF' }}
+            >
+              <option value="none">Off (Default)</option>
+              <option value="individual_50">50% Individual</option>
+              <option value="chc_80">80% CHC</option>
+            </select>
           </label>
 
           {/* Memory / Draw Calls Overlay */}

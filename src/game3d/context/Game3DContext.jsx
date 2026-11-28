@@ -232,6 +232,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   })
 
   const [invertLook, setInvertLook] = useState(false)
+  const [crmSubsidyMode, setCrmSubsidyMode] = useState('none')
 
   const triggerHaptic = useCallback((pattern) => {
     if (reducedMotion) return
@@ -651,7 +652,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     const acres = farmConfig?.acres || 5
     const outcome = computeSeasonOutcome(choiceKey, curState, {
       acres,
-      isPerfectSow: lastSowingWasPerfectRef.current
+      isPerfectSow: lastSowingWasPerfectRef.current,
+      crmSubsidyMode
     })
 
     const {
@@ -1217,6 +1219,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         setReducedMotion,
         invertLook,
         setInvertLook,
+        crmSubsidyMode,
+        setCrmSubsidyMode,
         triggerHaptic,
         isDayCyclePaused,
         toggleDayCycle,

@@ -85,16 +85,26 @@ export function getSeasonGoal(seasonIndex = 1) {
   return `Goal S${seasonIndex}: Sustain 90%+ Soil & Village Health through market/weather shifts.`
 }
 
+export const CRM_SUBSIDY_MODES = {
+  none: { id: 'none', label: 'Off (Full Hire Cost)', discount: 0 },
+  individual_50: { id: 'individual_50', label: 'CRM 50% Individual Subsidy (Game Setting)', discount: 0.50 },
+  chc_80: { id: 'chc_80', label: 'CRM 80% CHC Subsidy (Game Setting)', discount: 0.80 }
+}
+
 /**
  * Compute upfront cost (deducted at decision) and end-of-season cash delta for a choice,
  * derived strictly from scenarios.json economics * acres * seasonScale.
+ * Optionally applies CRM machinery subsidy (off by default) to happy_seeder / mulch.
  */
-export function computeChoiceFinancials(choiceKey, { acres = 5, seasonIndex = 1 } = {}) {
+export function computeChoiceFinancials(choiceKey, { acres = 5, seasonIndex = 1, crmSubsidyMode = 'none' } = {}) {
   const econ = CHOICE_ECONOMICS[choiceKey] || CHOICE_ECONOMICS.burn
   const safeAcres = Math.max(1, Math.min(20, Number(acres) || 5))
   const scale = getSeasonCostScale(seasonIndex)
+  const subsidy = CRM_SUBSIDY_MODES[crmSubsidyMode] || CRM_SUBSIDY_MODES.none
+  const isMachineryChoice = choiceKey === 'happy_seeder' || choiceKey === 'mulch'
+  const subsidyFactor = isMachineryChoice ? (1 - subsidy.discount) : 1
 
-  const upfrontCost = Math.round((econ.upfrontCostPerAcre || 0) * safeAcres * scale)
+  const upfrontCost = Math.round((econ.upfrontCostPerAcre || 0) * safeAcres * scale * subsidyFactor)
   const endPenalty = Math.round((econ.endPenaltyPerAcre || 0) * safeAcres * scale)
 
   // For bale_sell, net return varies by season (transport/moisture) within the sourced Punjab range
@@ -127,7 +137,7 @@ export function computeChoiceFinancials(choiceKey, { acres = 5, seasonIndex = 1 
  * Compute full end-of-season financial & carry-over outcome.
  * Ensures upfrontCost + harvestAddition == netSeasonBalance to the exact rupee.
  */
-export function computeSeasonOutcome(choiceKey, state, { acres = 5, isPerfectSow = false } = {}) {
+export function computeSeasonOutcome(choiceKey, state, { acres = 5, isPerfectSow = false, crmSubsidyMode = 'none' } = {}) {
   const decisionConfig = GAME_BALANCE.DECISIONS[choiceKey] || GAME_BALANCE.DECISIONS.burn
   const seasonIndex = state?.seasonIndex || 1
   const soilHealth = state?.soilHealth ?? 70
@@ -135,7 +145,7 @@ export function computeSeasonOutcome(choiceKey, state, { acres = 5, isPerfectSow
   const reputation = state?.reputation ?? 50
   const startMoney = state?.money ?? GAME_BALANCE.INITIAL_STATE.money
 
-  const fin = computeChoiceFinancials(choiceKey, { acres, seasonIndex })
+  const fin = computeChoiceFinancials(choiceKey, { acres, seasonIndex, crmSubsidyMode })
 
   // Crop revenue scaled by soil health, acreage, and sowing bonus
   const acreScale = fin.acres / 5

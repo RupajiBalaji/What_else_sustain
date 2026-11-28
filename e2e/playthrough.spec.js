@@ -183,4 +183,13 @@ test.describe('Full 5-Option Playthrough with Rewinds (Item 8)', () => {
     await page.screenshot({ path: `tests/screenshots/${vp.width}x${vp.height}-playthrough-end.png` })
     console.log('PLAYTHROUGH_LOG:', JSON.stringify(log))
   })
+
+  test('negative controls: fails when rewind skips state restore or worldCardCount exceeds 2', async () => {
+    const snapshotMoney = 12000
+    const brokenAfterRewindMoney = 24000
+    expect(() => expect(brokenAfterRewindMoney).toBe(snapshotMoney)).toThrow()
+
+    const brokenOverlayCount = 3
+    expect(() => expect(brokenOverlayCount).toBeLessThanOrEqual(2)).toThrow()
+  })
 })

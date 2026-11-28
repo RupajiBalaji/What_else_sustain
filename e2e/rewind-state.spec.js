@@ -73,16 +73,28 @@ test.describe('Rewind State Restoration (Item 1)', () => {
     const rewindOverlay = page.locator('[data-testid="rewind-glitch-overlay"]')
     const rewindTimecode = page.locator('[data-testid="rewind-timecode"]')
     await rewindOverlay.waitFor({ state: 'visible', timeout: 5000 })
-    await expect(rewindTimecode).toBeVisible()
-    await expect(page.locator('[data-testid="what-else-controls"]')).toBeHidden()
-    await expect(page.locator('[data-testid="director-local-hint"]')).toBeHidden()
-    await expect(page.locator('[data-testid="consequence-callout-card"]')).toBeHidden()
+    await rewindTimecode.waitFor({ state: 'visible', timeout: 5000 })
 
     const overlapCheck = await page.evaluate(() => {
+      const isVisible = (sel) => {
+        const el = document.querySelector(sel)
+        if (!el) return false
+        const st = window.getComputedStyle(el)
+        return st.display !== 'none' && st.visibility !== 'hidden' && st.opacity !== '0'
+      }
       const hud = document.querySelector('[data-testid="hud-top-bar"]')?.getBoundingClientRect()
       const tc = document.querySelector('[data-testid="rewind-timecode"]')?.getBoundingClientRect()
-      return { hudBottom: hud?.bottom ?? 0, tcTop: tc?.top ?? 0 }
+      return {
+        hudBottom: hud?.bottom ?? 0,
+        tcTop: tc?.top ?? 0,
+        whatElseVisible: isVisible('[data-testid="what-else-controls"]'),
+        hintVisible: isVisible('[data-testid="director-local-hint"]'),
+        calloutVisible: isVisible('[data-testid="consequence-callout-card"]')
+      }
     })
+    expect(overlapCheck.whatElseVisible).toBe(false)
+    expect(overlapCheck.hintVisible).toBe(false)
+    expect(overlapCheck.calloutVisible).toBe(false)
     expect(overlapCheck.tcTop).toBeGreaterThanOrEqual(overlapCheck.hudBottom)
     await page.screenshot({ path: 'tests/screenshots/rewind-screen-verified.png' })
 

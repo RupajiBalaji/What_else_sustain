@@ -197,9 +197,10 @@ export function OverlayManagerProvider({ children }) {
           candidateRect.top > zone.bottom
         )
         if (overlapsZone) {
-          offsetY -= (candidateRect.bottom - zone.top + 8)
-          candidateRect.top += offsetY
-          candidateRect.bottom += offsetY
+          const dy = -(candidateRect.bottom - zone.top + 8)
+          offsetY += dy
+          candidateRect.top += dy
+          candidateRect.bottom += dy
         }
       }
 
@@ -357,6 +358,12 @@ export function ManagedOverlay({
   const offsetRef = useRef({ x: 0, y: 0 })
   const [isCollapsed, setIsCollapsed] = useState(false)
   const containerRef = useRef(null)
+  const setContainerRef = useCallback((node) => {
+    containerRef.current = node
+    if (node && manager) {
+      manager.resolveCollisions()
+    }
+  }, [manager])
 
   const handleSetOffset = useCallback((newOffset) => {
     offsetRef.current = newOffset
@@ -395,6 +402,7 @@ export function ManagedOverlay({
       setCollapsed: (collapsed, ox = 0, oy = 0) => {
         if (containerRef.current) {
           containerRef.current.style.display = collapsed ? 'none' : ''
+          containerRef.current.setAttribute('data-collapsed', collapsed ? 'true' : 'false')
           if (!collapsed) {
             containerRef.current.style.transform = `translate3d(${ox}px, ${oy}px, 0)`
           }
@@ -441,7 +449,7 @@ export function ManagedOverlay({
         <group position={position}>
           <Html center={center} style={{ display: 'none', pointerEvents: 'none', visibility: 'hidden' }}>
             <div
-              ref={containerRef}
+              ref={setContainerRef}
               data-overlay-id={id}
               data-hidden-by-choice="true"
               style={{ display: 'none' }}
@@ -480,10 +488,11 @@ export function ManagedOverlay({
         }}
       >
         <div
-          ref={containerRef}
+          ref={setContainerRef}
           data-overlay-id={id}
           data-collapsed={isCollapsed ? 'true' : 'false'}
           style={{
+            display: isCollapsed ? 'none' : undefined,
             transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
             maxWidth,
             width: 'max-content',

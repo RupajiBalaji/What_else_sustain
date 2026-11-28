@@ -419,7 +419,7 @@ test.describe('D9 Overlay Collision Suite (All 6 Viewports, All 4 Phases)', () =
         await page.evaluate(() => window.__wes_debug?.resolveCollisions?.())
         const res = await inspectOverlayCollisions(page)
         expect(res.collisions, `${altKey} @ ${t}s collisions`).toEqual([])
-        expect(res.worldCardCount, `${altKey} @ ${t}s worldCardCount`).toBeLessThanOrEqual(2)
+        expect(res.worldCardCount, `${altKey} @ ${t}s worldCardCount (${JSON.stringify(res.activeWorldCardIds)})`).toBeLessThanOrEqual(2)
         expect(res.waveCardCount, `${altKey} @ ${t}s waveCardCount`).toBeLessThanOrEqual(1)
       }
 

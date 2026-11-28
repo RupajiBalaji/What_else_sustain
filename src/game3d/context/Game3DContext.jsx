@@ -851,7 +851,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
       isRewindingRef.current = false
       setShowChoiceWheel(true)
       triggerToast('Rewound to harvest! Explore an alternative approach.')
-    }, 1350)
+    }, 1800)
   }, [triggerToast, savePersistentState, setSeasonPhase])
 
   useEffect(() => {

@@ -232,9 +232,14 @@ test('Full E2E smoke flow: Quick Play -> Free Camera -> Burn -> Watch Village ->
   const canvas = page.locator('canvas').first()
   const canvasBox = await canvas.boundingBox()
   if (canvasBox) {
-    // Horizontal drag to rotate yaw
-    const startX = canvasBox.x + Math.floor(canvasBox.width * 0.35)
-    const startY = canvasBox.y + Math.floor(canvasBox.height * 0.35)
+    // Dismiss regional advisory hint if it covers the upper-left canvas on compact phones
+    const dismissHint = page.locator('[data-testid="director-local-hint"] button').first()
+    if (await dismissHint.isVisible().catch(() => false)) {
+      await dismissHint.click({ force: true })
+    }
+    // Horizontal drag to rotate yaw (use upper-center open canvas area clear of bottom choice panel)
+    const startX = canvasBox.x + Math.floor(canvasBox.width * 0.45)
+    const startY = canvasBox.y + Math.floor(canvasBox.height * 0.25)
     await page.mouse.move(startX, startY)
     await page.mouse.down()
     await page.mouse.move(startX + 140, startY, { steps: 8 })

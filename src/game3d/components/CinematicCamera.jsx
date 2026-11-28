@@ -250,6 +250,63 @@ export default function CinematicCamera() {
         yaw: currentYawRef.current,
         pitch: currentPitchRef.current
       })
+      window.__wes_debug.getMinCameraColliderDist = () => {
+        const cx = camera.position.x
+        const cz = camera.position.z
+        let minD = Infinity
+        for (const p of STRAW_PILES_DATA) {
+          minD = Math.min(minD, Math.hypot(cx - p.x, cz - p.z))
+        }
+        for (const c of colliders) {
+          const dx = Math.max(c.minX - cx, 0, cx - c.maxX)
+          const dz = Math.max(c.minZ - cz, 0, cz - c.maxZ)
+          minD = Math.min(minD, Math.hypot(dx, dz))
+        }
+        return minD
+      }
+      window.__wes_debug.getAltActionScreenPos = (key) => {
+        const t = window.__wes_alt_targets?.[key]
+        if (!t) return null
+        const hw = t.halfW || 1.5
+        const hh = t.halfH || 1.2
+        const hd = t.halfD || 1.5
+        const corners = [
+          [t.x - hw, t.y - hh, t.z - hd],
+          [t.x + hw, t.y - hh, t.z - hd],
+          [t.x - hw, t.y + hh, t.z - hd],
+          [t.x + hw, t.y + hh, t.z - hd],
+          [t.x - hw, t.y - hh, t.z + hd],
+          [t.x + hw, t.y - hh, t.z + hd],
+          [t.x - hw, t.y + hh, t.z + hd],
+          [t.x + hw, t.y + hh, t.z + hd]
+        ]
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+        let anyInFront = false
+        for (const [x, y, z] of corners) {
+          const v = new THREE.Vector3(x, y, z).project(camera)
+          if (v.z >= -1 && v.z <= 1) anyInFront = true
+          const sx = ((v.x + 1) / 2) * window.innerWidth
+          const sy = ((-v.y + 1) / 2) * window.innerHeight
+          minX = Math.min(minX, sx)
+          maxX = Math.max(maxX, sx)
+          minY = Math.min(minY, sy)
+          maxY = Math.max(maxY, sy)
+        }
+        const centerV = new THREE.Vector3(t.x, t.y, t.z).project(camera)
+        const inFrustum =
+          anyInFront &&
+          centerV.z >= -1 && centerV.z <= 1 &&
+          maxX > 0 && minX < window.innerWidth &&
+          maxY > 0 && minY < window.innerHeight
+        const clippedH = Math.max(0, Math.min(window.innerHeight, maxY) - Math.max(0, minY))
+        const heightPct = (clippedH / Math.max(1, window.innerHeight)) * 100
+        return {
+          inFrustum,
+          heightPct,
+          boxHeight: Math.round(clippedH),
+          boundingBox: { minX: Math.round(minX), maxX: Math.round(maxX), minY: Math.round(minY), maxY: Math.round(maxY) }
+        }
+      }
       window.__wes_debug.setCameraPose = ({ yaw, pitch, distance }) => {
         if (yaw !== undefined) {
           targetYawRef.current = yaw
@@ -301,6 +358,34 @@ export default function CinematicCamera() {
       }
     }
   }, [seasonPhase, size.width, size.height])
+
+  useEffect(() => {
+    if (!activeAlternative) return
+    isEasingPhaseRef.current = true
+    easingEndTimeRef.current = performance.now() + 2000
+    const isPortrait = size.width < size.height
+    const aspectVal = size.width / Math.max(1, size.height)
+    const distMult = isPortrait ? Math.min(1.28, 0.90 / Math.max(0.42, aspectVal)) : 1.0
+
+    if (activeAlternative === 'happy_seeder') {
+      targetYawRef.current = -0.22
+      targetPitchRef.current = isPortrait ? 0.24 : 0.26
+      targetDistanceRef.current = 16.2 * distMult
+    } else if (activeAlternative === 'bale_sell') {
+      targetYawRef.current = 0.24
+      targetPitchRef.current = isPortrait ? 0.24 : 0.26
+      targetDistanceRef.current = 15.0 * distMult
+    } else if (activeAlternative === 'mulch') {
+      targetYawRef.current = -0.18
+      targetPitchRef.current = isPortrait ? 0.28 : 0.30
+      targetDistanceRef.current = 16.0 * distMult
+    } else if (activeAlternative === 'compost') {
+      targetYawRef.current = 0.26
+      targetPitchRef.current = isPortrait ? 0.24 : 0.26
+      targetDistanceRef.current = 10.2 * distMult
+    }
+    springArmDistRef.current = targetDistanceRef.current
+  }, [activeAlternative, size.width, size.height])
 
   useEffect(() => {
     if (burnState !== lastBurnStateRef.current) {
@@ -540,6 +625,16 @@ export default function CinematicCamera() {
 
     if (isWatchingVillageRef.current) {
       _lookTarget.set(-3.5, 2.0, 44.0)
+    } else if (activeAlternative) {
+      if (activeAlternative === 'happy_seeder') {
+        _lookTarget.set(-2.6, 1.0, 12.2)
+      } else if (activeAlternative === 'bale_sell') {
+        _lookTarget.set(0.8, 1.1, 12.5)
+      } else if (activeAlternative === 'mulch') {
+        _lookTarget.set(-3.2, 0.9, 12.2)
+      } else {
+        _lookTarget.set(-2.2, 1.0, 10.8)
+      }
     } else if (isBurnActive) {
       const leadPile = STRAW_PILES_DATA.find((p) => ignitedPiles?.includes(p.id)) || STRAW_PILES_DATA[0]
       const pileBias = 0.62
@@ -583,8 +678,8 @@ export default function CinematicCamera() {
     }
 
     let minHitDist = curDist
-    // During burn or near piles, ensure arm never collapses below 3.5m or 60% of target distance
-    const minAllowedArm = isBurnActive ? Math.max(3.5, curDist * 0.60) : 1.2
+    // During burn or alternative sequences, ensure arm never collapses below 3.5m or 60% of target distance
+    const minAllowedArm = (isBurnActive || Boolean(activeAlternative)) ? Math.max(3.5, curDist * 0.60) : 1.2
 
     // Ground clearance check (keep y >= 0.65)
     if (rayDir.y < -1e-4) {

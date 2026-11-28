@@ -56,6 +56,10 @@ export default function CompostSprayEffect() {
       }
     }
     mistMeshRef.current.instanceMatrix.needsUpdate = true
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_alt_targets) window.__wes_alt_targets = {}
+      window.__wes_alt_targets.compost = { x: -3.2, y: 0.9, z: 12.5, halfW: 1.8, halfH: 1.2, halfD: 1.8 }
+    }
   })
 
   if (!isActive) return null

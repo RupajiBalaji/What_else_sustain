@@ -85,45 +85,61 @@ export default function HappySeederTractor() {
     if (!tractorRef.current || !isActive) return
 
     const p = alternativeProgress
-    let x = 6
-    let z = 14
+    let x = 0.5
+    let z = 13.0
     let rotY = -Math.PI / 2
 
-    if (p <= 0.33) {
-      const subP = p / 0.33
-      x = THREE.MathUtils.lerp(6, -22, subP)
-      z = 14
+    if (p <= 0.35) {
+      const subP = p / 0.35
+      x = THREE.MathUtils.lerp(0.5, -6.5, subP)
+      z = 13.0
       rotY = -Math.PI / 2
-    } else if (p <= 0.40) {
-      const subP = (p - 0.33) / 0.07
-      x = -22 + Math.sin(subP * Math.PI) * 1.5
-      z = THREE.MathUtils.lerp(14, 20, subP)
+    } else if (p <= 0.45) {
+      const subP = (p - 0.35) / 0.10
+      x = -6.5 - Math.sin(subP * Math.PI) * 0.6
+      z = THREE.MathUtils.lerp(13.0, 15.5, subP)
       rotY = THREE.MathUtils.lerp(-Math.PI / 2, Math.PI / 2, subP)
-    } else if (p <= 0.70) {
-      const subP = (p - 0.40) / 0.30
-      x = THREE.MathUtils.lerp(-22, 4, subP)
-      z = 20
+    } else if (p <= 0.78) {
+      const subP = (p - 0.45) / 0.33
+      x = THREE.MathUtils.lerp(-6.5, 0.5, subP)
+      z = 15.5
       rotY = Math.PI / 2
-    } else if (p <= 0.75) {
-      const subP = (p - 0.70) / 0.05
-      x = 4 + Math.sin(subP * Math.PI) * 1.5
-      z = THREE.MathUtils.lerp(20, 26, subP)
+    } else if (p <= 0.84) {
+      const subP = (p - 0.78) / 0.06
+      x = 0.5 + Math.sin(subP * Math.PI) * 0.6
+      z = THREE.MathUtils.lerp(15.5, 17.5, subP)
       rotY = THREE.MathUtils.lerp(Math.PI / 2, -Math.PI / 2, subP)
     } else {
-      const subP = (p - 0.75) / 0.25
-      x = THREE.MathUtils.lerp(4, -20, subP)
-      z = 26
+      const subP = (p - 0.84) / 0.16
+      x = THREE.MathUtils.lerp(0.5, -5.5, subP)
+      z = 17.5
       rotY = -Math.PI / 2
     }
 
     tractorRef.current.position.set(x, 0, z)
     tractorRef.current.rotation.y = rotY
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_alt_targets) window.__wes_alt_targets = {}
+      window.__wes_alt_targets.happy_seeder = { x, y: 1.1, z, halfW: 1.6, halfH: 1.3, halfD: 2.2 }
+    }
   })
 
   if (!isActive) return null
 
   return (
-    <group ref={tractorRef} name="HappySeederTractor">
+    <group name="HappySeederSystem">
+      {/* Seed lines & straw mulch strip left behind by the Happy Seeder */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-8, 0.03, 14]} receiveShadow={isHigh}>
+        <planeGeometry args={[Math.max(1, Math.min(28, alternativeProgress * 84)), 2.4]} />
+        <meshStandardMaterial color="#8D6E63" roughness={0.95} />
+      </mesh>
+      {alternativeProgress > 0.38 && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-9, 0.03, 20]} receiveShadow={isHigh}>
+          <planeGeometry args={[Math.max(1, Math.min(26, (alternativeProgress - 0.38) * 84)), 2.4]} />
+          <meshStandardMaterial color="#6D4C41" roughness={0.95} />
+        </mesh>
+      )}
+      <group ref={tractorRef} name="HappySeederTractor">
       {/* 1. Working Tractor Body with Model Support */}
       <ModelWithFallback
         assetId="tractor"
@@ -152,6 +168,7 @@ export default function HappySeederTractor() {
           <cylinderGeometry args={[0.25, 0.25, 2.0, 12]} />
           <meshStandardMaterial color="#212121" roughness={0.9} />
         </mesh>
+      </group>
       </group>
     </group>
   )

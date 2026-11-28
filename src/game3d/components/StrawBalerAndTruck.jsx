@@ -113,8 +113,8 @@ export default function StrawBalerAndTruck() {
     if (balerRef.current) {
       if (p <= 0.5) {
         const balerP = p / 0.5
-        const x = THREE.MathUtils.lerp(6, -18, balerP)
-        const z = THREE.MathUtils.lerp(12, 26, balerP)
+        const x = THREE.MathUtils.lerp(3.0, -6.5, balerP)
+        const z = THREE.MathUtils.lerp(12.5, 17.5, balerP)
         balerRef.current.position.set(x, 0, z)
         balerRef.current.visible = true
       } else {
@@ -125,11 +125,22 @@ export default function StrawBalerAndTruck() {
     if (truckRef.current) {
       if (p >= 0.25) {
         const truckP = (p - 0.25) / 0.75
-        const z = THREE.MathUtils.lerp(10, 68, truckP)
-        truckRef.current.position.set(6.5, 0, z)
+        const z = THREE.MathUtils.lerp(11.5, 22.0, truckP)
+        truckRef.current.position.set(3.5, 0, z)
         truckRef.current.visible = true
       } else {
         truckRef.current.visible = false
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_alt_targets) window.__wes_alt_targets = {}
+      if (p <= 0.5 && balerRef.current) {
+        const bp = balerRef.current.position
+        window.__wes_alt_targets.bale_sell = { x: bp.x, y: 1.0, z: bp.z, halfW: 1.5, halfH: 1.2, halfD: 1.8 }
+      } else if (truckRef.current) {
+        const tp = truckRef.current.position
+        window.__wes_alt_targets.bale_sell = { x: tp.x, y: 1.4, z: tp.z, halfW: 1.8, halfH: 1.5, halfD: 3.2 }
       }
     }
   })

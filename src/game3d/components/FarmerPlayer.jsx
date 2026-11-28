@@ -146,6 +146,26 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       }
       window.__wes_debug.playerInput = playerInput
       window.__wes_debug.resetPlayerInput = resetPlayerInput
+      window.__wes_debug.getFarmerPoseHealth = () => {
+        const torsoY = torsoRef.current?.position.y ?? 1.05
+        const leftLegY = leftLegRef.current?.position.y ?? 0.58
+        const rightLegY = rightLegRef.current?.position.y ?? 0.58
+        const detached = Math.abs(torsoY - 1.05) > 0.12 || Math.abs(leftLegY - 0.58) > 0.1 || Math.abs(rightLegY - 0.58) > 0.1
+        const insidePile = STRAW_PILES_DATA.some(
+          (p) => Math.hypot(posRef.current.x - p.x, posRef.current.z - p.z) < 1.35
+        )
+        return { detached, insidePile, torsoY, leftLegY, rightLegY }
+      }
+      window.__wes_debug.getFarmerScreenPos = () => {
+        const v = new THREE.Vector3(posRef.current.x, posRef.current.y + 1.0, posRef.current.z)
+        v.project(camera)
+        const inFrustum = v.z >= -1 && v.z <= 1 && v.x >= -0.98 && v.x <= 0.98 && v.y >= -0.98 && v.y <= 0.98
+        return {
+          x: Math.round(((v.x + 1) / 2) * window.innerWidth),
+          y: Math.round(((-v.y + 1) / 2) * window.innerHeight),
+          inFrustum
+        }
+      }
       window.__wes_debug.stepMovement = (simDelta) => {
         const curPos = posRef.current
         return integratePlayerPosition(
@@ -178,6 +198,20 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       }
     }
   }, [camera])
+
+  // Position farmer clear of straw piles & facing the action when an alternative sequence starts
+  useEffect(() => {
+    if (!activeAlternative) return
+    posRef.current.set(-1.2, 0, 8.5)
+    if (playerRef.current) {
+      playerRef.current.position.set(-1.2, 0, 8.5)
+    }
+    currentVelRef.current.set(0, 0, 0)
+    targetVelRef.current.set(0, 0, 0)
+    if (activeAlternative === 'bale_sell') yawRef.current = 0.35
+    else if (activeAlternative === 'compost') yawRef.current = -0.45
+    else yawRef.current = -0.35
+  }, [activeAlternative])
 
   // Reset all movement inputs on blur, visibilitychange (document.hidden), or when modals / choice panel open
   useEffect(() => {
@@ -494,44 +528,44 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
       if (leftLegRef.current) leftLegRef.current.rotation.x = 0
       if (rightLegRef.current) rightLegRef.current.rotation.x = 0
     } else if (activeAlternative === 'happy_seeder') {
-      // 2. Happy Seeder: Climbing into tractor animation
+      // 2. Happy Seeder: Standing clear watching tractor & gesturing (connected limbs)
       if (torsoRef.current) {
-        torsoRef.current.position.y = 1.26
-        torsoRef.current.rotation.x = 0.18
-        torsoRef.current.rotation.y = 0
+        torsoRef.current.position.y = 1.05
+        torsoRef.current.rotation.x = 0.04
+        torsoRef.current.rotation.y = Math.sin(elapsed * 1.5) * 0.08
       }
       if (leftArmRef.current) {
-        leftArmRef.current.rotation.x = -2.1
-        leftArmRef.current.rotation.z = -0.35
+        leftArmRef.current.rotation.x = -0.15
+        leftArmRef.current.rotation.z = -0.15
       }
       if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -1.6
+        rightArmRef.current.rotation.x = -0.75 + Math.sin(elapsed * 2.5) * 0.12
         rightArmRef.current.rotation.y = 0
-        rightArmRef.current.rotation.z = 0.3
+        rightArmRef.current.rotation.z = 0.2
       }
       if (rightLegRef.current) {
-        rightLegRef.current.rotation.x = -1.15
-        rightLegRef.current.position.y = 0.72
+        rightLegRef.current.rotation.x = 0
+        rightLegRef.current.position.y = 0.58
       }
       if (leftLegRef.current) {
-        leftLegRef.current.rotation.x = 0.2
+        leftLegRef.current.rotation.x = 0
         leftLegRef.current.position.y = 0.58
       }
     } else if (activeAlternative === 'bale_sell') {
       // 3. Bale & Sell: Waving to the baler / truck operator animation
       if (torsoRef.current) {
         torsoRef.current.position.y = 1.05
-        torsoRef.current.rotation.x = -0.05
+        torsoRef.current.rotation.x = -0.04
         torsoRef.current.rotation.y = 0
       }
       if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -2.45
+        rightArmRef.current.rotation.x = -2.2
         rightArmRef.current.rotation.y = 0
-        rightArmRef.current.rotation.z = Math.sin(elapsed * 7.0) * 0.4 + 0.3
+        rightArmRef.current.rotation.z = Math.sin(elapsed * 6.0) * 0.35 + 0.25
       }
       if (leftArmRef.current) {
-        leftArmRef.current.rotation.x = -0.45
-        leftArmRef.current.rotation.z = -0.45
+        leftArmRef.current.rotation.x = -0.2
+        leftArmRef.current.rotation.z = -0.2
       }
       if (leftLegRef.current) {
         leftLegRef.current.rotation.x = 0
@@ -542,27 +576,27 @@ export default function FarmerPlayer({ initialPosition = [-1.2, 0, 10.0] }) {
         rightLegRef.current.position.y = 0.58
       }
     } else if (activeAlternative === 'mulch') {
-      // 4. Mulch: Bending down inspecting soil and spreading mulch
+      // 4. Mulch: Standing clear observing mulch spread (connected limbs)
       if (torsoRef.current) {
-        torsoRef.current.position.y = 0.8
-        torsoRef.current.rotation.x = 0.52
-        torsoRef.current.rotation.y = 0
+        torsoRef.current.position.y = 1.05
+        torsoRef.current.rotation.x = 0.14
+        torsoRef.current.rotation.y = Math.sin(elapsed * 1.8) * 0.1
       }
       if (rightArmRef.current) {
-        rightArmRef.current.rotation.x = -1.35
-        rightArmRef.current.rotation.y = Math.sin(elapsed * 3.0) * 0.25
+        rightArmRef.current.rotation.x = -0.85 + Math.sin(elapsed * 2.8) * 0.18
+        rightArmRef.current.rotation.y = 0.15
         rightArmRef.current.rotation.z = 0.1
       }
       if (leftArmRef.current) {
-        leftArmRef.current.rotation.x = 0.35
-        leftArmRef.current.rotation.z = 0.15
+        leftArmRef.current.rotation.x = 0.15
+        leftArmRef.current.rotation.z = -0.1
       }
       if (leftLegRef.current) {
-        leftLegRef.current.rotation.x = -0.4
+        leftLegRef.current.rotation.x = 0
         leftLegRef.current.position.y = 0.58
       }
       if (rightLegRef.current) {
-        rightLegRef.current.rotation.x = 0.3
+        rightLegRef.current.rotation.x = 0
         rightLegRef.current.position.y = 0.58
       }
     } else if (activeAlternative === 'compost') {

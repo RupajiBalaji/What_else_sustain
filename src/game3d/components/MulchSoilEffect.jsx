@@ -57,8 +57,14 @@ export default function MulchSoilEffect() {
   useFrame(() => {
     if (!mulchPlaneRef.current || !isActive) return
     // Mulch spreads out across soil
-    const opacity = Math.min(0.92, alternativeProgress * 1.5)
+    const opacity = Math.min(0.92, 0.35 + alternativeProgress * 0.65)
     mulchPlaneRef.current.material.opacity = opacity
+    const spreadScale = Math.max(0.25, Math.min(1.0, alternativeProgress * 1.4))
+    mulchPlaneRef.current.scale.set(spreadScale, spreadScale, 1)
+    if (typeof window !== 'undefined') {
+      if (!window.__wes_alt_targets) window.__wes_alt_targets = {}
+      window.__wes_alt_targets.mulch = { x: -5.5, y: 0.4, z: 15.0, halfW: 3.5, halfH: 1.0, halfD: 3.0 }
+    }
   })
 
   if (!isActive) return null

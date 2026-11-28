@@ -158,7 +158,7 @@ export default function ConsequenceCallouts() {
         left: isShortLandscape ? 'auto' : (isMobile ? '12px' : '20px'),
         right: isShortLandscape ? '16px' : 'auto',
         transform: 'none',
-        top: isShortLandscape ? '56px' : (isMobile ? 'calc(138px + env(safe-area-inset-top, 0px))' : '190px'),
+        top: isShortLandscape ? '56px' : (isMobile ? (isBurnt ? '194px' : 'calc(138px + env(safe-area-inset-top, 0px))') : '190px'),
         bottom: 'auto',
         width: isShortLandscape ? '210px' : (isMobile ? 'min(260px, calc(100vw - 80px))' : '290px'),
         zIndex: 75,

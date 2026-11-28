@@ -17,3 +17,14 @@
 | C4 | Tier C | DONE | `8053d8e` | `.github/workflows/ci.yml`, `playwright.config.js` | Configured `playwright.config.js` & CI for all 6 viewports: `360x640`, `390x844`, `844x390`, `768x1024`, `1366x768`, `1920x1080`. |
 | C5 | Tier C | DONE | `26af01b` | — | Bumped `CACHE_NAME` in `public/sw.js` (`wes-cache-v3` -> `wes-cache-v4`) and added cache-bump rule to `docs/DEPLOY.md`. |
 | C6 | Tier C | DONE | `25c32a4`, `26af01b` | `backend/tests/test_security_audit.py` | Audited `25c32a4`: restricted CORS/origins, disabled `/docs` in prod, added security headers, path-traversal guard on SPA fallback, Pydantic bounds, `PrivacyModal` + delete-data controls, pinned deps. Residual risk: in-memory rate-limiter resets per worker; `allow_headers=["*"]`; Gemini keys via env. |
+
+## Fix Round 2: Overlaps, Economy Balance, Counting
+
+| ID | Tier | Status | Commit | Test Name | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| R2-1 | Round 2 | DONE | pending | `e2e/overlay-collision.spec.js` | Merged duplicate `MoneyFloatingTag` into single `ConsequenceCallouts` card; docked mobile burn callout at `top: 194px` clear of `SmokeMeterHUD` and bottom buttons. |
+| R2-2 | Round 2 | NOT DONE | — | — | Top banners (`Sequence complete!` vs action banner) clear of zoom controls. |
+| R2-3 | Round 2 | NOT DONE | — | — | Desktop Bale & Sell camera obstruction (power/flag pole). |
+| R2-4 | Round 2 | NOT DONE | — | — | Honest balance: flag ₹0 as FAIL, switchable CRM subsidy (50%/80%, off by default), designer decisions note. |
+| R2-5 | Round 2 | NOT DONE | — | — | Bale & Sell base-income label clarifies bale & transport net only. |
+| R2-6 | Round 2 | NOT DONE | — | — | Actual visible DOM overlay count test with negative control (`360x640`, `390x844`, `1366x768`). |

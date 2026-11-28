@@ -11,7 +11,7 @@
 | B3 | Tier B | DONE | `05944ad` | `e2e/perf-overlay.spec.js` | `?perf=1` overlay with fps, frame time, draw calls, `Copy Report`; particle pooling & burn stall fixes. |
 | B4 | Tier B | DONE | pending | `e2e/smoke.spec.js`, `e2e/overlay-collision.spec.js` | Warmed house albedo/emissive & balanced proportions (`1.35x/1.05x`), denser instanced crop rows (`30x34` high / `22x24` med / `14x16` low), `39vh` mobile choice sheet keeps farmer visible on `360x640`. |
 | B5 | Tier B | DONE | pending | `tests/unit/movement.test.js`, `e2e/movement.spec.js` | Raised `accelAlpha`/`decelAlpha` delta clamp in `FarmerPlayer.jsx` from `0.05s` to `0.1s` (matching integration step) and relaxed `expectSimDistance` to `0.5 * elapsedSim`. |
-| C1 | Tier C | NOT DONE | — | — | Delete `vercel.json`, `netlify.toml`, `api/ask-advisor.js`, and legacy `vite.config.js` middleware. |
+| C1 | Tier C | DONE | pending | `npm run build` | Deleted `vercel.json`, `netlify.toml`, `api/ask-advisor.js`, and legacy `/api/ask-advisor` middleware from `vite.config.js`; Render + `backend/app` is the sole backend. |
 | C2 | Tier C | NOT DONE | — | `npm run lint` | Add `no-unused-vars` and `react-hooks/exhaustive-deps` to `eslint.config.js`. |
 | C3 | Tier C | NOT DONE | — | — | Gitignore `tests/screenshots/`, keep curated images in `docs/screenshots/`, upload artifacts in CI. |
 | C4 | Tier C | NOT DONE | — | `.github/workflows/*.yml` | CI runs all 6 viewports (`360x640`, `390x844`, `768x1024`, `1366x768`, `1920x1080`, `844x390`). |

@@ -71,7 +71,8 @@ export function OverlayManagerProvider({ children }) {
       '[data-testid="watch-village-button"]',
       '[data-testid="continue-to-report-button"]',
       '[data-testid="what-else-controls"]',
-      '[data-testid="director-local-hint"]'
+      '[data-testid="director-local-hint"]',
+      '[data-testid="rupee-counter-hud"]'
     ]
     for (const sel of hudSelectors) {
       const el = document.querySelector(sel)

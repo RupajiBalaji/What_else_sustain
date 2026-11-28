@@ -49,10 +49,19 @@ test.describe('Rewind State Restoration (Item 1)', () => {
     await confirmBtn.waitFor({ state: 'visible', timeout: 10000 })
     await confirmBtn.click({ force: true })
 
-    // Wait for Season Report to appear for bale_sell (~14.5s) and verify Replay from Season Report
+    // Consistent End of Sequence (Item 6): alternative must NOT auto-open Season Report; must show Continue, What else?, Compare
+    const continueBtn = page.locator('[data-testid="continue-to-report-button"]')
     const reportReplayBtn = page.locator('[data-testid="season-report-replay-button"], button:has-text("Replay")').first()
-    const hudRewindBtn = page.locator('[data-testid="rewind-button"], button:has-text("What else?")').first()
-    await reportReplayBtn.waitFor({ state: 'visible', timeout: 30000 })
+    const hudRewindBtn = page.locator('[data-testid="what-else-rewind-button"], [data-testid="rewind-button"], button:has-text("What else?")').first()
+    await continueBtn.waitFor({ state: 'visible', timeout: 30000 })
+    await expect(reportReplayBtn).toBeHidden()
+    await expect(page.locator('[data-testid="what-else-rewind-button"]')).toBeVisible()
+    await expect(page.locator('[data-testid="open-comparison-button"]')).toBeVisible()
+    await page.screenshot({ path: 'tests/screenshots/end-of-sequence-consistent.png' })
+
+    // Now click Continue to open Season Report
+    await continueBtn.click({ force: true })
+    await reportReplayBtn.waitFor({ state: 'visible', timeout: 10000 })
 
     const afterSeasonReport = await readState()
     expect(afterSeasonReport.money).toBeGreaterThan(startMoney)

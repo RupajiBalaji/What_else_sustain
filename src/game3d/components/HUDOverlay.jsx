@@ -39,6 +39,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
     interactionTarget,
     nearestPileInfo,
     activeAlternative,
+    altCompleted,
     hasMadeChoice,
     harvestState,
     harvestProgress,
@@ -752,7 +753,8 @@ export default function HUDOverlay({ onSwitchToLite }) {
       {!useInWorldChoices && <ChoiceWheel />}
 
       {/* BURN CONSEQUENCE ACTIONS: WATCH THE VILLAGE & CONTINUE TO REPORT */}
-      {burnState === 'consequence' && !showSeasonReport && (
+      {/* CONSEQUENCE ACTION BUTTONS (Consistent End of Sequence: Continue to Report + Watch Village on Burn) */}
+      {!isRewinding && (burnState === 'consequence' || altCompleted) && !showSeasonReport && (
         <div
           style={{
             position: 'absolute',
@@ -769,29 +771,31 @@ export default function HUDOverlay({ onSwitchToLite }) {
             animation: 'fadeInUp 0.4s ease'
           }}
         >
-          <button
-            type="button"
-            data-testid="watch-village-button"
-            onClick={watchVillage}
-            style={{
-              minHeight: '48px',
-              padding: '10px 20px',
-              borderRadius: '9999px',
-              backgroundColor: '#1B5E20',
-              color: '#FFFFFF',
-              border: '2px solid #81C784',
-              fontWeight: 900,
-              fontSize: '0.92rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 6px 18px rgba(0,0,0,0.3)'
-            }}
-          >
-            <span>🏘️</span>
-            <span>Watch the village</span>
-          </button>
+          {burnState === 'consequence' && (
+            <button
+              type="button"
+              data-testid="watch-village-button"
+              onClick={watchVillage}
+              style={{
+                minHeight: '48px',
+                padding: '10px 20px',
+                borderRadius: '9999px',
+                backgroundColor: '#1B5E20',
+                color: '#FFFFFF',
+                border: '2px solid #81C784',
+                fontWeight: 900,
+                fontSize: '0.92rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 6px 18px rgba(0,0,0,0.3)'
+              }}
+            >
+              <span>🏘️</span>
+              <span>Watch the village</span>
+            </button>
+          )}
 
           <button
             type="button"

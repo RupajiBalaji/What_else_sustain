@@ -431,6 +431,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
 
   // Live Alternatives state: null | 'happy_seeder' | 'bale_sell' | 'mulch' | 'compost'
   const [activeAlternative, setActiveAlternative] = useState(null)
+  const [altCompleted, setAltCompleted] = useState(false)
   const [alternativeProgress, setAlternativeProgress] = useState(0)
   const [rupeeCount, setRupeeCount] = useState(0)
 
@@ -765,6 +766,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setBurnProgress(0)
     setIgnitedPiles([])
     setActiveAlternative(null)
+    setAltCompleted(false)
     setAlternativeProgress(0)
     setRupeeCount(0)
     setHasMadeChoice(false)
@@ -876,6 +878,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     setBurnProgress(0)
     setIgnitedPiles([])
     setActiveAlternative(null)
+    setAltCompleted(false)
     setAlternativeProgress(0)
     setRupeeCount(0)
     setHasMadeChoice(false)
@@ -999,8 +1002,8 @@ export function Game3DProvider({ children, onFallbackToLite }) {
   }, [activePile, interactionTarget, windState, reducedMotion, triggerHaptic, game, triggerToast])
 
   const proceedToSeasonReport = useCallback(() => {
-    finishSeason('burn')
-  }, [finishSeason])
+    finishSeason(activeAlternative || 'burn')
+  }, [finishSeason, activeAlternative])
 
   // Trigger VHS-style Rewind
   const triggerRewind = useCallback(() => {
@@ -1017,6 +1020,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
     sound.playTap()
     audioManager.setMusicState('hopeful')
     setActiveAlternative(altKey)
+    setAltCompleted(false)
     setAlternativeProgress(0)
     setRupeeCount(0)
 
@@ -1107,10 +1111,11 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         language: 'en'
       })
 
-      setShowComparison(true)
-      finishSeason(altKey)
+      // Consistent end-of-sequence: never auto-open Season Report; wait for Continue
+      setAltCompleted(true)
+      triggerToast('✅ Sequence complete! Tap Continue to Season Report, or What else? to compare.')
     }, durationMs)
-  }, [game, triggerHaptic, finishSeason])
+  }, [game, triggerHaptic, triggerToast, farmConfig?.acres])
 
   const handleInteract = useCallback(() => {
     if (!interactionTarget) return
@@ -1252,6 +1257,7 @@ export function Game3DProvider({ children, onFallbackToLite }) {
         triggerRewind,
         playerResetTrigger,
         activeAlternative,
+        altCompleted,
         alternativeProgress,
         startAlternative,
         triedChoices,

@@ -10,6 +10,7 @@ export default function RupeeCounterHUD() {
 
   return (
     <div
+      data-testid="rupee-counter-hud"
       style={{
         position: 'absolute',
         top: '124px',

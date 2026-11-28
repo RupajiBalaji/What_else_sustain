@@ -24,7 +24,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | R2-1 | Round 2 | DONE | pending | `e2e/overlay-collision.spec.js` | Merged duplicate `MoneyFloatingTag` into single `ConsequenceCallouts` card; docked mobile burn callout at `top: 194px` clear of `SmokeMeterHUD` and bottom buttons. |
 | R2-2 | Round 2 | DONE | pending | `npm run lint`, `npm run build` | Replaced active status banner with `Sequence complete!` toast on completion; shifted mobile top banners left of zoom controls (`maxWidth: calc(100vw - 112px)`). |
-| R2-3 | Round 2 | DONE | pending | `e2e/alt-sequences.spec.js` | Nudged `bale_sell` camera yaw (`0.24` -> `-0.18`) to keep the left-road foreground flag pole clear of baler, truck, and farmer. |
+| R2-3 | Round 2 | DONE | pending | `e2e/alt-sequences.spec.js` | Nudged `bale_sell` camera yaw (`0.24` -> `-0.52`) to keep the farm gate flag pole `[2.5, 0, 5.0]` clear of baler, truck, and farmer. |
 | R2-4 | Round 2 | NOT DONE | — | — | Honest balance: flag ₹0 as FAIL, switchable CRM subsidy (50%/80%, off by default), designer decisions note. |
 | R2-5 | Round 2 | NOT DONE | — | — | Bale & Sell base-income label clarifies bale & transport net only. |
 | R2-6 | Round 2 | NOT DONE | — | — | Actual visible DOM overlay count test with negative control (`360x640`, `390x844`, `1366x768`). |

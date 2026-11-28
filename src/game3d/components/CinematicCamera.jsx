@@ -372,7 +372,7 @@ export default function CinematicCamera() {
       targetPitchRef.current = isPortrait ? 0.24 : 0.26
       targetDistanceRef.current = 18.2 * distMult
     } else if (activeAlternative === 'bale_sell') {
-      targetYawRef.current = -0.18
+      targetYawRef.current = -0.52
       targetPitchRef.current = isPortrait ? 0.24 : 0.26
       targetDistanceRef.current = 15.0 * distMult
     } else if (activeAlternative === 'mulch') {

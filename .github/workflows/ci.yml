@@ -71,3 +71,10 @@ jobs:
         run: npx playwright test --project="Phone (390x844)" --project="Desktop (1366x768)"
         env:
           CI: true
+      - name: Upload Playwright test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: tests/screenshots/
+          if-no-files-found: ignore

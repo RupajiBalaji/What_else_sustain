@@ -40,4 +40,5 @@ ENV/
 # Testing & Audits
 test-results/
 playwright-report/
+tests/screenshots/
 AUDIT.md

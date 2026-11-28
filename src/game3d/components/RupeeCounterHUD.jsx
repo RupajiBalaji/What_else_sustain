@@ -4,18 +4,20 @@ import { useGame3D } from '../context/Game3DContext'
 
 export default function RupeeCounterHUD() {
   const { t } = useLanguage()
-  const { activeAlternative, rupeeCount } = useGame3D()
+  const { activeAlternative, altCompleted, rupeeCount } = useGame3D()
 
   if (!activeAlternative) return null
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
 
   return (
     <div
       data-testid="rupee-counter-hud"
       style={{
         position: 'absolute',
-        top: '124px',
-        left: '50%',
+        top: isMobile ? '110px' : '124px',
+        left: isMobile ? 'calc(50% - 22px)' : '50%',
         transform: 'translateX(-50%)',
+        maxWidth: isMobile ? 'calc(100vw - 112px)' : 'none',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -51,33 +53,37 @@ export default function RupeeCounterHUD() {
         </div>
       )}
 
-      {/* 2. Active Sustainable Alternative Status Banner */}
-      <div
-        style={{
-          backgroundColor: 'rgba(27, 94, 32, 0.9)',
-          border: '2px solid #81C784',
-          color: '#E8F5E9',
-          borderRadius: '9999px',
-          padding: '6px 16px',
-          fontSize: '0.78rem',
-          fontWeight: 800,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}
-      >
-        <span>🌱</span>
-        <span>
-          {activeAlternative === 'happy_seeder'
-            ? t('game3d.happySeederActive')
-            : activeAlternative === 'bale_sell'
-            ? t('game3d.baleSellActive')
-            : activeAlternative === 'mulch'
-            ? t('game3d.mulchActive')
-            : t('game3d.compostActive')}
-        </span>
-      </div>
+      {/* 2. Active Sustainable Alternative Status Banner (replaced by Sequence complete toast when altCompleted) */}
+      {!altCompleted && (
+        <div
+          data-testid="active-alt-status-banner"
+          style={{
+            backgroundColor: 'rgba(27, 94, 32, 0.9)',
+            border: '2px solid #81C784',
+            color: '#E8F5E9',
+            borderRadius: '9999px',
+            padding: '6px 16px',
+            fontSize: '0.78rem',
+            fontWeight: 800,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            textAlign: 'center'
+          }}
+        >
+          <span>🌱</span>
+          <span>
+            {activeAlternative === 'happy_seeder'
+              ? t('game3d.happySeederActive')
+              : activeAlternative === 'bale_sell'
+              ? t('game3d.baleSellActive')
+              : activeAlternative === 'mulch'
+              ? t('game3d.mulchActive')
+              : t('game3d.compostActive')}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

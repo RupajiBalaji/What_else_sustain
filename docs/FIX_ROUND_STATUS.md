@@ -23,7 +23,7 @@
 | ID | Tier | Status | Commit | Test Name | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | R2-1 | Round 2 | DONE | pending | `e2e/overlay-collision.spec.js` | Merged duplicate `MoneyFloatingTag` into single `ConsequenceCallouts` card; docked mobile burn callout at `top: 194px` clear of `SmokeMeterHUD` and bottom buttons. |
-| R2-2 | Round 2 | NOT DONE | — | — | Top banners (`Sequence complete!` vs action banner) clear of zoom controls. |
+| R2-2 | Round 2 | DONE | pending | `npm run lint`, `npm run build` | Replaced active status banner with `Sequence complete!` toast on completion; shifted mobile top banners left of zoom controls (`maxWidth: calc(100vw - 112px)`). |
 | R2-3 | Round 2 | NOT DONE | — | — | Desktop Bale & Sell camera obstruction (power/flag pole). |
 | R2-4 | Round 2 | NOT DONE | — | — | Honest balance: flag ₹0 as FAIL, switchable CRM subsidy (50%/80%, off by default), designer decisions note. |
 | R2-5 | Round 2 | NOT DONE | — | — | Bale & Sell base-income label clarifies bale & transport net only. |

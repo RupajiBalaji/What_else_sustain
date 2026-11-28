@@ -1013,17 +1013,18 @@ export default function HUDOverlay({ onSwitchToLite }) {
       {/* Dynamic Performance & Tier Adjustment Toast Notice (Docked center-top under HUD bar, hidden during rewind) */}
       {!isRewinding && toastNotice && (
         <div
+          data-testid="hud-toast-notice"
           style={{
             position: 'absolute',
             top: 'calc(58px + env(safe-area-inset-top, 0px))',
-            left: '50%',
+            left: isMobile ? 'calc(50% - 22px)' : '50%',
             transform: 'translateX(-50%)',
             backgroundColor: 'rgba(22, 56, 43, 0.94)',
             color: '#FFFFFF',
             border: '2px solid #81C784',
             borderRadius: '16px',
-            padding: '8px 18px',
-            fontSize: '0.86rem',
+            padding: isMobile ? '6px 12px' : '8px 18px',
+            fontSize: isMobile ? '0.76rem' : '0.86rem',
             fontWeight: 800,
             boxShadow: '0 6px 18px rgba(0,0,0,0.3)',
             zIndex: 110,
@@ -1031,7 +1032,7 @@ export default function HUDOverlay({ onSwitchToLite }) {
             alignItems: 'center',
             gap: '8px',
             pointerEvents: 'none',
-            maxWidth: 'min(90vw, 420px)',
+            maxWidth: isMobile ? 'calc(100vw - 112px)' : 'min(90vw, 420px)',
             width: 'max-content',
             whiteSpace: 'normal',
             wordBreak: 'break-word',
